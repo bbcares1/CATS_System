@@ -3,5 +3,9 @@ package group6.project.controller;
 import group6.project.service.UserService;
 
 public class UserController {
-    public UserService usesev;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 }
