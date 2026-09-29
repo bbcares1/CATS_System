@@ -6,6 +6,6 @@ import group6.project.repo.UserRepo;
 
 public class UserService {
     @Autowired 
-    private UserRepo usrepo;
+    private UserRepo userRepo;
     
 }
