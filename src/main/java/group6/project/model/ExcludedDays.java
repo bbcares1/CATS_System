@@ -22,7 +22,8 @@ public class ExcludedDays {
 @Id
 @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-  private LocalDate date;
+  private LocalDate holidayDate;
+  private String description;
 
   
 }
