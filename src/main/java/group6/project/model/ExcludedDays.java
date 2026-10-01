@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.persistence.Id;
 
 @Entity 
@@ -22,8 +24,11 @@ public class ExcludedDays {
 @Id
 @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+@NotNull(message = "Holiday date is required")
   private LocalDate holidayDate;
+@NotBlank(message = "Description is required")
   private String description;
 
   
 }
+ 

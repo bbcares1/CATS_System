@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import group6.project.model.ExcludedDays;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/excluded-days")
@@ -25,16 +26,16 @@ public class ExcludedDaysController{
         return excludedDaysService.getAllExcludedDays();
     }
     @PostMapping
-    public ExcludedDays addExcludedDay(@RequestBody ExcludedDays excludedDay) {
-    return excludedDaysService.saveExcludedDay(excludedDay);
+    public ExcludedDays addExcludedDay(
+       @Valid @RequestBody ExcludedDays excludedDay) {
+    return excludedDaysService.addExcludedDay(excludedDay);
     }
     @PutMapping("/{id}")
     public ExcludedDays updateExcludedDay(
         @PathVariable Long id,
-        @RequestBody ExcludedDays excludedDay) {
+        @Valid @RequestBody ExcludedDays excludedDay) {
 
-    excludedDay.setId(id);
-    return excludedDaysService.saveExcludedDay(excludedDay);
+    return excludedDaysService.updateExcludedDay(id,excludedDay);
 }
     @DeleteMapping("/{id}")
     public void deleteExcludedDay(@PathVariable Long id) {

@@ -23,6 +23,11 @@ public class TrainingEntitlement {
   private Integer id;
   private Integer year;
 
+  public TrainingEntitlement(Integer year) {
+        this.year = year;
+    }
+
+
   
 
 }

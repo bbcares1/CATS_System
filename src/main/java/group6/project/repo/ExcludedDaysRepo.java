@@ -9,5 +9,6 @@ import group6.project.model.ExcludedDays;
 public interface ExcludedDaysRepo extends JpaRepository<ExcludedDays, Long> {
   
   boolean existsByHolidayDate(LocalDate holidayDate);
+  boolean existsByHolidayDateAndIdNot(LocalDate holidayDate, Long id);
 
 }
