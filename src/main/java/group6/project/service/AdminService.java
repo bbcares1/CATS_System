@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import group6.project.model.Staff;
 import group6.project.model.TrainingEntitlement;
@@ -12,6 +13,8 @@ import group6.project.repo.StaffRepo;
 import group6.project.repo.TrainingEntitlementRepo;
 import jakarta.transaction.Transactional;
 
+
+@Service 
 public class AdminService {
      @Autowired 
      public AdminRepo adminRepo;

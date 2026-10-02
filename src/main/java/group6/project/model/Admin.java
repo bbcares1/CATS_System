@@ -9,7 +9,6 @@ import lombok.Setter;
 import group6.project.model.User;
 
 @Entity 
-@Table(name= "admin")
 @Getter 
 @Setter 
 @NoArgsConstructor 
