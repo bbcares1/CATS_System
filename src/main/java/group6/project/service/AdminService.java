@@ -48,5 +48,11 @@ public class AdminService {
            return staffRepo.findAll();
      }
 
-     
+     public Optional<Staff> getIdStaff(Integer id){
+          return staffRepo.findById(id);
+     }
+
+     public void save(Staff staff){
+           staffRepo.save(staff);
+     }
 }

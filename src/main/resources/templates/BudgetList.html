@@ -37,15 +37,15 @@
             </tr>
         </thead>
         <tbody>
-            <!-- 遍历 Controller 传过来的 staffs 列表 -->
+          
             <tr th:each="s : ${staffs}">
                 <td th:text="${s.id}">1</td>
-                <td th:text="${s.staffNo}">S001</td>
+                <td th:text="${s.staffId}">S001</td>
                 <td th:text="${s.trainingBudget}">2000.00</td>
                 <td th:text="${s.trainingDays}">10</td>
                 <td>
-                    <!-- 核心按钮：按下后触发超链接跳转到 GET /updateemp/{id} 方法 -->
-                    <a class="btn-edit" th:href="@{/updateemp/{id}(id=${s.id})}">修改额度</a>
+                
+                    <a class="btn-edit" th:href="@{/update/{id}(id=${s.id})}">修改额度</a>
                 </td>
             </tr>
         </tbody>
