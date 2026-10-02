@@ -15,6 +15,8 @@ import group6.project.service.AdminService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 
 
@@ -51,6 +53,14 @@ public class AdminController {
         List<Staff> staffs = adminService.getAllStaff();
         model.addAttribute("staffs",staffs);
         return "BudgetList";
+    }
+    
+    @PostMapping("/save")
+    public String postMethodName(Staff staff) {
+        
+        adminService.save(staff);
+        
+        return "redirect:/admin/showBudgetList";
     }
     
     

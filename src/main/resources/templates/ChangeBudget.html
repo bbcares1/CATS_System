@@ -82,7 +82,7 @@
     <h2>修改培训额度</h2>
 
     <!-- 提交给 Controller 的 POST 路径 /admin/save，绑定 model 里的 "employee" 对象 -->
-    <form th:action="@{/admin/save}" th:object="${employee}" method="post">
+    <form th:action="@{/admin/save}" th:object="${staff}" method="post">
         
         <!-- 隐藏域：保存主键 id，用于告诉 JPA 要更新哪条记录 -->
         <input type="hidden" th:field="*{id}" />
