@@ -7,4 +7,6 @@ import group6.project.repo.AdminRepo;
 public class AdminService {
      @Autowired 
      public AdminRepo adminRepo;
+
+     
 }
