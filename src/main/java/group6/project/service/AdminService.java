@@ -1,5 +1,6 @@
 package group6.project.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class AdminService {
 
 
      @Transactional
-     public void updateStaffProject(Integer Id, Double new_budget, Integer new_days){
+     public void updateStaffBudget(Integer Id, Double new_budget, Integer new_days){
                
           Optional<Staff> targeted_staff = staffRepo.findById(Id);
           if(targeted_staff.isEmpty()){
@@ -38,6 +39,10 @@ public class AdminService {
              staffRepo.save(staff);
           }
 
+     }
+
+     public List<Staff> getAllStaff(){
+           return staffRepo.findAll();
      }
 
      
