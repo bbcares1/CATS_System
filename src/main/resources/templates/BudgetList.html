@@ -46,6 +46,9 @@
                 <td>
                 
                     <a class="btn-edit" th:href="@{/admin/update/{id}(id=${s.id})}">修改额度</a>
+                    <a class="btn-delete" 
+       th:href="@{/admin/delete/{id}(id=${s.id})}" 
+       onclick="return confirm('确定要删除该员工的额度记录吗？');">删除</a>
                 </td>
             </tr>
         </tbody>
