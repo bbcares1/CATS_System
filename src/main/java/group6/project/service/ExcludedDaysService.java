@@ -22,6 +22,13 @@ private ExcludedDaysRepo excludedDaysRepo;
     public List<ExcludedDays> getAllExcludedDays() {
         return excludedDaysRepo.findAll();
 }
+    public ExcludedDays getExcludedDayById(Long id) {
+    return excludedDaysRepo.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Excluded day not found with id: " + id));
+}
+
     public ExcludedDays addExcludedDay(ExcludedDays excludedDay) {
         if (excludedDaysRepo.existsByHolidayDate(excludedDay.getHolidayDate
             ())) {

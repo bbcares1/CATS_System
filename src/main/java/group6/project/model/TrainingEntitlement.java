@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
 @Entity 
 @Table(name = "training_entitlement")
@@ -18,12 +19,13 @@ import jakarta.persistence.Table;
 @EqualsAndHashCode
 public class TrainingEntitlement {
 
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
-  private Integer year;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    @NotNull(message = "Year is required")
+    private Integer year;
 
-  public TrainingEntitlement(Integer year) {
+    public TrainingEntitlement(Integer year) {
         this.year = year;
     }
 

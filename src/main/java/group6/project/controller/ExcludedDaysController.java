@@ -2,43 +2,81 @@ package group6.project.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
 import group6.project.service.ExcludedDaysService;
-import java.util.List;
-
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import group6.project.model.ExcludedDays;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import jakarta.validation.Valid;
 
-@RestController
-@RequestMapping("/api/excluded-days")
+@Controller
+@RequestMapping("/excluded-days")
 public class ExcludedDaysController{
 
     @Autowired
     private ExcludedDaysService excludedDaysService;
     @GetMapping
-    public List<ExcludedDays> getAllExcludedDays() {
-        return excludedDaysService.getAllExcludedDays();
-    }
-    @PostMapping
-    public ExcludedDays addExcludedDay(
-       @Valid @RequestBody ExcludedDays excludedDay) {
-    return excludedDaysService.addExcludedDay(excludedDay);
-    }
-    @PutMapping("/{id}")
-    public ExcludedDays updateExcludedDay(
-        @PathVariable Long id,
-        @Valid @RequestBody ExcludedDays excludedDay) {
+    public String getAllExcludedDays(Model model) {
 
-    return excludedDaysService.updateExcludedDay(id,excludedDay);
+        model.addAttribute(
+            "excludedDays",
+            excludedDaysService.getAllExcludedDays()
+        );
+
+        return "excluded-days";
+    }
+
+    @GetMapping("/add")
+    public String showAddForm(Model model) {
+
+       model.addAttribute(
+        "excludedDay", new ExcludedDays()
+    );
+
+    return "excluded-days-add";
 }
-    @DeleteMapping("/{id}")
-    public void deleteExcludedDay(@PathVariable Long id) {
-    excludedDaysService.deleteExcludedDay(id);
+
+    @PostMapping("/add")
+    public String addExcludedDay(
+            @Valid @ModelAttribute("excludedDay")
+            ExcludedDays excludedDay) {
+
+        excludedDaysService.addExcludedDay(excludedDay);
+
+        return "redirect:/excluded-days";
+    }
+
+    @GetMapping("/edit/{id}")
+    public String showEditForm(
+            @PathVariable Long id,
+            Model model) {
+
+       ExcludedDays excludedDay =
+               excludedDaysService.getExcludedDayById(id);
+
+       model.addAttribute("excludedDay", excludedDay);
+
+       return "excluded-days-edit";
+}
+
+    @PostMapping("/edit/{id}")
+    public String updateExcludedDay(
+            @PathVariable Long id,
+            @Valid @ModelAttribute("excludedDay") ExcludedDays excludedDay) {
+
+        excludedDaysService.updateExcludedDay(id, excludedDay);
+
+        return "redirect:/excluded-days";
+}
+
+    @PostMapping("/delete/{id}")
+    public String deleteExcludedDay(@PathVariable Long id) {
+
+        excludedDaysService.deleteExcludedDay(id);
+
+        return "redirect:/excluded-days";
 }
 }
