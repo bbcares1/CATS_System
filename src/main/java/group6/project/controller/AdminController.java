@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import group6.project.model.ApprovalHierarchy;
 import group6.project.model.CourseCategory;
 import group6.project.model.CourseDetail;
 import group6.project.model.ExcludedDays;
+import group6.project.model.Roles;
 import group6.project.model.Staff;
 import group6.project.repo.StaffRepo;
 import group6.project.service.AdminService;
@@ -67,10 +69,13 @@ public class AdminController {
         return "redirect:/admin/showBudgetList";
     }
 
+    // here below is about excluded days
+    // -----------------------------------
+
     @GetMapping("/excludedDays")
     public String showExcludedDays(Model model) {
         List<ExcludedDays> dayList = adminService.getAllExcludedDays();
-        model.addAttribute("dayList",dayList);
+        model.addAttribute("dayList", dayList);
         model.addAttribute("newExcludedDay", new ExcludedDays());
         return "ExcludedDaysList";
     }
@@ -105,7 +110,7 @@ public class AdminController {
     public String editCourse(@PathVariable("id") Integer id, Model model) {
         Optional<CourseDetail> course = adminService.getByIdCourseDetails(id);
         if (course.isPresent()) {
-            model.addAttribute("course",course.get());
+            model.addAttribute("course", course.get());
             model.addAttribute("courseList", adminService.getAllCourseDetails());
             model.addAttribute("categories", CourseCategory.values());
             return "CourseList";
@@ -126,5 +131,43 @@ public class AdminController {
         adminService.deleteCourseById(id);
         return "redirect:/admin/course";
     }
+
+    // here below is about approvalhierarchy
+    // -------------------------------------
+
+    @GetMapping("/hierarchy")
+    public String showAllHierarchy(Model model) {
+        model.addAttribute("hierarchies", adminService.getAllApprovalHierarchy());
+        model.addAttribute("hierarchy", new ApprovalHierarchy());
+        model.addAttribute("roles", Roles.values());
+        return "HierarchyList";
+    }
+
+    @GetMapping("/hierarchy/edit/{id}")
+    public String editHierarchy(@PathVariable("id") Integer id, Model model) {
+        Optional<ApprovalHierarchy> hierarchySelected = adminService.getHierarchyById(id);
+        if (hierarchySelected.isPresent()) {
+            model.addAttribute("hierarchy",hierarchySelected.get());
+            model.addAttribute("hierarchies", adminService.getAllApprovalHierarchy());
+            model.addAttribute("roles", Roles.values());
+            return "HierarchyList";
+        }
+
+        return "redirect:/admin/hierarchy";
+    }
+
+    @PostMapping("/hierarchy/save")
+    public String saveHierarchy(@ModelAttribute("hierarchy") ApprovalHierarchy hierarchy) {
+        adminService.saveHierarchy(hierarchy);
+
+        return "redirect:/admin/hierarchy";
+    }
+
+    @GetMapping("/hierarchy/delete/{id}")
+    public String deleteHierarchy(@PathVariable ("id") Integer id) {
+       adminService.deleteHierarchyById(id);
+        return "redirect:/admin/hierarchy";
+    }
+    
 
 }

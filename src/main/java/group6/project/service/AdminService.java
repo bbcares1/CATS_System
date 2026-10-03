@@ -6,12 +6,14 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import group6.project.model.ApprovalHierarchy;
 import group6.project.model.CourseCategory;
 import group6.project.model.CourseDetail;
 import group6.project.model.ExcludedDays;
 import group6.project.model.Staff;
 import group6.project.model.TrainingEntitlement;
 import group6.project.repo.AdminRepo;
+import group6.project.repo.ApprovalHierarchyRepo;
 import group6.project.repo.CourseDetailRepo;
 import group6.project.repo.ExcludedDaysRepo;
 import group6.project.repo.StaffRepo;
@@ -34,6 +36,9 @@ public class AdminService {
 
      @Autowired
      public CourseDetailRepo courseDetailRepo;
+
+     @Autowired
+     public ApprovalHierarchyRepo approvalHierarchyRepo;
 
      @Transactional
      public void updateStaffBudget(Integer Id, Double new_budget, Integer new_days) {
@@ -67,6 +72,9 @@ public class AdminService {
           staffRepo.deleteById(id);
      }
 
+     // here below is about excluded days
+     // -----------------------------------
+
      public List<ExcludedDays> getAllExcludedDays() {
           return excludedDaysRepo.findAll();
      }
@@ -97,5 +105,24 @@ public class AdminService {
 
      public void deleteCourseById(Integer id) {
           courseDetailRepo.deleteById(id);
+     }
+
+     // here below is about approvalhierarchy
+     // -------------------------------------
+
+     public List<ApprovalHierarchy> getAllApprovalHierarchy() {
+          return approvalHierarchyRepo.findAllByOrderByLevelAsc();
+     }
+
+     public Optional<ApprovalHierarchy> getHierarchyById(Integer id) {
+          return approvalHierarchyRepo.findById(id);
+     }
+
+     public void saveHierarchy(ApprovalHierarchy hierarchy) {
+          approvalHierarchyRepo.save(hierarchy);
+     }
+
+     public void deleteHierarchyById(Integer id) {
+          approvalHierarchyRepo.deleteById(id);
      }
 }
