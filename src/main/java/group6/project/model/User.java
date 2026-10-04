@@ -1,42 +1,21 @@
-
 package group6.project.model;
 
-import java.lang.annotation.Inherited;
-
-import javax.annotation.processing.Generated;
-
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "User")
 @Getter
 @Setter
-@EqualsAndHashCode 
-@NoArgsConstructor 
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    
-    
-    private Integer userId;
-    
-    
-    private String userName;
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class Staff extends User {
 
-    private Enum role;
+    private String staffId;
 
-    private String designation;
+    private Double trainingBudget;
 
-    private String name;
-
-
-
+    private Integer trainingDays;
 }
