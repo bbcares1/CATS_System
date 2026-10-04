@@ -97,9 +97,7 @@ public class AdminService {
      }
 
      public void saveCourse(CourseDetail course) {
-          if (course.getCourseCategory() == CourseCategory.InternalTraining) {
-               course.setCourseFee(0.0);
-          }
+          
           courseDetailRepo.save(course);
      }
 

@@ -19,16 +19,20 @@ INSERT INTO excluded_days (date) VALUES ('2026-10-01');
 INSERT INTO excluded_days (date) VALUES ('2026-10-02');
 INSERT INTO excluded_days (date) VALUES ('2026-12-25');
 
--- 2. 插入课程目录 (CourseDetail) 测试数据
--- 注意：列名为 course_category，且枚举字符串为 InternalTraining / ExternalCourse / ProfessionalCertification
-INSERT INTO course_detail (title, course_category, course_fee, course_description) 
-VALUES ('Company Orientation & Agile', 'InternalTraining', 0.0, '公司内部新员工敏捷流程培训');
+-- 1. Insert Course Categories
+INSERT INTO course_category (category_id, category_name) VALUES (1, 'Internal Training');
+INSERT INTO course_category (category_id, category_name) VALUES (2, 'External Course');
+INSERT INTO course_category (category_id, category_name) VALUES (3, 'Professional Certification');
 
-INSERT INTO course_detail (title, course_category, course_fee, course_description) 
-VALUES ('Spring Boot & Cloud Masterclass', 'ExternalCourse', 850.0, '外部 Spring Boot 实战与微服务进阶课程');
+-- 2. Insert Course Details
+INSERT INTO course_detail (title, course_fee, course_description, category_id) 
+VALUES ('Hands-on Java Spring Boot', 500.00, 'In-depth guide to Spring Boot framework and practical application development.', 1);
 
-INSERT INTO course_detail (title, course_category, course_fee, course_description) 
-VALUES ('AWS Certified Solutions Architect', 'ProfessionalCertification', 1200.0, 'AWS 架构师专业认证考试与考前辅导');
+INSERT INTO course_detail (title, course_fee, course_description, category_id) 
+VALUES ('AWS Solutions Architect Certification', 1200.00, 'Official AWS training for Cloud Solutions Architect certification exam preparation.', 3);
+
+INSERT INTO course_detail (title, course_fee, course_description, category_id) 
+VALUES ('Agile Project Management Workshop', 850.00, 'Interactive external workshop covering Scrum practices and Agile methodologies.', 2);
 
 -- 3. 插入员工 (Staff) 测试数据
 INSERT INTO staff (staff_id, training_budget, training_days) VALUES ('S1001', 2000.0, 10);
