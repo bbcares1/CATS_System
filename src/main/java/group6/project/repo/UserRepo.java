@@ -2,8 +2,12 @@ package group6.project.repo;
 
 import group6.project.model.User;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
 
-public interface UserRepo extends JpaRepository<User,Integer>{
-    
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface UserRepo extends JpaRepository<User, Integer> {
+    Optional<User> findByUsername(String username);
 }

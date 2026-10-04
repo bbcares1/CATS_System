@@ -1,15 +1,17 @@
 package group6.project.model;
 
 import jakarta.persistence.Entity;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
-public class Manager extends Staff {
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class Manager extends User {
 
-  private Integer id;
-  private String staffNo;
-
-  public Manager() {
-
-  }
-
+    private String staffNo;
 }

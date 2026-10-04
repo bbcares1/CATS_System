@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login - CATS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-dark">
+<div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="card shadow p-4 text-dark" style="max-width: 400px; width: 100%;">
+        <h4 class="card-title text-center text-danger mb-3">Admin Login</h4>
+        <div th:if="${error}" class="alert alert-danger py-2 small" th:text="${error}"></div>
+        <form th:action="@{/admin/login}" method="post">
+            <div class="mb-3">
+                <label class="form-label">Admin Username</label>
+                <input type="text" name="username" class="form-control" required autofocus>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-danger w-100 mb-2">Log In</button>
+            <div class="text-center mt-2">
+                <a th:href="@{/login}" class="text-decoration-none small">&larr; Return to selection page</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
