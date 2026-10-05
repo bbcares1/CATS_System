@@ -5,6 +5,8 @@ import group6.project.model.User;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import java.util.Optional;
 import group6.project.model.CourseApplication;
 import group6.project.model.ApprovalHierarchy;
 
@@ -45,32 +47,32 @@ public class AdminController {
     }
 
     @PutMapping("/fee‑reimbursement/approve/{id}")
-    public ResponseEntity<Void> courseFeeReimbursementApprove(@PathVariable Integer id){
-        adminService.courseFeeReimbursementApprove(id);
+    public ResponseEntity<Void> courseFeeReimbursementApprovement(@PathVariable Integer id){
+        adminService.courseFeeReimbursementApprovement(id);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/hierarchy")
-    public ResponseEntity<ApprovalHierarchy> addHierachy(@RequestBody ApprovalHierarchy ApprovalHierarchy){
-        ApprovalHierarchy saved = adminService.manageHierachySave(ApprovalHierarchy);
+    public ResponseEntity<ApprovalHierarchy> addHierarchy(@RequestBody ApprovalHierarchy ApprovalHierarchy){
+        ApprovalHierarchy saved = adminService.manageHierarchySave(ApprovalHierarchy);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
     @GetMapping("/hierarchy")
-    public ResponseEntity<List<ApprovalHierarchy>> getAllHierachy(){
-        List<ApprovalHierarchy> list = adminService.manageHierachyFindAll();
+    public ResponseEntity<List<ApprovalHierarchy>> getAllHierarchy(){
+        List<ApprovalHierarchy> list = adminService.manageHierarchyFindAll();
         return ResponseEntity.ok(list);
     }
 
     @DeleteMapping("/hierarchy/{id}")
-    public ResponseEntity<Void> deleteHierachy(@PathVariable Integer id){
-        adminService.manageHierachyDelete(id);
+    public ResponseEntity<Void> deleteHierarchy(@PathVariable Integer id){
+        adminService.manageHierarchyDelete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/hierarchy/{id}")
-    public ResponseEntity<ApprovalHierarchy> getHierachyById(@PathVariable Integer id){
-        Optional<ApprovalHierarchy> opt = adminService.manageHierachyFindById(id);
+    public ResponseEntity<ApprovalHierarchy> getHierarchyById(@PathVariable Integer id){
+        Optional<ApprovalHierarchy> opt = adminService.manageHierarchyFindById(id);
         return opt.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

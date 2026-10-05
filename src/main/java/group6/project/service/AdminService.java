@@ -7,8 +7,8 @@ import group6.project.repo.UserRepository;
 import group6.project.model.User;
 import group6.project.model.CourseApplication;
 import group6.project.model.ApprovalHierarchy;
-import group6.project.repository.CourseApplicationRepo;
-import group6.project.repository.ApprovalHierarchyRepo;
+import group6.project.repo.CourseApplicationRepo;
+import group6.project.repo.ApprovalHierarchyRepo;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,9 +19,9 @@ public class AdminService {
      @Autowired
      private UserRepository userRepository;
      @Autowired
-    private CourseApplicationRepo courseApplicationRepo;
-    @Autowired
-    private ApprovalHierarchyRepo ApprovalHierarchyRepo;
+     private CourseApplicationRepo courseApplicationRepo;
+     @Autowired
+     private ApprovalHierarchyRepo approvalHierarchyRepo;
 
      public List<User> viewList(){
           return userRepository.findAll();
@@ -44,22 +44,22 @@ public class AdminService {
 
      public CourseApplication courseApplicationCreate(CourseApplication courseApplication){
         return courseApplicationRepo.save(courseApplication);
-    }
+     }
 
-    public void courseFeeReimbursementApprove(Integer feeApplicationId){
+    public void courseFeeReimbursementApprovement(Integer feeApplicationId){
         
     }
 
-    public ApprovalHierarchy manageHierachySave(ApprovalHierarchy entity){
-        return ApprovalHierarchyRepo.save(entity);
+    public ApprovalHierarchy manageHierarchySave(ApprovalHierarchy entity){
+        return approvalHierarchyRepo.save(entity);
     }
-    public List<ApprovalHierarchy> manageHierachyFindAll(){
-        return ApprovalHierarchyRepo.findAll();
+    public List<ApprovalHierarchy> manageHierarchyFindAll(){
+        return approvalHierarchyRepo.findAll();
     }
-    public void manageHierachyDelete(Integer id){
-        ApprovalHierarchyRepo.deleteById(id);
+    public void manageHierarchyDelete(Integer id){
+        approvalHierarchyRepo.deleteById(id);
     }
-    public Optional<ApprovalHierarchy> manageHierachyFindById(Integer id){
-        return ApprovalHierarchyRepo.findById(id);
+    public Optional<ApprovalHierarchy> manageHierarchyFindById(Integer id){
+        return approvalHierarchyRepo.findById(id);
     }
 }
