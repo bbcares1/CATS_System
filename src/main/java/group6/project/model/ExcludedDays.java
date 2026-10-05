@@ -1,7 +1,7 @@
 package group6.project.model;
 
 import java.time.LocalDate;
-
+import org.springframework.format.annotation.DateTimeFormat;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,6 +28,7 @@ public class ExcludedDays {
     private Integer id;
 
     @NotNull(message = "Holiday date is required")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
 
     @NotBlank(message = "Description is required")

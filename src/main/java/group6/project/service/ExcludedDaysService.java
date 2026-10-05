@@ -14,7 +14,7 @@ import group6.project.repo.ExcludedDaysRepo;
 @Service
 public class ExcludedDaysService {
 
-    @Autowired
+@Autowired
     private ExcludedDaysRepo excludedDaysRepo;
 
     public boolean isExcludedDay(LocalDate date) {

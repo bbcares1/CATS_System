@@ -86,7 +86,6 @@ public class AdminController {
 
     @PostMapping("/excludedDays/add")
     public String addExcludedDays(@Valid @ModelAttribute("newExcludedDay") ExcludedDays excludedDays,BindingResult result,Model model) {
-        excludedDaysService.addExcludedDay(excludedDays);
         if (result.hasErrors()) {
         model.addAttribute(
                 "excludedDaysList",
