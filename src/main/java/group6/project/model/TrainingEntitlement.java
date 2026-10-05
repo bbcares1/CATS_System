@@ -6,14 +6,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 
-@Entity 
+@Entity
 @Table(name = "training_entitlement")
 @Getter
 @Setter
@@ -24,8 +25,10 @@ public class TrainingEntitlement {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
     @NotNull(message = "Year is required")
     private Integer year;
+
     @ManyToOne
     @JoinColumn(name = "staff_id")
     private Staff staff;
@@ -33,8 +36,4 @@ public class TrainingEntitlement {
     public TrainingEntitlement(Integer year) {
         this.year = year;
     }
-
-
-  
-
 }

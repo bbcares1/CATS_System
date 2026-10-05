@@ -47,7 +47,7 @@ public class ExcludedDaysController{
 
     @GetMapping("/edit/{id}")
     public String showEditForm(
-            @PathVariable Long id,
+            @PathVariable Integer id,
             Model model) {
        ExcludedDays excludedDay =
                excludedDaysService.getExcludedDayById(id);
@@ -57,7 +57,7 @@ public class ExcludedDaysController{
 
     @PostMapping("/edit/{id}")
     public String updateExcludedDay(
-            @PathVariable Long id,
+            @PathVariable Integer id,
             @Valid @ModelAttribute("excludedDay") ExcludedDays excludedDay,BindingResult result) {
         if (result.hasErrors()) {
         return "excluded-days-edit";
@@ -67,7 +67,7 @@ public class ExcludedDaysController{
 }
 
     @PostMapping("/delete/{id}")
-    public String deleteExcludedDay(@PathVariable Long id) {
+    public String deleteExcludedDay(@PathVariable Integer id) {
         excludedDaysService.deleteExcludedDay(id);
         return "redirect:/excluded-days";
 }

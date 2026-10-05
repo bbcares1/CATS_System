@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>排除日期管理</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        .add-form { display: flex; gap: 10px; margin-bottom: 25px; justify-content: center; align-items: center; }
+        input[type="date"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        button { padding: 8px 16px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #007bff; color: white; }
+        .btn-delete { color: #dc3545; text-decoration: none; font-weight: bold; }
+        .btn-delete:hover { text-decoration: underline; }
+        .nav-link { display: inline-block; margin-bottom: 15px; color: #007bff; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a th:href="@{/admin/showBudgetList}" class="nav-link">← 返回员工额度列表</a>
+    <h2>排除日期管理 (Excluded Days)</h2>
+
+    <!-- 新增排除日期表单 -->
+    <form class="add-form" th:action="@{/admin/excludedDays/add}" th:object="${newExcludedDay}" method="post">
+        <label for="date">选择日期：</label>
+        <input type="date" id="date" th:field="*{date}" required />
+        <span th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></span>
+        <label for="description">描述：</label>
+        <input type="text" id="description" th:field="*{description}" required />
+        <span th:if="${#fields.hasErrors('description')}" 
+              th:errors="*{description}"></span>
+        <button type="submit">添加日期</button>
+    </form>
+
+    <!-- 已有排除日期列表 -->
+    <table>
+        <thead>
+            <tr>
+                <th>序号</th>
+                <th>排除日期</th>
+                <th>描述</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="day, iterStat : ${excludedDaysList}">
+                <td th:text="${iterStat.count}">1</td>
+                <td th:text="${#temporals.format(day.date, 'yyyy-MM-dd')}">2026-10-01</td>
+                <td th:text="${day.description}">Public Holiday</td>
+                <td>
+                    <a th:href="@{/admin/excludedDays/edit/{id}(id=${day.id})}">编辑</a>
+                    <a class="btn-delete" 
+                       th:href="@{/admin/deleteExcludedDays/{id}(id=${day.id})}"
+                       onclick="return confirm('确定要删除这个排除日期吗？');">删除</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(excludedDaysList)}">
+                <td colspan="3">暂无排除日期记录</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

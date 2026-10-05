@@ -1,67 +1,79 @@
 package group6.project.service;
+
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import group6.project.repo.ExcludedDaysRepo;
-import java.util.List;
 import group6.project.model.ExcludedDays;
+import group6.project.repo.ExcludedDaysRepo;
 
 @Service
 public class ExcludedDaysService {
 
     @Autowired
-private ExcludedDaysRepo excludedDaysRepo;
+    private ExcludedDaysRepo excludedDaysRepo;
 
     public boolean isExcludedDay(LocalDate date) {
-        return excludedDaysRepo.existsByHolidayDate(date);
+        return excludedDaysRepo.existsByDate(date);
     }
+
     public List<ExcludedDays> getAllExcludedDays() {
         return excludedDaysRepo.findAll();
-}
-    public ExcludedDays getExcludedDayById(Long id) {
-    return excludedDaysRepo.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Excluded day not found with id: " + id));
-}
+    }
+
+    public ExcludedDays getExcludedDayById(Integer id) {
+        return excludedDaysRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Excluded day not found with id: " + id));
+    }
 
     public ExcludedDays addExcludedDay(ExcludedDays excludedDay) {
-        if (excludedDaysRepo.existsByHolidayDate(excludedDay.getHolidayDate
-            ())) {
+
+        if (excludedDaysRepo.existsByDate(excludedDay.getDate())) {
             throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-        "This holiday date already exists.");
-    }
+                    HttpStatus.CONFLICT,
+                    "This holiday date already exists.");
+        }
+
         return excludedDaysRepo.save(excludedDay);
-}
-    public ExcludedDays updateExcludedDay(Long id, ExcludedDays excludedDay) {
+    }
 
-    ExcludedDays existingDay = excludedDaysRepo.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(
-                   HttpStatus.NOT_FOUND,
-                   "Excluded day not found with id: " + id));
-    
-    if (excludedDaysRepo.existsByHolidayDateAndIdNot(
-        excludedDay.getHolidayDate(), id)) {
-       throw new RuntimeException("This holiday date already exists.");
-}
+    public ExcludedDays updateExcludedDay(
+            Integer id,
+            ExcludedDays excludedDay) {
 
-    existingDay.setHolidayDate(excludedDay.getHolidayDate());
-    existingDay.setDescription(excludedDay.getDescription());
+        ExcludedDays existingDay = excludedDaysRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Excluded day not found with id: " + id));
 
-    return excludedDaysRepo.save(existingDay);
-}
-    public void deleteExcludedDay(Long id) {
+        if (excludedDaysRepo.existsByDateAndIdNot(
+                excludedDay.getDate(), id)) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "This holiday date already exists.");
+        }
+
+        existingDay.setDate(excludedDay.getDate());
+        existingDay.setDescription(excludedDay.getDescription());
+
+        return excludedDaysRepo.save(existingDay);
+    }
+
+    public void deleteExcludedDay(Integer id) {
+
         if (!excludedDaysRepo.existsById(id)) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "Excluded day not found with id: " + id);
-}
+        }
+
         excludedDaysRepo.deleteById(id);
-}
-  
+    }
 }
