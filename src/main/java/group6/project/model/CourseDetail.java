@@ -1,9 +1,13 @@
 package group6.project.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -20,11 +24,15 @@ public class CourseDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long courseId;
+    private Integer courseId;
 
     private String title;
 
     private Double courseFee;
 
     private String courseDescription;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private CourseCategory courseCategory;
 }
