@@ -1,16 +1,36 @@
 package group6.project.model;
 
 import java.time.LocalDate;
-
+import org.springframework.format.annotation.DateTimeFormat;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-@Entity 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "excluded_days")
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode
 public class ExcludedDays {
 
-  private Integer id;
-  private LocalDate date;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-  public ExcludedDays() {
+    @NotNull(message = "Holiday date is required")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate date;
 
-  }
+    @NotBlank(message = "Description is required")
+    private String description;
 }

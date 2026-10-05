@@ -1,0 +1,45 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Edit Excluded Day</title>
+  </head>
+
+  <body>
+    <h2>Edit Excluded Day</h2>
+
+    <form
+      th:action="@{/admin/excludedDays/edit/{id}(id=${excludedDay.id})}"
+      th:object="${excludedDay}"
+      method="post"
+    >
+      <div>
+        <label for="date">Date:</label>
+        <input type="date" id="date" th:field="*{date}" required />
+
+        <span th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></span>
+      </div>
+
+      <div>
+        <label for="description">Description:</label>
+        <input
+          type="text"
+          id="description"
+          th:field="*{description}"
+          required
+        />
+
+        <span
+          th:if="${#fields.hasErrors('description')}"
+          th:errors="*{description}"
+        ></span>
+      </div>
+
+      <div>
+        <button type="submit">Save</button>
+
+        <a th:href="@{/admin/excludedDays}"> Cancel </a>
+      </div>
+    </form>
+  </body>
+</html>
