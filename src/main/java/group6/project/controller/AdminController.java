@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,8 @@ import group6.project.model.Roles;
 import group6.project.model.Staff;
 import group6.project.service.AdminService;
 import group6.project.service.CourseCategoryService;
+import group6.project.service.ExcludedDaysService;
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/admin")
@@ -25,11 +28,16 @@ public class AdminController {
 
     private final AdminService adminService;
     private final CourseCategoryService courseCategoryService;
+    private final ExcludedDaysService excludedDaysService;
 
-    public AdminController(AdminService adminService, CourseCategoryService courseCategoryService) {
-        this.adminService = adminService;
-        this.courseCategoryService = courseCategoryService;
-    }
+    public AdminController(
+            AdminService adminService,
+            CourseCategoryService courseCategoryService,
+            ExcludedDaysService excludedDaysService) {
+       this.adminService = adminService;
+       this.courseCategoryService = courseCategoryService;
+       this.excludedDaysService = excludedDaysService;
+}
 
   // ------- this part below is about budgetmanagement
   // -----------------------------------------------
@@ -70,21 +78,46 @@ public class AdminController {
 
     @GetMapping("/excludedDays")
     public String showExcludedDays(Model model) {
-        List<ExcludedDays> dayList = adminService.getAllExcludedDays();
-        model.addAttribute("dayList", dayList);
+        List<ExcludedDays> dayList =excludedDaysService.getAllExcludedDays();
+        model.addAttribute("excludedDaysList", dayList);
         model.addAttribute("newExcludedDay", new ExcludedDays());
         return "ExcludedDaysList";
     }
 
     @PostMapping("/excludedDays/add")
-    public String addExcludedDays(@ModelAttribute("newExcludedDay") ExcludedDays excludedDays) {
-        adminService.saveExcludedDays(excludedDays);
+    public String addExcludedDays(@Valid @ModelAttribute("newExcludedDay") ExcludedDays excludedDays,BindingResult result,Model model) {
+        if (result.hasErrors()) {
+        model.addAttribute(
+                "excludedDaysList",
+                excludedDaysService.getAllExcludedDays());
+        return "ExcludedDaysList";
+    }
+    excludedDaysService.addExcludedDay(excludedDays);
         return "redirect:/admin/excludedDays";
+    }
+
+    @GetMapping("/excludedDays/edit/{id}")
+    public String showEditExcludedDay(
+            @PathVariable("id") Integer id,Model model) {
+       ExcludedDays excludedDay =excludedDaysService.getExcludedDayById(id);
+       model.addAttribute("excludedDay", excludedDay);
+       return "ExcludedDaysEdit";
+    }
+
+    @PostMapping("/excludedDays/edit/{id}")
+    public String updateExcludedDay(
+            @PathVariable("id") Integer id,
+            @Valid @ModelAttribute("excludedDay") ExcludedDays excludedDay,BindingResult result) {
+       if (result.hasErrors()) {
+           return "ExcludedDaysEdit";
+    }
+       excludedDaysService.updateExcludedDay(id, excludedDay);
+       return "redirect:/admin/excludedDays";
     }
 
     @GetMapping("/deleteExcludedDays/{id}")
     public String deleteExcludedDays(@PathVariable("id") Integer id) {
-        adminService.deleteExcludedDays(id);
+        excludedDaysService.deleteExcludedDay(id);
         return "redirect:/admin/excludedDays";
     }
 

@@ -15,9 +15,14 @@ INSERT INTO user (dtype, name, user_name, staff_no, designation) VALUES
 
 
 --- 1. 插入排除日期 (ExcludedDays) 测试数据
-INSERT INTO excluded_days (date) VALUES ('2026-10-01');
-INSERT INTO excluded_days (date) VALUES ('2026-10-02');
-INSERT INTO excluded_days (date) VALUES ('2026-12-25');
+INSERT INTO excluded_days (date, description)
+VALUES ('2026-10-01', 'Public Holiday');
+
+INSERT INTO excluded_days (date, description)
+VALUES ('2026-10-02', 'Public Holiday');
+
+INSERT INTO excluded_days (date, description)
+VALUES ('2026-12-25', 'Christmas Day');
 
 -- 1. Insert Course Categories
 INSERT INTO course_category (category_id, category_name) VALUES (1, 'Internal Training');
