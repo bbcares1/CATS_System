@@ -1,11 +1,22 @@
 package group6.project.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
+import org.hibernate.annotations.JoinColumnOrFormula;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -22,13 +33,40 @@ public class CourseFeeApplication {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Integer applicationId;
 
-    private Double courseFee;
+    @ManyToOne 
+    @JoinColumn (name = "staff_id")
+    private Staff applicant;
 
-    private String applicationStatus;
+    @ManyToOne 
+    @JoinColumn (name = "batch_id")
+    private CourseBatch courseBatch;
+
+    @Enumerated (EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ApplicationStatus applicationStatus;
+
+    @Lob 
+    @Column (name = "receipt")
+    private byte[] receipt;
+
+    private String receiptFileName;
+
+    private String receiptContentType;
+
+    @Lob
+    @Column(name = "certificate")
+    private byte[] certificate;
+
+    private String certificateFileName;
+
+    private String certificateContentType;
 
     private LocalDateTime submittedAt;
 
     private LocalDateTime reviewedAt;
+
+    private String decisionReason;  
+
 }
