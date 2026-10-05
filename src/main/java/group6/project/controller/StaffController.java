@@ -3,14 +3,17 @@ package group6.project.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.service.StaffService;
 import jakarta.servlet.http.HttpSession;
 
 @RestController
 @Controller
+@RequestMapping("/staff")
 public class StaffController {
 
     private final StaffService staffService;
@@ -21,11 +24,16 @@ public class StaffController {
     
     @GetMapping("/home")
     public String staffHome(HttpSession session, Model model) {
-        User staff = (User) session.getAttribute("user");
-        if (staff == null) {
-            return "redirect:/staff/login";
+        User user = (User) session.getAttribute("user");
+        
+        if (user == null) {
+            return "redirect:/employee/login";
         }
-        model.addAttribute("currentUser", staff);
+        if (!(user instanceof Staff)) {
+            return "redirect:/employee/login";
+        }
+
+        model.addAttribute("currentUser", user);
         return "staff-home";
     }
 }

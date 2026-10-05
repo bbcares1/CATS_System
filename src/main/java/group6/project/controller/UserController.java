@@ -1,6 +1,5 @@
 package group6.project.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,8 +13,11 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
    
     @GetMapping({"/", "/login"})
@@ -24,30 +26,40 @@ public class UserController {
     }
 
     
-    @GetMapping("/staff/login")
-    public String staffLoginPage(HttpSession session) {
+    @GetMapping("/employee/login")
+    public String employeeLoginPage(HttpSession session) {
         User user = (User) session.getAttribute("user");
-        if (user != null && userService.isStaffOrManager(user)) {
+        if (userService.isManager(user)) {
+            return "redirect:/manager/home";
+        }
+        if (userService.isStaff(user)) {
             return "redirect:/staff/home";
         }
-        return "staff-login";
+        return "employee-login";
     }
 
-    @PostMapping("/staff/login")
-    public String handleStaffLogin(@RequestParam("username") String username,
+    @PostMapping("/employee/login")
+    public String handleStaffLogin(@RequestParam("userName") String userName,
                                    @RequestParam("password") String password,
+                                   @RequestParam("designation") String designation,
                                    HttpSession session,
                                    Model model) {
-        User user = userService.authenticate(username, password);
+        User user = userService.authenticate(userName, password);
 
        
         if (user != null && userService.isStaffOrManager(user)) {
-            session.setAttribute("user", user);
-            return "redirect:/staff/home";
+            if (user != null && userService.isManager(user) && designation.equalsIgnoreCase("Manager")) {
+                session.setAttribute("user", user);
+                return "redirect:/manager/home";
+            }
+            if (user != null && userService.isStaff(user) && designation.equalsIgnoreCase("Staff")) {
+                session.setAttribute("user", user);
+                return "redirect:/staff/home";
+            }
         }
 
-        model.addAttribute("error", "Incorrect username or password for the Staff!");
-        return "staff-login";
+        model.addAttribute("error", "Incorrect username or password for the Employee!");
+        return "employee-login";
     }
 
     
@@ -61,11 +73,11 @@ public class UserController {
     }
 
     @PostMapping("/admin/login")
-    public String handleAdminLogin(@RequestParam("username") String username,
+    public String handleAdminLogin(@RequestParam("userName") String userName,
                                    @RequestParam("password") String password,
                                    HttpSession session,
                                    Model model) {
-        User user = userService.authenticate(username, password);
+        User user = userService.authenticate(userName, password);
 
         
         if (user != null && userService.isAdmin(user)) {

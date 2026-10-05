@@ -42,13 +42,18 @@ public class AdminController {
     @GetMapping("/home")
     public String adminHome(HttpSession session, Model model) {
         User admin = (User) session.getAttribute("user");
+
         if (admin == null) {
             return "redirect:/admin/login";
         }
+        if (!(admin instanceof group6.project.model.Admin)) {
+            return "redirect:/admin/login";
+        }
+        
         model.addAttribute("currentUser", admin);
         return "admin-home";
     }
-}
+
 
 
   // ------- this part below is about budgetmanagement
@@ -179,4 +184,4 @@ public class AdminController {
         return "redirect:/admin/hierarchy";
     }
 }
->>>>>>> origin/main
+
