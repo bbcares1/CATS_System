@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>员工培训额度列表</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        h2 { color: #333; }
+        table { width: 80%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        tr:hover { background-color: #f9f9f9; }
+        .btn-edit {
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn-edit:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <h2>员工培训额度管理列表</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>员工 ID</th>
+                <th>员工编号</th>
+                <th>培训预算 (Training Budget)</th>
+                <th>培训天数 (Training Days)</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+          
+            <tr th:each="s : ${staffs}">
+                <td th:text="${s.id}">1</td>
+                <td th:text="${s.staffId}">S001</td>
+                <td th:text="${s.trainingBudget}">2000.00</td>
+                <td th:text="${s.trainingDays}">10</td>
+                <td>
+                
+                    <a class="btn-edit" th:href="@{/admin/update/{id}(id=${s.id})}">修改额度</a>
+                    <a class="btn-delete" 
+       th:href="@{/admin/delete/{id}(id=${s.id})}" 
+       onclick="return confirm('确定要删除该员工的额度记录吗？');">删除</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>
