@@ -3,15 +3,19 @@ package group6.project.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import java.util.List;
+
+
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.service.StaffService;
 import jakarta.servlet.http.HttpSession;
 
-@RestController
+
 @Controller
 @RequestMapping("/staff")
 public class StaffController {
@@ -35,5 +39,16 @@ public class StaffController {
 
         model.addAttribute("currentUser", user);
         return "staff-home";
+    }
+
+
+    @GetMapping
+    public List<Staff> getAllStaff() {
+        return staffService.getAllStaff();
+    }
+
+    @GetMapping("/{id}")
+    public Staff getStaff(@PathVariable Integer id) {
+        return staffService.getStaff(id);
     }
 }

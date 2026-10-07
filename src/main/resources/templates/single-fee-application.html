@@ -1,0 +1,82 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Course Fee Claim</title>
+    </head>
+
+    <body>
+        <h1>Course Fee Claim Details</h1>
+
+        <p>
+        <strong>Application ID:</strong>
+        <span th:text="${feeApplication.applicationId}"></span>
+        </p>
+
+        <p>
+        <strong>Status:</strong>
+        <span th:text="${feeApplication.applicationStatus}"></span>
+        </p>
+
+        <p>
+        <strong>Submitted At:</strong>
+        <span th:text="${feeApplication.submittedAt}"></span>
+        </p>
+
+        <p>
+            <strong>Receipt:</strong>
+
+            <a th:href="@{/course-fee-applications/{id}/receipt
+                (id=${feeApplication.applicationId})}"
+            target="_blank">
+                View Receipt
+            </a>
+        </p>
+
+        <p>
+            <strong>Certificate:</strong>
+
+            <a th:href="@{/course-fee-applications/{id}/certificate
+                (id=${feeApplication.applicationId})}"
+            target="_blank">
+                View Certificate
+            </a>
+        </p>
+
+        <p>
+        <strong>Reviewed At:</strong>
+        <span th:text="${feeApplication.reviewedAt}"></span>
+        </p>
+
+        <p>
+        <strong>Decision Reason:</strong>
+        <span th:text="${feeApplication.decisionReason}"></span>
+        </p>
+
+        <hr />
+
+        <h2>Manager Decision</h2>
+
+        <form
+        method="post"
+        th:action="@{/course-fee-applications/{id}/decision
+        (id=${feeApplication.applicationId})}"
+        >
+        <label for="reason">Reason:</label>
+
+        <br />
+
+        <textarea id="reason" name="reason" required></textarea>
+
+        <br /><br />
+
+        <button type="submit" name="decision" value="approve">Approve</button>
+
+        <button type="submit" name="decision" value="reject">Reject</button>
+        </form>
+
+        <br />
+
+        <a th:href="@{/course-fee-applications}"> Back to Applications </a>
+    </body>
+</html>

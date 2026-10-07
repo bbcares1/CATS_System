@@ -29,6 +29,11 @@
     <form class="add-form" th:action="@{/admin/excludedDays/add}" th:object="${newExcludedDay}" method="post">
         <label for="date">选择日期：</label>
         <input type="date" id="date" th:field="*{date}" required />
+        <span th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></span>
+        <label for="description">描述：</label>
+        <input type="text" id="description" th:field="*{description}" required />
+        <span th:if="${#fields.hasErrors('description')}" 
+              th:errors="*{description}"></span>
         <button type="submit">添加日期</button>
     </form>
 
@@ -38,6 +43,7 @@
             <tr>
                 <th>序号</th>
                 <th>排除日期</th>
+                <th>描述</th>
                 <th>操作</th>
             </tr>
         </thead>
@@ -45,7 +51,9 @@
             <tr th:each="day, iterStat : ${excludedDaysList}">
                 <td th:text="${iterStat.count}">1</td>
                 <td th:text="${#temporals.format(day.date, 'yyyy-MM-dd')}">2026-10-01</td>
+                <td th:text="${day.description}">Public Holiday</td>
                 <td>
+                    <a th:href="@{/admin/excludedDays/edit/{id}(id=${day.id})}">编辑</a>
                     <a class="btn-delete" 
                        th:href="@{/admin/deleteExcludedDays/{id}(id=${day.id})}"
                        onclick="return confirm('确定要删除这个排除日期吗？');">删除</a>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Submit Course Fee Claim</title>
+  </head>
+
+  <body>
+    <h1>Submit Course Fee Claim</h1>
+
+    <form
+      th:action="@{/course-fee-applications}"
+      th:object="${feeApplication}"
+      method="post"
+      enctype="multipart/form-data"
+    >
+      <div>
+        <label for="receiptFile">Receipt</label>
+
+        <input
+          type="file"
+          id="receiptFile"
+          name="receiptFile"
+          accept=".pdf,.jpg,.jpeg,.png"
+          required
+        />
+      </div>
+
+      <div>
+        <label for="certificateFile"> Certificate of Completion </label>
+
+        <input
+          type="file"
+          id="certificateFile"
+          name="certificateFile"
+          accept=".pdf,.jpg,.jpeg,.png"
+          required
+        />
+      </div>
+
+      <button type="submit">Submit Claim</button>
+    </form>
+
+    <br />
+
+    <a th:href="@{/course-fee-applications}"> Cancel </a>
+  </body>
+</html>
