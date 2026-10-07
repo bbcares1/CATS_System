@@ -1,44 +1,25 @@
 package group6.project.controller;
 
-import group6.project.service.UserService;
-import java.util.List;
-
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import group6.project.model.Manager;
-import group6.project.model.User;
-import group6.project.service.ManagerService;
 import jakarta.servlet.http.HttpSession;
 
-@RestController
-@RequestMapping("/api/managers")
+@Controller
 @RequestMapping("/manager")
 public class ManagerController {
 
-    private final UserService userService;
-    private final ManagerService managerService;
+    @GetMapping({"", "/home"})
+    public String managerHome(HttpSession session, Model model) {
+        if (!(session.getAttribute("user") instanceof Manager manager)) {
+            return "redirect:/employee/login";
+        }
 
-    public ManagerController(ManagerService managerService, UserService userService) {
-        this.managerService = managerService;
-        this.userService = userService;
-    }
-
-    @GetMapping
-    public List<Manager> getAllManagers() {
-        return managerService.getAllManagers();
-    }
-
-    @GetMapping("/{id}")
-    public Manager getManager(@PathVariable Integer id) {
-        return managerService.getManager(id);
-    }
-
-    @GetMapping("/staff-id/{staffId}")
-    public Manager getManagerByStaffId(@PathVariable String staffId) {
-        return managerService.getManagerByStaffId(staffId);
+        model.addAttribute("currentUser", manager);
+        return "manager-home";
     }
 
     @GetMapping({"/home"})
