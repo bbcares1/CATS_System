@@ -1,5 +1,6 @@
 package group6.project.service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -15,10 +16,16 @@ import group6.project.repo.ExcludedDaysRepo;
 public class ExcludedDaysService {
 
 @Autowired
-    private ExcludedDaysRepo excludedDaysRepo;
+private ExcludedDaysRepo excludedDaysRepo;
 
     public boolean isExcludedDay(LocalDate date) {
         return excludedDaysRepo.existsByDate(date);
+    }
+    public boolean isWorkingDay(LocalDate date) {
+        boolean isWeekend =
+                date.getDayOfWeek() == DayOfWeek.SATURDAY
+                || date.getDayOfWeek() == DayOfWeek.SUNDAY;
+        return !isWeekend && !isExcludedDay(date);
     }
 
     public List<ExcludedDays> getAllExcludedDays() {

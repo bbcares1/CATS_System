@@ -2,6 +2,7 @@ package group6.project.controller;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import group6.project.model.Admin;
 import group6.project.model.ApprovalHierarchy;
@@ -24,6 +27,8 @@ import group6.project.service.CourseCategoryService;
 import group6.project.service.ExcludedDaysService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import group6.project.service.CourseScheduleService;
+import group6.project.model.CourseApplication;
 
 @Controller
 @RequestMapping("/admin")
@@ -32,15 +37,17 @@ public class AdminController {
     private final AdminService adminService;
     private final CourseCategoryService courseCategoryService;
     private final ExcludedDaysService excludedDaysService;
+    private final CourseScheduleService courseScheduleService;
 
     public AdminController(
             AdminService adminService,
             CourseCategoryService courseCategoryService,
-            ExcludedDaysService excludedDaysService) {
+            ExcludedDaysService excludedDaysService,CourseScheduleService courseScheduleService) {
        this.adminService = adminService;
        this.courseCategoryService = courseCategoryService;
        this.excludedDaysService = excludedDaysService;
-}
+       this.courseScheduleService = courseScheduleService;
+    }
 
 
     @GetMapping("/home")
@@ -137,7 +144,36 @@ public class AdminController {
         return "redirect:/admin/excludedDays";
     }
 
-   
+  // this part below is about course schedule calendar
+  // -------------------------------------------------
+    @GetMapping("/calendar")
+    public String showCourseCalendar(Model model) {
+        model.addAttribute("courses",courseScheduleService.getAllCourses());
+        return "CourseCalendar";
+    }
+    @PostMapping("/calendar")
+    public String calculateCourseSchedule(
+            @RequestParam Integer courseId,@RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate requestedStartDate,Model model) {
+       CourseApplication course =courseScheduleService.getCourse(courseId);
+       if (course.getTrainingDays() == null || course.getTrainingDays() <= 0) {
+           throw new IllegalArgumentException(
+                "Training days are not available for this course.");
+       } 
+        CourseScheduleService.Schedule schedule =courseScheduleService.calculateSchedule(
+                requestedStartDate,course.getTrainingDays());
+        model.addAttribute("courses",courseScheduleService.getAllCourses());
+        model.addAttribute("selectedCourse", course);
+        model.addAttribute("schedule", schedule);
+        model.addAttribute("calendars",courseScheduleService.generateCalendars(schedule.actualStartDate(),
+                schedule.actualEndDate()));
+        model.addAttribute("holidayDates",excludedDaysService.
+        getAllExcludedDays().stream().map(ExcludedDays::getDate).toList());
+        model.addAttribute("trainingDates",courseScheduleService.getTrainingDates(schedule));
+        return "CourseCalendar";
+    }
+    // -------------------------------------------------
 
     @GetMapping("/courses") 
     public String getCourseList(Model model) {

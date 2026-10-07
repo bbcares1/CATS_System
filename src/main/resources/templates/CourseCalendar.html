@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Course Schedule Calendar</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f6f9;
+        }
+
+        .container {
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        /* Schedule form */
+        .schedule-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: inline-block;
+            width: 180px;
+            font-weight: bold;
+        }
+
+        select,
+        input[type="date"] {
+            padding: 8px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        /* Schedule result */
+        .schedule-result {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        /* Calendar */
+        .calendar-container {
+            width: 100%;
+            margin: 40px auto;
+        }
+
+        .calendar {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            background-color: white;
+        }
+
+        .calendar th {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .calendar td {
+            border: 1px solid #ccc;
+            height: 110px;
+            vertical-align: top;
+            padding: 8px;
+        }
+
+        /* Saturday and Sunday */
+        .weekend {
+            background-color: #f3f3f3;
+        }
+
+        /* Date number */
+        .date-number {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        /* Public holiday */
+        .holiday {
+            margin-top: 8px;
+            padding: 5px;
+            background-color: #ffe6e6;
+            border-radius: 4px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* Course training day */
+        .course-day {
+            margin-top: 8px;
+            padding: 6px;
+            background-color: #e6f2ff;
+            border-radius: 4px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .start-label {
+            margin-top: 4px;
+            font-weight: bold;
+        }
+
+        .end-label {
+            margin-top: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Course Schedule Calendar</h1>
+
+    <!-- Course selection form -->
+    <form class="schedule-form"
+          th:action="@{/admin/calendar}"
+          method="post">
+
+        <div class="form-group">
+
+            <label for="courseId">
+                Select Course:
+            </label>
+
+            <select id="courseId"
+                    name="courseId"
+                    required>
+
+                <option value="">
+                    -- Select Course --
+                </option>
+
+                <option th:each="course : ${courses}"
+                        th:value="${course.courseId}"
+                        th:text="${course.courseTitle}">
+                    Course
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="requestedStartDate">
+                Requested Start Date:
+            </label>
+
+            <input type="date"
+                   id="requestedStartDate"
+                   name="requestedStartDate"
+                   required>
+
+        </div>
+
+        <button type="submit">
+            Show Schedule
+        </button>
+
+    </form>
+
+
+    <!-- Schedule result -->
+    <div class="schedule-result"
+         th:if="${schedule != null}">
+
+        <h2>Schedule Result</h2>
+
+        <p>
+            <strong>Course:</strong>
+
+            <span th:text="${selectedCourse.courseTitle}">
+                Course Name
+            </span>
+        </p>
+
+        <p>
+            <strong>Training Days:</strong>
+
+            <span th:text="${schedule.trainingDays}">
+                5
+            </span>
+        </p>
+
+        <p>
+            <strong>Requested Start Date:</strong>
+
+            <span th:text="${schedule.requestedStartDate}">
+                2026-10-29
+            </span>
+        </p>
+
+        <p>
+            <strong>Actual Start Date:</strong>
+
+            <span th:text="${schedule.actualStartDate}">
+                2026-10-29
+            </span>
+        </p>
+
+        <p>
+            <strong>Actual End Date:</strong>
+
+            <span th:text="${schedule.actualEndDate}">
+                2026-11-04
+            </span>
+        </p>
+
+    </div>
+
+
+    <!-- Calendars -->
+    <div th:if="${calendars != null}">
+
+        <!-- One calendar is generated for each month -->
+        <div class="calendar-container"
+             th:each="calendar : ${calendars}">
+
+            <h2>
+                Course Calendar
+
+                <span th:text="${calendar.month + ' ' + calendar.year}">
+                    OCTOBER 2026
+                </span>
+            </h2>
+
+            <table class="calendar">
+
+                <thead>
+
+                    <tr>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                        <th>Sunday</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    <!-- One row for each week -->
+                    <tr th:each="week : ${calendar.weeks}">
+
+                        <!-- One cell for each day -->
+                        <td th:each="day, dayStat : ${week}"
+                            th:classappend="${dayStat.index >= 5} ? 'weekend' : ''">
+
+                            <!-- Date -->
+                            <div th:if="${day != null}"
+                                 class="date-number"
+                                 th:text="${day.dayOfMonth}">
+                            </div>
+
+
+                            <!-- Public Holiday -->
+                            <div th:if="${day != null
+                                        and holidayDates != null
+                                        and holidayDates.contains(day)}"
+                                 class="holiday">
+
+                                Public Holiday
+
+                            </div>
+
+
+                            <!-- Course Training Day -->
+                            <div th:if="${day != null
+                                        and trainingDates != null
+                                        and trainingDates.contains(day)}"
+                                 class="course-day">
+
+                                <div th:text="${selectedCourse.courseTitle}">
+                                    Course Name
+                                </div>
+
+
+                                <!-- Actual Start -->
+                                <div th:if="${day.equals(schedule.actualStartDate())}"
+                                     class="start-label">
+
+                                    START
+
+                                </div>
+
+
+                                <!-- Actual End -->
+                                <div th:if="${day.equals(schedule.actualEndDate())}"
+                                     class="end-label">
+
+                                    END
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
