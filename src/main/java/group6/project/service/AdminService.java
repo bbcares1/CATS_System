@@ -11,6 +11,7 @@ import group6.project.model.CourseCategory;
 import group6.project.model.CourseDetail;
 import group6.project.model.ExcludedDays;
 import group6.project.model.Manager;
+import group6.project.model.Roles;
 import group6.project.model.Staff;
 import group6.project.model.TrainingEntitlement;
 import group6.project.repo.AdminRepo;
@@ -69,11 +70,45 @@ public class AdminService {
           return staffRepo.findById(id);
      }
 
-     public void saveStaff(Staff staff) {
-          if (staff.getManager() != null && staff.getManager().getUserId() == null) {
-               staff.setManager(null);
-          } 
-          staffRepo.save(staff);
+     @Transactional
+     public void saveStaff(Staff form) {
+          Staff target;
+
+          if (form.getUserId() == null) {
+
+               if (form.getRole() == Roles.Manager) {
+                    target = new Manager();
+               } else {
+                    target = new Staff();
+               }
+          } else {
+               target = staffRepo.findById(form.getUserId()).orElse(null);
+          }
+
+          target.setName(form.getName());
+          target.setUserName(form.getUserName());
+          target.setDesignation(form.getDesignation());
+          target.setStaffId(form.getStaffId());
+          target.setTrainingBudget(form.getTrainingBudget());
+          target.setTrainingDays(form.getTrainingDays());
+          target.setRole(form.getRole());
+
+          if (form.getManager() != null && form.getManager().getUserId() != null) {
+
+               Integer managerId = form.getManager().getUserId();
+
+               Staff managerObj = staffRepo.findById(managerId).orElse(null);
+               target.setManager(managerObj);
+          } else {
+
+               target.setManager(null);
+          }
+
+          if (form.getUserId() == null) {
+
+               staffRepo.save(target);
+          }
+
      }
 
      public void deleteStaffById(Integer id) {

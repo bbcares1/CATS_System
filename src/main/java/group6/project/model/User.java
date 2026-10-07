@@ -34,9 +34,5 @@ public class User {
 
     private String name;
 
-    private String staffId;
-
-    private Double trainingBudget;
-
-    private Integer trainingDays;
+ 
 }
