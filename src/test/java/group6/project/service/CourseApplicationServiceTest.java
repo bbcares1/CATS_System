@@ -38,7 +38,7 @@ class CourseApplicationServiceTest {
         staff.setUserId(7);
         staff.setTrainingDays(5);
         staff.setTrainingBudget(1000d);
-        lenient().when(entitlementRepo.findByStaff_IdAndYear(any(), any())).thenReturn(Optional.empty());
+        lenient().when(entitlementRepo.findByStaff_UserIdAndYear(any(), any())).thenReturn(Optional.empty());
         lenient().when(applicationRepo.findByApplicant_UserIdAndStatusIn(any(), any())).thenReturn(java.util.List.of());
         lenient().when(excludedDaysRepo.existsByDate(any())).thenReturn(false);
         lenient().when(applicationRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
