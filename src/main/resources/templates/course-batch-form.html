@@ -1,0 +1,79 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Add Course Batch</title>
+  </head>
+
+  <body>
+    <h1>Add Course Batch</h1>
+
+    <form
+      th:action="@{/admin/batches/new}"
+      th:object="${newBatch}"
+      method="post"
+    >
+      <div>
+        <label for="course">Course:</label>
+
+        <select id="courseId"
+                name="courseId"
+                required>
+
+            <option value="">
+                -- Select Course --
+            </option>
+
+            <option th:each="course : ${courses}"
+                    th:value="${course.courseId}"
+                    th:text="${course.title}">
+            </option>
+
+        </select>
+      </div>
+
+      <br />
+
+      <div>
+        <label for="startDate">Start Date:</label>
+
+        <input
+          type="date"
+          id="startDate"
+          th:field="*{courseStartDate}"
+          required
+        />
+      </div>
+
+      <br />
+
+      <div>
+        <label for="endDate">End Date:</label>
+
+        <input type="date" id="endDate" th:field="*{courseEndDate}" required />
+      </div>
+
+      <br />
+
+      <div>
+        <label for="capacity">Capacity:</label>
+
+        <input
+          type="number"
+          id="capacity"
+          th:field="*{capacity}"
+          min="1"
+          required
+        />
+      </div>
+
+      <br />
+
+      <button type="submit">Create Batch</button>
+    </form>
+
+    <br />
+
+    <a th:href="@{/admin/batches}">Cancel</a>
+  </body>
+</html>
