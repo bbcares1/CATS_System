@@ -2,30 +2,30 @@ package group6.project.service;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-import group6.project.model.CourseApplication;
+import group6.project.model.Staff;
+import group6.project.repo.StaffRepo;
 
 @Service
 public class StaffService {
 
-    public CourseApplication pending() {
-        throw new UnsupportedOperationException("Not implemented");
+    private final StaffRepo staffRepo;
+
+    public StaffService(StaffRepo staffRepo) {
+        this.staffRepo = staffRepo;
     }
 
-    public CourseApplication createCourseApplication() {
-        throw new UnsupportedOperationException("Not implemented");
+    public List<Staff> getAllStaff() {
+        return staffRepo.findAll();
     }
 
-    public List<CourseApplication> getHistory() {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    public void clearApplication() {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    public void completeApplication() {
-        throw new UnsupportedOperationException("Not implemented");
+    public Staff getStaff(Integer id) {
+        return staffRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Staff not found with id: " + id));
     }
 }
