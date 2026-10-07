@@ -10,9 +10,9 @@ import group6.project.model.TrainingEntitlement;
 public interface TrainingEntitlementRepo
         extends JpaRepository<TrainingEntitlement, Integer> {
 
-    List<TrainingEntitlement> findByStaff_Id(Integer staffDbId);
+    List<TrainingEntitlement> findByStaff_UserId(Integer staffDbId);
 
-    Optional<TrainingEntitlement> findByStaff_IdAndYear(
+    Optional<TrainingEntitlement> findByStaff_UserIdAndYear(
             Integer staffDbId,
             Integer year);
 }
