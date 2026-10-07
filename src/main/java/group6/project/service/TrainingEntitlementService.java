@@ -31,13 +31,13 @@ public class TrainingEntitlementService {
     }
 
     public List<TrainingEntitlement> getEntitlementsByStaff(Integer staffDId) {
-    return trainingEntitlementRepo.findByStaff_Id(staffDId);
+    return trainingEntitlementRepo.findByStaff_UserId(staffDId);
     }
 
     public TrainingEntitlement getEntitlementByStaffAndYear(Integer staffDId,
         Integer year) {
         return trainingEntitlementRepo
-            .findByStaff_IdAndYear(staffDId, year)
+            .findByStaff_UserIdAndYear(staffDId, year)
             .orElseThrow(() -> new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "Training entitlement not found for staff id: "

@@ -8,7 +8,7 @@ import group6.project.model.Manager;
 
 public interface ManagerRepo extends JpaRepository<Manager, Integer> {
 
-    Optional<Manager> findByStaffNo(String staffNo);
+    Optional<Manager> findByStaffId(String staffId);
 
     Optional<Manager> findByUserName(String userName);
 }
