@@ -1,0 +1,40 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CATS - Login Portal</title>
+  </head>
+
+  <body>
+    <header>
+      <div>
+        <h1>CATS</h1>
+        <p>Course Application Tracking System</p>
+      </div>
+    </header>
+    <main>
+      <section>
+        <div>
+          <p>WELCOME TO CATS</p>
+          <h2>Choose your workspace</h2>
+          <p>Select your account type to continue.</p>
+        </div>
+        <div>
+          <div>
+            <div><span>Employee Icon</span></div>
+            <h3>Employee</h3>
+            <p>Access course applications and training history.</p>
+            <a th:href="@{/employee/login}"> Employee Login </a>
+          </div>
+          <div>
+            <div><span>Admin Icon</span></div>
+            <h3>Administrator</h3>
+            <p>Manage employees, courses and system settings.</p>
+            <a th:href="@{/admin/login}"> Admin Login </a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
