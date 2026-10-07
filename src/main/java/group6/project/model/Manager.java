@@ -11,7 +11,5 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Manager extends User {
-
-    private String staffNo;
+public class Manager extends Staff {
 }
