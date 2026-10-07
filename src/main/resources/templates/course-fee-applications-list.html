@@ -1,0 +1,46 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Course Fee Applications</title>
+  </head>
+
+  <body>
+    <h1>Course Fee Applications</h1>
+
+    <a th:href="@{/course-fee-applications/new}"> Submit New Claim </a>
+
+    <table border="1">
+      <thead>
+        <tr>
+          <th>Application ID</th>
+          <th>Status</th>
+          <th>Submitted At</th>
+          <th>Reviewed At</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr th:each="application : ${feeApplications}">
+          <td th:text="${application.applicationId}"></td>
+
+          <td th:text="${application.applicationStatus}"></td>
+
+          <td th:text="${application.submittedAt}"></td>
+
+          <td th:text="${application.reviewedAt}"></td>
+
+          <td>
+            <a
+              th:href="@{/course-fee-applications/{id}
+                    (id=${application.applicationId})}"
+            >
+              View
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

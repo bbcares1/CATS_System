@@ -1,9 +1,4 @@
-
 package group6.project.model;
-
-import java.lang.annotation.Inherited;
-
-import javax.annotation.processing.Generated;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +12,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "User")
 @Getter
 @Setter
 @EqualsAndHashCode 
@@ -36,6 +30,9 @@ public class User {
 
     private String name;
 
+    private String staffId;
 
+    private Double trainingBudget;
 
+    private Integer trainingDays;
 }

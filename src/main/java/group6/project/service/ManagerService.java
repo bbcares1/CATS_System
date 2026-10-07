@@ -28,10 +28,10 @@ public class ManagerService {
                         HttpStatus.NOT_FOUND, "Manager not found with id: " + id));
     }
 
-    public Manager getManagerByStaffNo(String staffNo) {
-        return managerRepo.findByStaffNo(staffNo)
+    public Manager getManagerByStaffId(String staffId) {
+        return managerRepo.findByStaffId(staffId)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Manager not found with staffNo: " + staffNo));
+                        HttpStatus.NOT_FOUND, "Manager not found with staffId: " + staffId));
     }
 
     // The methods below come from the class diagram.

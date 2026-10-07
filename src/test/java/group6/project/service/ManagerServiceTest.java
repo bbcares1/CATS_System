@@ -1,6 +1,7 @@
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import group6.project.model.Manager;
+import group6.project.model.Staff;
 import group6.project.repo.ManagerRepo;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,10 +32,11 @@ class ManagerServiceTest {
     void getManagerReturnsTheManager() {
         Manager manager = new Manager();
         manager.setUserId(1);
-        manager.setStaffNo("M001");
+        manager.setStaffId("M001");
         when(managerRepo.findById(1)).thenReturn(Optional.of(manager));
 
-        assertEquals("M001", managerService.getManager(1).getStaffNo());
+        Staff staff = assertInstanceOf(Staff.class, managerService.getManager(1));
+        assertEquals("M001", staff.getStaffId());
     }
 
     @Test
@@ -47,11 +50,20 @@ class ManagerServiceTest {
     }
 
     @Test
-    void getManagerByUnknownStaffNoGivesNotFound() {
-        when(managerRepo.findByStaffNo("X999")).thenReturn(Optional.empty());
+    void getManagerByStaffIdReturnsTheManager() {
+        Manager manager = new Manager();
+        manager.setStaffId("M001");
+        when(managerRepo.findByStaffId("M001")).thenReturn(Optional.of(manager));
+
+        assertEquals(manager, managerService.getManagerByStaffId("M001"));
+    }
+
+    @Test
+    void getManagerByUnknownStaffIdGivesNotFound() {
+        when(managerRepo.findByStaffId("X999")).thenReturn(Optional.empty());
 
         ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getManagerByStaffNo("X999"));
+                () -> managerService.getManagerByStaffId("X999"));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
     }
