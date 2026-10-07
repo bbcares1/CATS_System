@@ -12,14 +12,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import group6.project.model.Admin;
 import group6.project.model.ApprovalHierarchy;
 import group6.project.model.CourseDetail;
 import group6.project.model.ExcludedDays;
 import group6.project.model.Roles;
 import group6.project.model.Staff;
+import group6.project.model.User;
 import group6.project.service.AdminService;
 import group6.project.service.CourseCategoryService;
 import group6.project.service.ExcludedDaysService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
 @Controller
@@ -39,6 +42,19 @@ public class AdminController {
        this.excludedDaysService = excludedDaysService;
 }
 
+
+    @GetMapping("/home")
+    public String adminHome(HttpSession session, Model model) {
+
+        if (!(session.getAttribute("user") instanceof Admin admin)) {
+            return "redirect:/admin/login";
+        }
+
+        model.addAttribute("currentUser", admin);
+        return "admin-home";
+    }
+
+    
   // ------- this part below is about budgetmanagement
   // -----------------------------------------------
 
