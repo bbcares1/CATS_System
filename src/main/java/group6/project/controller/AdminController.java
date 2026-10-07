@@ -17,10 +17,12 @@ import group6.project.model.CourseDetail;
 import group6.project.model.ExcludedDays;
 import group6.project.model.Roles;
 import group6.project.model.Staff;
+import group6.project.repo.StaffRepo;
 import group6.project.service.AdminService;
 import group6.project.service.CourseCategoryService;
 import group6.project.service.ExcludedDaysService;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/admin")
@@ -34,85 +36,97 @@ public class AdminController {
             AdminService adminService,
             CourseCategoryService courseCategoryService,
             ExcludedDaysService excludedDaysService) {
-       this.adminService = adminService;
-       this.courseCategoryService = courseCategoryService;
-       this.excludedDaysService = excludedDaysService;
-}
+        this.adminService = adminService;
+        this.courseCategoryService = courseCategoryService;
+        this.excludedDaysService = excludedDaysService;
+    }
 
-  // ------- this part below is about budgetmanagement
-  // -----------------------------------------------
+    // ------- this part below is about budgetmanagement
+    // -----------------------------------------------
 
-    @GetMapping("/update/{Id}")
+    @GetMapping("/staffs/update/{Id}")
     public String update_budget(Model model, @PathVariable("Id") Integer Id) {
         Optional<Staff> selectedStaff = adminService.getIdStaff(Id);
         if (selectedStaff.isEmpty()) {
-            throw new RuntimeException("未找到 ID 为 " + Id + " 的员工");
+            throw new RuntimeException("can not find ID as " + Id + " staff");
         } else {
             Staff staff = selectedStaff.get();
-            model.addAttribute("staff", staff); 
-            return "ChangeBudget"; 
+            model.addAttribute("staff", staff);
+            model.addAttribute("role", Roles.values());
+            model.addAttribute("managerList", adminService.getManagerList());
+            return "StaffForm";
         }
     }
 
-    @GetMapping("/showBudgetList")
-    public String showBudgetList(Model model) {
+    @GetMapping("/staffs")
+    public String showStaffList(Model model) {
         List<Staff> staffs = adminService.getAllStaff();
         model.addAttribute("staffs", staffs);
-        return "BudgetList";
+        return "StaffList";
     }
 
-    @PostMapping("/save")
-    public String postMethodName(Staff staff) {
-        adminService.save(staff);
-        return "redirect:/admin/showBudgetList";
+    @GetMapping("/staffs/add")
+    public String createNewStaff(Model model) {
+        model.addAttribute("staff", new Staff());
+        model.addAttribute("role", Roles.values());
+        model.addAttribute("managerList", adminService.getManagerList());
+
+        return "StaffForm";
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/staffs/save")
+    public String saveStaff(Staff staff) {
+        adminService.saveStaff(staff);
+        return "redirect:/admin/staffs";
+    }
+
+    @GetMapping("/staffs/delete/{id}")
     public String deleteById(@PathVariable("id") Integer id) {
-        adminService.deleteById(id);
-        return "redirect:/admin/showBudgetList";
+        adminService.deleteStaffById(id);
+        return "redirect:/admin/staffs";
     }
 
-  // this part below is about excludeddays
-  // -------------------------------------
+    // this part below is about excludeddays
+    // -------------------------------------
 
     @GetMapping("/excludedDays")
     public String showExcludedDays(Model model) {
-        List<ExcludedDays> dayList =excludedDaysService.getAllExcludedDays();
+        List<ExcludedDays> dayList = excludedDaysService.getAllExcludedDays();
         model.addAttribute("excludedDaysList", dayList);
         model.addAttribute("newExcludedDay", new ExcludedDays());
         return "ExcludedDaysList";
     }
 
     @PostMapping("/excludedDays/add")
-    public String addExcludedDays(@Valid @ModelAttribute("newExcludedDay") ExcludedDays excludedDays,BindingResult result,Model model) {
+    public String addExcludedDays(@Valid @ModelAttribute("newExcludedDay") ExcludedDays excludedDays,
+            BindingResult result, Model model) {
         if (result.hasErrors()) {
-        model.addAttribute(
-                "excludedDaysList",
-                excludedDaysService.getAllExcludedDays());
-        return "ExcludedDaysList";
-    }
-    excludedDaysService.addExcludedDay(excludedDays);
+            model.addAttribute(
+                    "excludedDaysList",
+                    excludedDaysService.getAllExcludedDays());
+            return "ExcludedDaysList";
+        }
+        excludedDaysService.addExcludedDay(excludedDays);
         return "redirect:/admin/excludedDays";
     }
 
     @GetMapping("/excludedDays/edit/{id}")
     public String showEditExcludedDay(
-            @PathVariable("id") Integer id,Model model) {
-       ExcludedDays excludedDay =excludedDaysService.getExcludedDayById(id);
-       model.addAttribute("excludedDay", excludedDay);
-       return "ExcludedDaysEdit";
+            @PathVariable("id") Integer id, Model model) {
+        ExcludedDays excludedDay = excludedDaysService.getExcludedDayById(id);
+        model.addAttribute("excludedDay", excludedDay);
+        return "ExcludedDaysEdit";
     }
 
     @PostMapping("/excludedDays/edit/{id}")
     public String updateExcludedDay(
             @PathVariable("id") Integer id,
-            @Valid @ModelAttribute("excludedDay") ExcludedDays excludedDay,BindingResult result) {
-       if (result.hasErrors()) {
-           return "ExcludedDaysEdit";
-    }
-       excludedDaysService.updateExcludedDay(id, excludedDay);
-       return "redirect:/admin/excludedDays";
+            @Valid @ModelAttribute("excludedDay") ExcludedDays excludedDay, BindingResult result) {
+        if (result.hasErrors()) {
+            return "ExcludedDaysEdit";
+        }
+        excludedDaysService.updateExcludedDay(id, excludedDay);
+        return "redirect:/admin/excludedDays";
     }
 
     @GetMapping("/deleteExcludedDays/{id}")
@@ -121,9 +135,7 @@ public class AdminController {
         return "redirect:/admin/excludedDays";
     }
 
-   
-
-    @GetMapping("/courses") 
+    @GetMapping("/courses")
     public String getCourseList(Model model) {
         List<CourseDetail> courseList = adminService.getAllCourseDetails();
         model.addAttribute("courseList", courseList);
@@ -132,7 +144,7 @@ public class AdminController {
         return "CourseList";
     }
 
-    @GetMapping("/courses/edit/{id}") 
+    @GetMapping("/courses/edit/{id}")
     public String editCourse(@PathVariable("id") Integer id, Model model) {
         Optional<CourseDetail> course = adminService.getByIdCourseDetails(id);
         if (course.isPresent()) {
@@ -148,16 +160,16 @@ public class AdminController {
     @PostMapping("/courses/save")
     public String saveCourse(@ModelAttribute("course") CourseDetail course) {
         adminService.saveCourse(course);
-        return "redirect:/admin/courses"; 
+        return "redirect:/admin/courses";
     }
 
     @GetMapping("/courses/delete/{id}")
     public String deleteCourse(@PathVariable("id") Integer id) {
         adminService.deleteCourseById(id);
-        return "redirect:/admin/courses"; 
+        return "redirect:/admin/courses";
     }
 
-    //this part below is about Approval Hierarchy
+    // this part below is about Approval Hierarchy
     // ----------------------------------------
 
     @GetMapping("/hierarchy")
@@ -191,4 +203,5 @@ public class AdminController {
         adminService.deleteHierarchyById(id);
         return "redirect:/admin/hierarchy";
     }
+
 }

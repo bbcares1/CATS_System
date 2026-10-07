@@ -1,6 +1,8 @@
 package group6.project.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -14,17 +16,19 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@EqualsAndHashCode 
-@NoArgsConstructor 
+@EqualsAndHashCode
+@NoArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
-    
-    
+
     private String userName;
 
-    private Enum role;
+  //  private Enum role;
+
+    @Enumerated(EnumType.STRING)
+    private Roles role;
 
     private String designation;
 

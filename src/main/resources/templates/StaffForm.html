@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Staff Form - CATS</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 30px;
+        background-color: #f8f9fa;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+      h2 {
+        color: #333;
+        margin-top: 0;
+        text-align: center;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #495057;
+      }
+      .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        box-sizing: border-box;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .btn-submit {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: bold;
+      }
+      .btn-submit:hover {
+        background-color: #218838;
+      }
+      .btn-cancel {
+        background-color: #6c757d;
+        color: white;
+        padding: 10px 15px;
+        text-decoration: none;
+        border-radius: 4px;
+        margin-left: 10px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2 th:text="${staff.userId == null} ? 'Create New Staff' : 'Edit Staff (ID: ' + ${staff.staffId} + ')'">
+        Staff Form
+      </h2>
+
+      <form th:action="@{/admin/staffs/save}" th:object="${staff}" method="post">
+       
+        <input type="hidden" th:field="*{userId}" />
+
+       
+        <div class="form-group">
+          <label for="name">Staff Name:</label>
+          <input
+            type="text"
+            id="name"
+            th:field="*{name}"
+            class="form-control"
+            placeholder="Enter full name"
+            required
+          />
+        </div>
+
+     
+        <div class="form-group">
+          <label for="role">Role:</label>
+          <select id="role" th:field="*{role}" class="form-control" required>
+            <option value="">-- Select Role --</option>
+            <option th:each="r : ${role}" th:value="${r}" th:text="${r}">
+              STAFF
+            </option>
+          </select>
+        </div>
+
+       
+        <div class="form-group">
+          <label for="manager">Manager:</label>
+          <select id="manager" th:field="*{manager.userId}" class="form-control">
+            <option value="">-- Select Manager (Optional) --</option>
+            <option
+              th:each="m : ${managerList}"
+              th:if="${m.userId != staff.userId}"
+              th:value="${m.userId}"
+              th:text="${m.name + ' (' + m.role + ')'}"
+            >
+              Jane Doe (MANAGER)
+            </option>
+          </select>
+        </div>
+
+       
+        <div class="form-group">
+          <label for="trainingBudget">Annual Training Budget ($):</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            id="trainingBudget"
+            th:field="*{trainingBudget}"
+            class="form-control"
+            placeholder="e.g. 2000.00"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="trainingDays">Entitlement Training Days:</label>
+          <input
+            type="number"
+            min="0"
+            id="trainingDays"
+            th:field="*{trainingDays}"
+            class="form-control"
+            placeholder="e.g. 10"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn-submit">Save Staff Details</button>
+       
+        <a th:href="@{/admin/staffs}" class="btn-cancel">Cancel</a>
+      </form>
+    </div>
+  </body>
+</html>

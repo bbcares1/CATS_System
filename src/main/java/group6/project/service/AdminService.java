@@ -10,12 +10,14 @@ import group6.project.model.ApprovalHierarchy;
 import group6.project.model.CourseCategory;
 import group6.project.model.CourseDetail;
 import group6.project.model.ExcludedDays;
+import group6.project.model.Manager;
 import group6.project.model.Staff;
 import group6.project.model.TrainingEntitlement;
 import group6.project.repo.AdminRepo;
 import group6.project.repo.ApprovalHierarchyRepo;
 import group6.project.repo.CourseDetailRepo;
 import group6.project.repo.ExcludedDaysRepo;
+import group6.project.repo.ManagerRepo;
 import group6.project.repo.StaffRepo;
 import group6.project.repo.TrainingEntitlementRepo;
 import jakarta.transaction.Transactional;
@@ -40,12 +42,15 @@ public class AdminService {
      @Autowired
      public ApprovalHierarchyRepo approvalHierarchyRepo;
 
+     @Autowired
+     public ManagerRepo managerRepo;
+
      @Transactional
      public void updateStaffBudget(Integer Id, Double new_budget, Integer new_days) {
 
           Optional<Staff> targeted_staff = staffRepo.findById(Id);
           if (targeted_staff.isEmpty()) {
-               throw new RuntimeException("未找到 ID 为 " + Id + " 的员工");
+               throw new RuntimeException("can not find ID as " + Id + " staff");
           } else {
                Staff staff = targeted_staff.get();
                staff.setTrainingBudget(new_budget);
@@ -64,12 +69,19 @@ public class AdminService {
           return staffRepo.findById(id);
      }
 
-     public void save(Staff staff) {
+     public void saveStaff(Staff staff) {
+          if (staff.getManager() != null && staff.getManager().getUserId() == null) {
+               staff.setManager(null);
+          } 
           staffRepo.save(staff);
      }
 
-     public void deleteById(Integer id) {
+     public void deleteStaffById(Integer id) {
           staffRepo.deleteById(id);
+     }
+
+     public List<Manager> getManagerList() {
+          return managerRepo.findAll();
      }
 
      // here below is about excluded days
@@ -97,7 +109,7 @@ public class AdminService {
      }
 
      public void saveCourse(CourseDetail course) {
-          
+
           courseDetailRepo.save(course);
      }
 
@@ -123,4 +135,10 @@ public class AdminService {
      public void deleteHierarchyById(Integer id) {
           approvalHierarchyRepo.deleteById(id);
      }
+
+     public void save(Staff staff) {
+          // TODO Auto-generated method stub
+          throw new UnsupportedOperationException("Unimplemented method 'save'");
+     }
+
 }
