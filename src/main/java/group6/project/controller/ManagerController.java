@@ -30,8 +30,8 @@ public class ManagerController {
         return managerService.getManager(id);
     }
 
-    @GetMapping("/staff-no/{staffNo}")
-    public Manager getManagerByStaffNo(@PathVariable String staffNo) {
-        return managerService.getManagerByStaffNo(staffNo);
+    @GetMapping("/staff-id/{staffId}")
+    public Manager getManagerByStaffId(@PathVariable String staffId) {
+        return managerService.getManagerByStaffId(staffId);
     }
 }
