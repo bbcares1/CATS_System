@@ -76,7 +76,7 @@ public class AdminService {
 
           if (form.getUserId() == null) {
 
-               if (form.getRole() == Roles.Manager) {
+               if (form.getRole() == Roles.MANAGER) {
                     target = new Manager();
                } else {
                     target = new Staff();
