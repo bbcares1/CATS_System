@@ -1,0 +1,67 @@
+/* Navigation: Arrange the staff page links. */
+nav {
+    margin-bottom: 24px;
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+nav a {
+    color: blue;
+    text-decoration: none;
+}
+nav .active {
+    color: black;
+    font-weight: bold;
+    text-decoration: underline;
+}
+/* Messages: Distinguish errors and successful actions. */
+.error {
+    color: darkred;
+    padding: 10px;
+    background: mistyrose;
+}
+.success {
+    color: darkgreen;
+    padding: 10px;
+    background: honeydew;
+}
+/* Allowance summary: Highlight training days and budget. */
+.summary {
+    background: aliceblue;
+    padding: 16px;
+    margin: 20px 0;
+}
+/* Application form: Style date, fee and comment inputs. */
+input[type="date"], input[type="number"], textarea {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid lightgray;
+    border-radius: 6px;
+    font: inherit;
+}
+/* Details: Style field labels and values. */
+dt {
+    font-weight: bold;
+    margin-top: 15px;
+}
+dd {
+    margin: 5px 0;
+    overflow-wrap: anywhere;
+}
+/* Course history: Allow wide tables to scroll. */
+.table-scroll {
+    overflow-x: auto;
+}
+.actions form {
+    margin: 0;
+}
+/* Small screens: Reduce spacing on narrow screens. */
+@media (max-width: 600px) {
+    body {
+        padding: 12px;
+    }
+    .container {
+        padding: 18px;
+    }
+}

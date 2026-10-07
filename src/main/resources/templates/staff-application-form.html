@@ -1,0 +1,86 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Course Application</title>
+        <link rel="stylesheet" th:href="@{/css/category.css}">
+        <link rel="stylesheet" th:href="@{/css/staff.css}">
+    </head>
+    <body>
+        <main class="container">
+            <!-- Navigation: Links to staff pages. -->
+            <nav>
+                <a th:href="@{/staff/home}">Dashboard</a>
+                <a th:href="@{/staff/personal}">Personal Course History</a>
+                <a class="active" th:href="@{/staff/apply}">Apply / Edit Application</a>
+                <a th:href="@{/logout}">Logout</a>
+            </nav>
+            <h1 th:text="${editId == null ? 'Apply for Course' : 'Edit Application'}"></h1>
+            <p class="error" th:if="${error}" th:text="${error}"></p>
+            <!-- Course application: Enter or edit the course details. -->
+            <form th:action="${formAction}" th:object="${course}" method="post">
+                <input th:if="${editId != null}" type="hidden" name="applicationId" th:value="${editId}">
+                <div class="form-group">
+                    <label for="courseTitle">Course title *</label>
+                    <p class="error" th:if="${#fields.hasErrors('courseTitle')}" th:errors="*{courseTitle}"></p>
+                    <input type="text" th:field="*{courseTitle}" required maxlength="255">
+                </div>
+                <div class="form-group">
+                    <label for="courseCategory">Category *</label>
+                    <p class="error" th:if="${#fields.hasErrors('courseCategory')}" th:errors="*{courseCategory}"></p>
+                    <select th:field="*{courseCategory}" required>
+                        <option value="">Select a category</option>
+                        <option th:each="category : ${categories}" th:value="${category}" th:text="${category.displayName}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="trainingProvider">Training provider</label>
+                    <p class="error" th:if="${#fields.hasErrors('trainingProvider')}" th:errors="*{trainingProvider}"></p>
+                    <input type="text" th:field="*{trainingProvider}" maxlength="255">
+                </div>
+                <div class="form-group">
+                    <!-- Course period: The existing shared service requires both dates in one calendar year. -->
+                    <p>Choose start and end dates within the same calendar year.</p>
+                    <label for="courseStartDate">Start date *</label>
+                    <p class="error" th:if="${#fields.hasErrors('courseStartDate')}" th:errors="*{courseStartDate}"></p>
+                    <input type="date" th:field="*{courseStartDate}" th:min="${today}" required>
+                </div>
+                <div class="form-group">
+                    <label for="courseEndDate">End date *</label>
+                    <p class="error" th:if="${#fields.hasErrors('courseEndDate')}" th:errors="*{courseEndDate}"></p>
+                    <input type="date" th:field="*{courseEndDate}" th:min="${today}" required>
+                </div>
+                <div class="form-group">
+                    <label for="halfDayPeriod">Session</label>
+                    <select th:field="*{halfDayPeriod}">
+                        <option value="">Full days</option>
+                        <option value="AM">Morning (AM)</option>
+                        <option value="PM">Afternoon (PM)</option>
+                    </select>
+                    <p>AM/PM is for Internal Training only and reduces the total by half a day. Weekends and public holidays are excluded.</p>
+                </div>
+                <div class="form-group">
+                    <label for="courseFee">Course fee ($)</label>
+                    <p class="error" th:if="${#fields.hasErrors('courseFee')}" th:errors="*{courseFee}"></p>
+                    <input type="number" th:field="*{courseFee}" min="0" step="0.01" required>
+                    <p>Internal Training is free. External Courses and Professional Certifications must stay within your remaining budget.</p>
+                </div>
+                <div class="form-group">
+                    <label for="justification">Justification *</label>
+                    <p class="error" th:if="${#fields.hasErrors('justification')}" th:errors="*{justification}"></p>
+                    <textarea th:field="*{justification}" rows="4" maxlength="255" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="workDissemination">Work dissemination during the course</label>
+                    <p class="error" th:if="${#fields.hasErrors('workDissemination')}" th:errors="*{workDissemination}"></p>
+                    <textarea th:field="*{workDissemination}" rows="3" maxlength="255"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit" th:text="${editId == null ? 'Submit Application' : 'Save Changes'}"></button>
+                    <a class="btn btn-secondary" th:href="@{/staff/personal}">Back</a>
+                </div>
+            </form>
+        </main>
+    </body>
+</html>
