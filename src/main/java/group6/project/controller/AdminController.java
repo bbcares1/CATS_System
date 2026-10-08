@@ -3,6 +3,7 @@ package group6.project.controller;
 import java.util.List;
 import java.util.Optional;
 import java.time.LocalDate;
+import java.time.YearMonth;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -143,12 +144,59 @@ public class AdminController {
         excludedDaysService.deleteExcludedDay(id);
         return "redirect:/admin/excludedDays";
     }
-
-  // this part below is about course schedule calendar
-  // -------------------------------------------------
+    // this part below is about course schedule calendar
+    // -------------------------------------------------
     @GetMapping("/calendar")
-    public String showCourseCalendar(Model model) {
-        model.addAttribute("courses",courseScheduleService.getAllCourses());
+    public String showCourseCalendar(
+            @RequestParam(required = false) String month,
+            @RequestParam(required = false) Integer courseId,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate requestedStartDate,
+            Model model) {
+       // Load available courses
+       model.addAttribute("courses",courseScheduleService.getAllCourses());
+      // Generate the current month's calendar
+       YearMonth selectedMonth = (month == null || month.isBlank())
+        ? YearMonth.now()
+        : YearMonth.parse(month);
+        LocalDate firstDay = selectedMonth.atDay(1);
+        LocalDate lastDay = selectedMonth.atEndOfMonth();
+        // Generate calendar
+        model.addAttribute(
+            "calendars",
+            courseScheduleService.generateCalendars(
+                    firstDay,lastDay));
+       // Load holidays configured by Admin
+       model.addAttribute(
+            "holidayDates",
+            excludedDaysService.getAllExcludedDays()
+                    .stream()
+                    .map(ExcludedDays::getDate)
+                    .toList());
+        // Previous and next month
+        model.addAttribute(
+            "previousMonth",
+            selectedMonth.minusMonths(1).toString());
+        model.addAttribute(
+            "nextMonth",
+            selectedMonth.plusMonths(1).toString());
+        // Keep the selected course when switching months
+        if (courseId != null && requestedStartDate != null) {
+            CourseApplication course =courseScheduleService.getCourse(courseId);
+        if (course.getTrainingDays() != null && course.getTrainingDays() > 0) {
+            CourseScheduleService.Schedule schedule =
+                    courseScheduleService.calculateSchedule(
+                            requestedStartDate,
+                            course.getTrainingDays());
+            model.addAttribute("selectedCourse", course);
+            model.addAttribute("schedule", schedule);
+            model.addAttribute("trainingDates",
+                     courseScheduleService.getTrainingDates(schedule));
+            model.addAttribute("selectedCourseId", courseId);
+            model.addAttribute("requestedStartDate", requestedStartDate);
+        }
+      }
         return "CourseCalendar";
     }
     @PostMapping("/calendar")
@@ -166,11 +214,21 @@ public class AdminController {
         model.addAttribute("courses",courseScheduleService.getAllCourses());
         model.addAttribute("selectedCourse", course);
         model.addAttribute("schedule", schedule);
-        model.addAttribute("calendars",courseScheduleService.generateCalendars(schedule.actualStartDate(),
-                schedule.actualEndDate()));
-        model.addAttribute("holidayDates",excludedDaysService.
-        getAllExcludedDays().stream().map(ExcludedDays::getDate).toList());
-        model.addAttribute("trainingDates",courseScheduleService.getTrainingDates(schedule));
+        model.addAttribute("selectedCourseId", courseId);
+        model.addAttribute("requestedStartDate", requestedStartDate);
+        YearMonth selectedMonth =YearMonth.from(schedule.actualStartDate());
+        model.addAttribute("calendars",
+                 courseScheduleService.generateCalendars(
+                         selectedMonth.atDay(1),
+                         selectedMonth.atEndOfMonth()));
+        model.addAttribute("previousMonth",
+                 selectedMonth.minusMonths(1).toString());
+        model.addAttribute("nextMonth",
+                 selectedMonth.plusMonths(1).toString());
+        model.addAttribute("holidayDates",
+                 excludedDaysService.getAllExcludedDays().stream().map    (ExcludedDays::getDate).toList());
+        model.addAttribute("trainingDates",
+                 courseScheduleService.getTrainingDates(schedule));
         return "CourseCalendar";
     }
     // -------------------------------------------------
