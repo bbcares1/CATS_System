@@ -20,6 +20,12 @@ import group6.project.repo.StaffRepo;
 import group6.project.repo.TrainingEntitlementRepo;
 import jakarta.transaction.Transactional;
 
+import group6.project.model.User;
+import group6.project.model.Admin;
+import group6.project.model.Manager;
+import group6.project.repo.UserRepo;
+
+
 @Service
 public class AdminService {
      @Autowired
@@ -33,6 +39,9 @@ public class AdminService {
 
      @Autowired
      public ExcludedDaysRepo excludedDaysRepo;
+
+     @Autowired
+     private UserRepo userRepo;
 
      @Autowired
      public CourseDetailRepo courseDetailRepo;
@@ -105,8 +114,7 @@ public class AdminService {
           courseDetailRepo.deleteById(id);
      }
 
-     // here below is about approvalhierarchy
-     // -------------------------------------
+     
 
      public List<ApprovalHierarchy> getAllApprovalHierarchy() {
           return approvalHierarchyRepo.findAllByOrderByLevelAsc();
@@ -123,4 +131,126 @@ public class AdminService {
      public void deleteHierarchyById(Integer id) {
           approvalHierarchyRepo.deleteById(id);
      }
+
+     
+    
+    public List<User> viewList() {
+        return userRepo.findAll();
+    }
+
+    
+    @Transactional
+    public User createAccount(
+            String userName,
+            String name,
+            String designation,
+            String accountType,
+            String staffNo,
+            String password) {
+
+        validateAccountFields(userName, name);
+
+        String username = userName.trim();
+
+        if (userRepo.findByUserName(username).isPresent()) {
+            throw new IllegalArgumentException(
+                "Username already exists");
+        }
+
+        User user;
+
+        switch (accountType) {
+            case "Admin":
+                Admin admin = new Admin();
+                admin.setStaffNo(staffNo);
+                user = admin;
+                break;
+
+            case "Manager":
+                Manager manager = new Manager();
+                manager.setStaffNo(staffNo);
+                user = manager;
+                break;
+
+            case "User":
+                user = new User();
+                break;
+
+            default:
+                throw new IllegalArgumentException(
+                    "Invalid account type");
+        }
+
+        user.setUserName(username);
+        user.setName(name.trim());
+        user.setDesignation(designation);
+
+        user.setPassword(password);
+
+        return userRepo.save(user);
+    }
+
+    
+    @Transactional
+    public void deleteAccount(Integer userId) {
+
+        User user = userRepo.findById(userId)
+            .orElseThrow(() ->
+                new IllegalArgumentException(
+                    "Account not found: " + userId));
+
+        userRepo.delete(user);
+        userRepo.flush();
+    }
+
+    
+    @Transactional
+    public User updateAccount(
+            Integer userId,
+            String userName,
+            String name,
+            String designation) {
+
+        validateAccountFields(userName, name);
+
+        User existingUser = userRepo.findById(userId)
+            .orElseThrow(() ->
+                new IllegalArgumentException(
+                    "Account not found: " + userId));
+
+        String username = userName.trim();
+
+        Optional<User> duplicate =
+            userRepo.findByUserName(username);
+
+        if (duplicate.isPresent()
+                && !duplicate.get().getUserId()
+                    .equals(userId)) {
+            throw new IllegalArgumentException(
+                "Username already exists");
+        }
+
+        existingUser.setUserName(username);
+        existingUser.setName(name.trim());
+        existingUser.setDesignation(designation);
+
+        return userRepo.save(existingUser);
+    }
+
+    private void validateAccountFields(
+            String userName, String name) {
+
+        if (userName == null ||
+                userName.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                "Username cannot be empty");
+        }
+
+        if (name == null ||
+                name.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                "Name cannot be empty");
+        }
+    }
+
 }
