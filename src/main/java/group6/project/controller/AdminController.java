@@ -104,7 +104,8 @@ public class AdminController {
         model.addAttribute("managerList", adminService.getManagerList());
 
         return "StaffForm";
-    }
+   
+ }
 
 
     @PostMapping("/staffs/save")
@@ -366,6 +367,7 @@ public class AdminController {
         return "redirect:/admin/hierarchy";
     }
 
+
     // CreateAccount
     @PostMapping("/accounts/create")
     public String createAccount(
@@ -380,7 +382,7 @@ public class AdminController {
             RedirectAttributes redirectAttributes) {
 
         try {
-            adminService.createAccount(
+          /*  adminService.createAccount(
                 userName,
                 name,
                 designation,
@@ -392,7 +394,8 @@ public class AdminController {
                 "successMessage",
                 "Account created successfully");
 
-        } catch (IllegalArgumentException e) {
+       */ 
+       } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute(
                 "errorMessage", e.getMessage());
         }
