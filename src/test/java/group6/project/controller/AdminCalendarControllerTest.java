@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +51,7 @@ public class AdminCalendarControllerTest {
                 courseScheduleService);
     }
 
+    // Test 1: Display selected month
     @Test
     void shouldDisplaySelectedMonth() {
 
@@ -64,6 +65,7 @@ public class AdminCalendarControllerTest {
 
         String viewName = adminController.showCourseCalendar(
                 "2026-11",
+                null,
                 null,
                 null,
                 model);
@@ -82,79 +84,238 @@ public class AdminCalendarControllerTest {
                 "2026-12",
                 model.getAttribute("nextMonth"));
     }
+
+    // Test 2: Keep course when switching months
     @Test
-void shouldKeepCourseWhenSwitchingMonths() {
+    void shouldKeepCourseWhenSwitchingMonths() {
 
-    CourseApplication course = new CourseApplication();
-    course.setCourseTitle("Java Training");
-    course.setTrainingDays(5.0);
+        CourseApplication course = new CourseApplication();
+        course.setCourseTitle("Java Training");
+        course.setTrainingDays(5.0);
 
-    Integer courseId = 1;
-    LocalDate requestedStartDate =
-            LocalDate.of(2026, 10, 29);
+        Integer courseId = 1;
 
-    CourseScheduleService.Schedule schedule =
-            new CourseScheduleService.Schedule(
-                    requestedStartDate,
-                    LocalDate.of(2026, 10, 29),
-                    LocalDate.of(2026, 11, 4),
-                    5.0);
+        LocalDate requestedStartDate =
+                LocalDate.of(2026, 10, 29);
 
-    List<LocalDate> trainingDates = List.of(
-            LocalDate.of(2026, 10, 29),
-            LocalDate.of(2026, 10, 30),
-            LocalDate.of(2026, 11, 2),
-            LocalDate.of(2026, 11, 3),
-            LocalDate.of(2026, 11, 4));
+        CourseScheduleService.Schedule schedule =
+                new CourseScheduleService.Schedule(
+                        requestedStartDate,
+                        LocalDate.of(2026, 10, 29),
+                        LocalDate.of(2026, 11, 4),
+                        5.0);
 
-    when(courseScheduleService.getCourse(courseId))
-            .thenReturn(course);
+        List<LocalDate> trainingDates = List.of(
+                LocalDate.of(2026, 10, 29),
+                LocalDate.of(2026, 10, 30),
+                LocalDate.of(2026, 11, 2),
+                LocalDate.of(2026, 11, 3),
+                LocalDate.of(2026, 11, 4));
 
-    when(courseScheduleService.calculateSchedule(
-            requestedStartDate, 5.0))
-            .thenReturn(schedule);
+        when(courseScheduleService.getAllCourses())
+                .thenReturn(Collections.emptyList());
 
-    when(courseScheduleService.getTrainingDates(schedule))
-            .thenReturn(trainingDates);
+        when(excludedDaysService.getAllExcludedDays())
+                .thenReturn(Collections.emptyList());
 
-    when(courseScheduleService.getAllCourses())
-            .thenReturn(Collections.emptyList());
+        when(courseScheduleService.getCourse(courseId))
+                .thenReturn(course);
 
-    when(excludedDaysService.getAllExcludedDays())
-            .thenReturn(Collections.emptyList());
+        when(courseScheduleService.calculateSchedule(
+                requestedStartDate,
+                5.0,
+                Set.of()))
+                .thenReturn(schedule);
 
-    Model model = new ExtendedModelMap();
+        when(courseScheduleService.getTrainingDates(
+                schedule,
+                Set.of()))
+                .thenReturn(trainingDates);
 
-    String viewName = adminController.showCourseCalendar(
-            "2026-11",
-            courseId,
-            requestedStartDate,
-            model);
+        Model model = new ExtendedModelMap();
 
-    assertEquals("CourseCalendar", viewName);
+        String viewName = adminController.showCourseCalendar(
+                "2026-11",
+                courseId,
+                requestedStartDate,
+                "",
+                model);
 
-    assertEquals(
-            course,
-            model.getAttribute("selectedCourse"));
+        assertEquals("CourseCalendar", viewName);
 
-    assertEquals(
-            schedule,
-            model.getAttribute("schedule"));
+        assertEquals(
+                course,
+                model.getAttribute("selectedCourse"));
 
-    assertEquals(
-            trainingDates,
-            model.getAttribute("trainingDates"));
+        assertEquals(
+                schedule,
+                model.getAttribute("schedule"));
 
-    assertEquals(
-            courseId,
-            model.getAttribute("selectedCourseId"));
+        assertEquals(
+                trainingDates,
+                model.getAttribute("trainingDates"));
 
-    assertEquals(
-            requestedStartDate,
-            model.getAttribute("requestedStartDate"));
+        assertEquals(
+                courseId,
+                model.getAttribute("selectedCourseId"));
 
-    verify(courseScheduleService).generateCalendars(
-            LocalDate.of(2026, 11, 1),
-            LocalDate.of(2026, 11, 30));
+        assertEquals(
+                requestedStartDate,
+                model.getAttribute("requestedStartDate"));
+
+        verify(courseScheduleService).generateCalendars(
+                LocalDate.of(2026, 11, 1),
+                LocalDate.of(2026, 11, 30));
+    }
+
+    // Test 3: Keep selected weekend training dates
+    @Test
+    void shouldKeepWeekendDatesWhenSwitchingMonths() {
+
+        CourseApplication course = new CourseApplication();
+        course.setCourseTitle("Java Training");
+        course.setTrainingDays(15.0);
+
+        Integer courseId = 1;
+
+        LocalDate requestedStartDate =
+                LocalDate.of(2026, 10, 12);
+
+        String weekendTrainingDates =
+                "2026-10-17,2026-10-24";
+
+        Set<LocalDate> selectedWeekends = Set.of(
+                LocalDate.of(2026, 10, 17),
+                LocalDate.of(2026, 10, 24));
+
+        CourseScheduleService.Schedule schedule =
+                new CourseScheduleService.Schedule(
+                        requestedStartDate,
+                        LocalDate.of(2026, 10, 12),
+                        LocalDate.of(2026, 10, 30),
+                        15.0);
+
+        List<LocalDate> trainingDates = List.of(
+                LocalDate.of(2026, 10, 12),
+                LocalDate.of(2026, 10, 13),
+                LocalDate.of(2026, 10, 17),
+                LocalDate.of(2026, 10, 24),
+                LocalDate.of(2026, 10, 30));
+
+        when(courseScheduleService.getAllCourses())
+                .thenReturn(Collections.emptyList());
+
+        when(excludedDaysService.getAllExcludedDays())
+                .thenReturn(Collections.emptyList());
+
+        when(courseScheduleService.getCourse(courseId))
+                .thenReturn(course);
+
+        when(courseScheduleService.calculateSchedule(
+                requestedStartDate,
+                15.0,
+                selectedWeekends))
+                .thenReturn(schedule);
+
+        when(courseScheduleService.getTrainingDates(
+                schedule,
+                selectedWeekends))
+                .thenReturn(trainingDates);
+
+        Model model = new ExtendedModelMap();
+
+        String viewName = adminController.showCourseCalendar(
+                "2026-10",
+                courseId,
+                requestedStartDate,
+                weekendTrainingDates,
+                model);
+
+        assertEquals("CourseCalendar", viewName);
+
+        assertEquals(
+                weekendTrainingDates,
+                model.getAttribute("weekendTrainingDates"));
+
+        assertEquals(
+                trainingDates,
+                model.getAttribute("trainingDates"));
+
+        verify(courseScheduleService).calculateSchedule(
+                requestedStartDate,
+                15.0,
+                selectedWeekends);
+
+        verify(courseScheduleService).getTrainingDates(
+                schedule,
+                selectedWeekends);
+    }
+
+    // Test 4: No weekend dates selected
+    @Test
+    void shouldUseDefaultWhenNoWeekendDatesSelected() {
+
+        CourseApplication course = new CourseApplication();
+        course.setCourseTitle("Python Programming");
+        course.setTrainingDays(3.0);
+
+        Integer courseId = 2;
+
+        LocalDate requestedStartDate =
+                LocalDate.of(2026, 10, 12);
+
+        CourseScheduleService.Schedule schedule =
+                new CourseScheduleService.Schedule(
+                        requestedStartDate,
+                        LocalDate.of(2026, 10, 12),
+                        LocalDate.of(2026, 10, 14),
+                        3.0);
+
+        when(courseScheduleService.getAllCourses())
+                .thenReturn(Collections.emptyList());
+
+        when(excludedDaysService.getAllExcludedDays())
+                .thenReturn(Collections.emptyList());
+
+        when(courseScheduleService.getCourse(courseId))
+                .thenReturn(course);
+
+        when(courseScheduleService.calculateSchedule(
+                requestedStartDate,
+                3.0,
+                Set.of()))
+                .thenReturn(schedule);
+
+        when(courseScheduleService.getTrainingDates(
+                schedule,
+                Set.of()))
+                .thenReturn(List.of(
+                        LocalDate.of(2026, 10, 12),
+                        LocalDate.of(2026, 10, 13),
+                        LocalDate.of(2026, 10, 14)));
+
+        Model model = new ExtendedModelMap();
+
+        String viewName = adminController.showCourseCalendar(
+                "2026-10",
+                courseId,
+                requestedStartDate,
+                "",
+                model);
+
+        assertEquals("CourseCalendar", viewName);
+
+        assertEquals(
+                "",
+                model.getAttribute("weekendTrainingDates"));
+
+        verify(courseScheduleService).calculateSchedule(
+                requestedStartDate,
+                3.0,
+                Set.of());
+
+        verify(courseScheduleService).getTrainingDates(
+                schedule,
+                Set.of());
     }
 }

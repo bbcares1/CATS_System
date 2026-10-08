@@ -2,8 +2,12 @@ package group6.project.controller;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Set;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -146,6 +150,26 @@ public class AdminController {
     }
     // this part below is about course schedule calendar
     // -------------------------------------------------
+    private Set<LocalDate> parseWeekendTrainingDates(String dates) {
+        if (dates == null || dates.isBlank()) {
+            return Set.of();
+        }
+        Set<LocalDate> selectedDates = Arrays.stream(dates.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(LocalDate::parse)
+                .collect(Collectors.toSet());
+        for (LocalDate date : selectedDates) {
+            DayOfWeek day = date.getDayOfWeek();
+            if (day != DayOfWeek.SATURDAY
+                    && day != DayOfWeek.SUNDAY) {
+                throw new IllegalArgumentException(
+                        "Weekend training dates must be Saturday or Sunday: "
+                        + date);
+        }
+     }
+    return selectedDates;
+    }
     @GetMapping("/calendar")
     public String showCourseCalendar(
             @RequestParam(required = false) String month,
@@ -153,6 +177,7 @@ public class AdminController {
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate requestedStartDate,
+            @RequestParam(required = false) String weekendTrainingDates,
             Model model) {
        // Load available courses
        model.addAttribute("courses",courseScheduleService.getAllCourses());
@@ -174,6 +199,9 @@ public class AdminController {
                     .stream()
                     .map(ExcludedDays::getDate)
                     .toList());
+        model.addAttribute(
+              "excludedDays",
+              excludedDaysService.getAllExcludedDays());
         // Previous and next month
         model.addAttribute(
             "previousMonth",
@@ -182,19 +210,25 @@ public class AdminController {
             "nextMonth",
             selectedMonth.plusMonths(1).toString());
         // Keep the selected course when switching months
+        Set<LocalDate> selectedWeekends =
+                parseWeekendTrainingDates(weekendTrainingDates);
+        model.addAttribute(
+            "weekendTrainingDates",
+            weekendTrainingDates == null ? "" : weekendTrainingDates);
         if (courseId != null && requestedStartDate != null) {
             CourseApplication course =courseScheduleService.getCourse(courseId);
         if (course.getTrainingDays() != null && course.getTrainingDays() > 0) {
             CourseScheduleService.Schedule schedule =
                     courseScheduleService.calculateSchedule(
                             requestedStartDate,
-                            course.getTrainingDays());
-            model.addAttribute("selectedCourse", course);
-            model.addAttribute("schedule", schedule);
-            model.addAttribute("trainingDates",
-                     courseScheduleService.getTrainingDates(schedule));
-            model.addAttribute("selectedCourseId", courseId);
-            model.addAttribute("requestedStartDate", requestedStartDate);
+                            course.getTrainingDays(),
+                            selectedWeekends);
+        model.addAttribute("selectedCourse", course);
+        model.addAttribute("schedule", schedule);
+        model.addAttribute("trainingDates",
+                     courseScheduleService.getTrainingDates(schedule,selectedWeekends));
+        model.addAttribute("selectedCourseId", courseId);
+        model.addAttribute("requestedStartDate", requestedStartDate);
         }
       }
         return "CourseCalendar";
@@ -203,14 +237,20 @@ public class AdminController {
     public String calculateCourseSchedule(
             @RequestParam Integer courseId,@RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate requestedStartDate,Model model) {
+            LocalDate requestedStartDate,
+            @RequestParam(required = false) String weekendTrainingDates,
+            Model model) {
        CourseApplication course =courseScheduleService.getCourse(courseId);
+       Set<LocalDate> selectedWeekends =
+               parseWeekendTrainingDates(weekendTrainingDates);
        if (course.getTrainingDays() == null || course.getTrainingDays() <= 0) {
            throw new IllegalArgumentException(
                 "Training days are not available for this course.");
        } 
         CourseScheduleService.Schedule schedule =courseScheduleService.calculateSchedule(
-                requestedStartDate,course.getTrainingDays());
+                requestedStartDate,
+                course.getTrainingDays(),
+                selectedWeekends);
         model.addAttribute("courses",courseScheduleService.getAllCourses());
         model.addAttribute("selectedCourse", course);
         model.addAttribute("schedule", schedule);
@@ -227,8 +267,13 @@ public class AdminController {
                  selectedMonth.plusMonths(1).toString());
         model.addAttribute("holidayDates",
                  excludedDaysService.getAllExcludedDays().stream().map    (ExcludedDays::getDate).toList());
+        model.addAttribute(
+              "excludedDays",
+              excludedDaysService.getAllExcludedDays());
         model.addAttribute("trainingDates",
-                 courseScheduleService.getTrainingDates(schedule));
+                 courseScheduleService.getTrainingDates(schedule,selectedWeekends));
+        model.addAttribute("weekendTrainingDates",
+        weekendTrainingDates == null ? "" : weekendTrainingDates);
         return "CourseCalendar";
     }
     // -------------------------------------------------

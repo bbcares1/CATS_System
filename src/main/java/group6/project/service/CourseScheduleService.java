@@ -3,6 +3,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.ArrayList;
 import java.time.YearMonth;
+import java.time.DayOfWeek;
+import java.util.Set;
 import group6.project.model.CourseApplication;
 import group6.project.repo.CourseApplicationRepo;
 import org.springframework.stereotype.Service;
@@ -11,95 +13,122 @@ public class CourseScheduleService {
   private final ExcludedDaysService excludedDaysService;
   private final CourseApplicationRepo courseApplicationRepo;
 
-  public CourseScheduleService(ExcludedDaysService excludedDaysService,           CourseApplicationRepo courseApplicationRepo) {
+   public CourseScheduleService(ExcludedDaysService excludedDaysService,       
+    CourseApplicationRepo courseApplicationRepo) {
       this.excludedDaysService = excludedDaysService;
       this.courseApplicationRepo = courseApplicationRepo;
-  }
-  public List<CourseApplication> getAllCourses() {
+   }
+   public List<CourseApplication> getAllCourses() {
     return courseApplicationRepo.findAll();
-  }
+   }
   public CourseApplication getCourse(Integer id) {
     return courseApplicationRepo.findById(id)
             .orElseThrow(() ->
                     new IllegalArgumentException(
                             "Course application was not found."));
-  }
-  public Schedule calculateSchedule(
-        LocalDate requestedStartDate,
-        double trainingDays) {
-     if (requestedStartDate == null) {
-         throw new IllegalArgumentException("Start date is required.");
-     }
-     if (trainingDays <= 0) {
-         throw new IllegalArgumentException("Training days must be greater than zero");
-     }
-     if (trainingDays % 0.5 != 0) {
-         throw new IllegalArgumentException("Training days must be in whole or half days");
-     }
-     LocalDate currentDate = requestedStartDate;
-
-     // Find the first valid working day
-     while (!excludedDaysService.isWorkingDay(currentDate)) {
-         currentDate = currentDate.plusDays(1);
-     }
-     LocalDate actualStartDate = currentDate;
-
-     // Number of whole training days
-     int wholeDays = (int) Math.floor(trainingDays);
-
-     // Whether there is an additional half day
-     boolean hasHalfDay = trainingDays - wholeDays >= 0.5;
-     double remainingDays = wholeDays;
-     if  (hasHalfDay) {
-        remainingDays += 0.5;
-     }
-     LocalDate actualEndDate = actualStartDate;
-     while (remainingDays > 0) {
-         if (excludedDaysService.isWorkingDay(currentDate)) {
-             if (remainingDays >= 1) {
-                remainingDays -= 1;
-            } else {
-                // Remaining 0.5 day
-                remainingDays = 0;
-            }
-            actualEndDate = currentDate;
+   }
+   // Check whether a date can be used for training
+  private boolean isTrainingDay(
+          LocalDate date,
+          Set<LocalDate> weekendTrainingDates) {
+    // Always skip Admin excluded days
+      if (excludedDaysService.isExcludedDay(date)) {
+          return false;
+    }
+    DayOfWeek dayOfWeek = date.getDayOfWeek();
+    // Normal working days
+       if (dayOfWeek != DayOfWeek.SATURDAY
+              && dayOfWeek != DayOfWeek.SUNDAY) {
+           return true;
+    }
+    // Only selected weekend dates are allowed
+       return weekendTrainingDates.contains(date);
+   }
+    // Calculate schedule without weekend training
+   public Schedule calculateSchedule(
+            LocalDate requestedStartDate,
+            double trainingDays) {
+        return calculateSchedule(
+                requestedStartDate,
+                trainingDays,
+                Set.of());
+   }
+    // Calculate schedule with selected weekend training dates
+   public Schedule calculateSchedule(
+           LocalDate requestedStartDate,
+           double trainingDays,
+            Set<LocalDate> weekendTrainingDates) {
+        // Validate requested start date
+        if (requestedStartDate == null) {
+            throw new IllegalArgumentException(
+                    "Start date is required.");
         }
-         if (remainingDays > 0) {
+        // Validate training days
+        if (!Double.isFinite(trainingDays)
+                || trainingDays <= 0
+                || trainingDays % 0.5 != 0) {
+            throw new IllegalArgumentException(
+                    "Training days must be positive whole or half days.");
+        }
+        // Default to no weekend training
+        if (weekendTrainingDates == null) {
+            weekendTrainingDates = Set.of();
+        }
+        LocalDate currentDate = requestedStartDate;
+        // Find the first valid training day
+        while (!isTrainingDay(currentDate, weekendTrainingDates)) {
             currentDate = currentDate.plusDays(1);
         }
-     }
-     return new Schedule(
-            requestedStartDate,
-            actualStartDate,
-            actualEndDate,
-            trainingDays);
+        LocalDate actualStartDate = currentDate;
+        // Count training time in half-day units
+        int remainingHalfDays =
+                (int) Math.round(trainingDays * 2);
+        LocalDate actualEndDate = actualStartDate;
+        // Calculate the actual end date
+        while (remainingHalfDays > 0) {
+            if (isTrainingDay(currentDate, weekendTrainingDates)) {
+                // One full day = 2 half-day units
+                int usedHalfDays =Math.min(2, remainingHalfDays);
+                remainingHalfDays -= usedHalfDays;
+                actualEndDate = currentDate;
+            }
+            // Move to next date if training is not finished
+            if (remainingHalfDays > 0) {
+                currentDate = currentDate.plusDays(1);
+            }
+        }
+        return new Schedule(
+                requestedStartDate,
+                actualStartDate,
+                actualEndDate,
+                trainingDays);
   }
   public List<List<LocalDate>> generateCalendar(LocalDate date) {
-     YearMonth yearMonth = YearMonth.from(date);
-     LocalDate firstDay = yearMonth.atDay(1);
-     LocalDate lastDay = yearMonth.atEndOfMonth();
-     List<List<LocalDate>> weeks = new ArrayList<>();
-     List<LocalDate> week = new ArrayList<>();
-     int firstDayPosition = firstDay.getDayOfWeek().getValue();
-     for (int i = 1; i < firstDayPosition; i++) {
-         week.add(null);
+         YearMonth yearMonth = YearMonth.from(date);
+         LocalDate firstDay = yearMonth.atDay(1);
+         LocalDate lastDay = yearMonth.atEndOfMonth();
+         List<List<LocalDate>> weeks = new ArrayList<>();
+         List<LocalDate> week = new ArrayList<>();
+         int firstDayPosition = firstDay.getDayOfWeek().getValue();
+         for (int i = 1; i < firstDayPosition; i++) {
+              week.add(null);
      }
-     LocalDate currentDate = firstDay;
-     while (!currentDate.isAfter(lastDay)) {
+         LocalDate currentDate = firstDay;
+         while (!currentDate.isAfter(lastDay)) {
          week.add(currentDate);
-         if (week.size() == 7) {
-             weeks.add(week);
-             week = new ArrayList<>();
+            if (week.size() == 7) {
+                weeks.add(week);
+                week = new ArrayList<>();
          }
          currentDate = currentDate.plusDays(1);
      }
-     if (!week.isEmpty()) {
-         while (week.size() < 7) {
-             week.add(null);
+            if (!week.isEmpty()) {
+                while (week.size() < 7) {
+                     week.add(null);
          }
-         weeks.add(week);
+          weeks.add(week);
      }
-     return weeks;
+        return weeks;
   }
   public List<CalendarMonth> generateCalendars(
           LocalDate startDate,
@@ -116,18 +145,28 @@ public class CourseScheduleService {
                           generateCalendar(monthDate)));
           currentMonth = currentMonth.plusMonths(1);
        }
-    return calendars;
+        return calendars;
   }
+  // Get training dates without weekend training
   public List<LocalDate> getTrainingDates(Schedule schedule) {
-     List<LocalDate> trainingDates = new ArrayList<>();
-     LocalDate currentDate = schedule.actualStartDate();
-     while (!currentDate.isAfter(schedule.actualEndDate())) {
-         if (excludedDaysService.isWorkingDay(currentDate)) {
-            trainingDates.add(currentDate);
-         }
-         currentDate = currentDate.plusDays(1);
-     }
-     return trainingDates;
+      return getTrainingDates(schedule, Set.of());
+  }
+  // Get training dates including selected weekends
+  public List<LocalDate> getTrainingDates(
+          Schedule schedule,
+          Set<LocalDate> weekendTrainingDates) {
+      List<LocalDate> trainingDates = new ArrayList<>();
+      if (weekendTrainingDates == null) {
+          weekendTrainingDates = Set.of();
+      }
+      LocalDate currentDate = schedule.actualStartDate();
+      while (!currentDate.isAfter(schedule.actualEndDate())) {
+          if (isTrainingDay(currentDate, weekendTrainingDates)) {
+                trainingDates.add(currentDate);
+          }
+          currentDate = currentDate.plusDays(1);
+      }
+      return trainingDates;
   }
   public record Schedule(
           LocalDate requestedStartDate,LocalDate actualStartDate,LocalDate actualEndDate,

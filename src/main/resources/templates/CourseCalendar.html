@@ -1,10 +1,12 @@
 
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
     <title>Course Schedule Calendar</title>
 
     <!-- Bootstrap CSS -->
@@ -58,6 +60,25 @@
             font-weight: 600;
         }
 
+        .form-help {
+            display: block;
+            margin-top: 6px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        /* Selected weekend dates */
+        .selected-weekend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            width: fit-content;
+        }
+
         /* Schedule result */
         .schedule-result {
             background-color: white;
@@ -106,7 +127,7 @@
             margin-bottom: 8px;
         }
 
-        /* Public holiday */
+        /* Admin excluded days */
         .holiday {
             margin-top: 8px;
             padding: 5px;
@@ -114,6 +135,7 @@
             border-radius: 4px;
             font-size: 13px;
             text-align: center;
+            color: #842029;
         }
 
         /* Course training day */
@@ -124,6 +146,7 @@
             border-radius: 4px;
             font-size: 13px;
             text-align: center;
+            color: #1e40af;
         }
 
         .start-label {
@@ -134,6 +157,26 @@
         .end-label {
             margin-top: 4px;
             font-weight: bold;
+        }
+
+        /* Month navigation */
+        .calendar-navigation {
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+
+            .calendar-page-container {
+                width: 100%;
+            }
+
+            .schedule-form,
+            .schedule-result {
+                padding: 15px;
+            }
         }
     </style>
 </head>
@@ -146,9 +189,11 @@
 
     <!-- Course selection form -->
     <form class="schedule-form"
+          id="scheduleForm"
           th:action="@{/admin/calendar}"
           method="post">
 
+        <!-- Select Course -->
         <div class="form-group">
 
             <label for="courseId">
@@ -173,9 +218,9 @@
                 </option>
 
             </select>
-
         </div>
 
+        <!-- Requested Start Date -->
         <div class="form-group">
 
             <label for="requestedStartDate">
@@ -186,19 +231,65 @@
                    id="requestedStartDate"
                    name="requestedStartDate"
                    class="form-control"
+                   lang="en"
                    th:value="${requestedStartDate}"
                    required>
+        </div>
+
+        <!-- Weekend Training Dates -->
+        <div class="form-group">
+
+            <label for="weekendDatePicker">
+                Weekend Training Dates (Optional):
+            </label>
+
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+
+                <!-- Date Picker -->
+                <input type="date"
+                       id="weekendDatePicker"
+                       class="form-control"
+                       style="max-width: 250px;"
+                       lang="en">
+
+                <!-- Add Button -->
+                <button type="button"
+                        class="btn btn-outline-primary"
+                        onclick="addWeekendDate()">
+                    + Add
+                </button>
+
+            </div>
+
+            <small class="form-help">
+                Select a Saturday or Sunday and click Add.
+                You can add multiple weekend dates.
+                Leave blank to skip all weekends.
+            </small>
+
+            <!-- Display selected dates -->
+            <div id="selectedWeekendDates"
+                 class="mt-3">
+            </div>
+
+            <!-- Hidden input sent to Controller -->
+            <input type="hidden"
+                   id="weekendTrainingDates"
+                   name="weekendTrainingDates"
+                   th:value="${weekendTrainingDates}">
 
         </div>
 
-        <button type="submit" class="btn btn-primary">
+        <!-- Show Schedule -->
+        <button type="submit"
+                class="btn btn-primary">
             Show Schedule
         </button>
 
     </form>
 
 
-    <!-- Schedule result -->
+    <!-- Schedule Result -->
     <div class="schedule-result"
          th:if="${schedule != null}">
 
@@ -214,52 +305,56 @@
         <p>
             <strong>Training Days:</strong>
             <span th:text="${schedule.trainingDays}">
-                5
+                15
             </span>
         </p>
 
         <p>
             <strong>Requested Start Date:</strong>
             <span th:text="${schedule.requestedStartDate}">
-                2026-10-29
+                2026-10-12
             </span>
         </p>
 
         <p>
             <strong>Actual Start Date:</strong>
             <span th:text="${schedule.actualStartDate}">
-                2026-10-29
+                2026-10-12
             </span>
         </p>
 
         <p>
             <strong>Actual End Date:</strong>
             <span th:text="${schedule.actualEndDate}">
-                2026-11-04
+                2026-10-30
             </span>
         </p>
 
     </div>
 
 
-    <!-- Calendar month navigation -->
-    <div class="d-flex justify-content-between mb-3"
+    <!-- Calendar Month Navigation -->
+    <div class="calendar-navigation d-flex justify-content-between"
          th:if="${previousMonth != null}">
 
+        <!-- Previous -->
         <a class="btn btn-outline-primary"
            th:href="@{/admin/calendar(
                month=${previousMonth},
                courseId=${selectedCourseId},
-               requestedStartDate=${requestedStartDate}
+               requestedStartDate=${requestedStartDate},
+               weekendTrainingDates=${weekendTrainingDates}
            )}">
             &larr; Previous
         </a>
 
+        <!-- Next -->
         <a class="btn btn-outline-primary"
            th:href="@{/admin/calendar(
                month=${nextMonth},
                courseId=${selectedCourseId},
-               requestedStartDate=${requestedStartDate}
+               requestedStartDate=${requestedStartDate},
+               weekendTrainingDates=${weekendTrainingDates}
            )}">
             Next &rarr;
         </a>
@@ -267,10 +362,10 @@
     </div>
 
 
-    <!-- Calendars -->
+    <!-- Calendar Display -->
     <div th:if="${calendars != null}">
 
-        <!-- One calendar for the selected month -->
+        <!-- Calendar for selected month -->
         <div class="calendar-container"
              th:each="calendar : ${calendars}">
 
@@ -303,21 +398,26 @@
 
                         <!-- One cell for each day -->
                         <td th:each="day, dayStat : ${week}"
-                            th:classappend="${dayStat.index >= 5} ? 'weekend' : ''">
+                            th:classappend="${dayStat.index >= 5}
+                                ? 'weekend' : ''">
 
-                            <!-- Date -->
+                            <!-- Date number -->
                             <div th:if="${day != null}"
                                  class="date-number"
                                  th:text="${day.dayOfMonth}">
                             </div>
 
-                            <!-- Public Holiday -->
-                            <div th:if="${day != null
-                                        and holidayDates != null
-                                        and holidayDates.contains(day)}"
-                                 class="holiday">
-                                Public Holiday
-                            </div>
+                            <!-- Admin Excluded Days -->
+                            <th:block th:if="${day != null}">
+
+                                <div th:each="excludedDay : ${excludedDays}"
+                                     th:if="${excludedDay.date.equals(day)}"
+                                     class="holiday"
+                                     th:text="${excludedDay.description}">
+                                    Holiday Description
+                                </div>
+
+                            </th:block>
 
                             <!-- Course Training Day -->
                             <div th:if="${day != null
@@ -325,6 +425,7 @@
                                         and trainingDates.contains(day)}"
                                  class="course-day">
 
+                                <!-- Course Name -->
                                 <div th:text="${selectedCourse.courseTitle}">
                                     Course Name
                                 </div>
@@ -356,6 +457,129 @@
     </div>
 
 </div>
+
+
+<!-- Weekend Training Date Picker JavaScript -->
+<script>
+    // Store selected weekend dates
+    let selectedWeekends = [];
+
+    const weekendDatePicker =
+        document.getElementById("weekendDatePicker");
+
+    const weekendTrainingInput =
+        document.getElementById("weekendTrainingDates");
+
+    const selectedWeekendDatesContainer =
+        document.getElementById("selectedWeekendDates");
+
+    const scheduleForm =
+        document.getElementById("scheduleForm");
+
+    // Restore selected dates after POST or month navigation
+    if (weekendTrainingInput.value.trim() !== "") {
+
+        selectedWeekends = weekendTrainingInput.value
+            .split(",")
+            .map(date => date.trim())
+            .filter(date => date !== "");
+    }
+
+    // Add selected weekend date
+    function addWeekendDate() {
+
+        const date = weekendDatePicker.value;
+
+        if (!date) {
+            alert("Please select a date.");
+            return;
+        }
+
+        // Parse date without timezone issues
+        const parts = date.split("-").map(Number);
+
+        const selectedDate = new Date(
+            parts[0],
+            parts[1] - 1,
+            parts[2]
+        );
+
+        const day = selectedDate.getDay();
+
+        // Sunday = 0, Saturday = 6
+        if (day !== 0 && day !== 6) {
+            alert("Please select a Saturday or Sunday.");
+            return;
+        }
+
+        // Prevent duplicate dates
+        if (selectedWeekends.includes(date)) {
+            alert("This weekend date has already been added.");
+            return;
+        }
+
+        selectedWeekends.push(date);
+        selectedWeekends.sort();
+
+        updateWeekendDates();
+
+        weekendDatePicker.value = "";
+    }
+
+    // Remove selected weekend date
+    function removeWeekendDate(date) {
+
+        selectedWeekends = selectedWeekends.filter(
+            selected => selected !== date
+        );
+
+        updateWeekendDates();
+    }
+
+    // Update selected date list and hidden form value
+    function updateWeekendDates() {
+
+        selectedWeekendDatesContainer.innerHTML = "";
+
+        selectedWeekends.forEach(date => {
+
+            const item = document.createElement("div");
+
+            item.className = "selected-weekend-item";
+
+            const dateText = document.createElement("span");
+            dateText.textContent = date;
+
+            const removeButton = document.createElement("button");
+
+            removeButton.type = "button";
+            removeButton.className =
+                "btn btn-sm btn-outline-danger";
+
+            removeButton.textContent = "Remove";
+
+            removeButton.addEventListener("click", function() {
+                removeWeekendDate(date);
+            });
+
+            item.appendChild(dateText);
+            item.appendChild(removeButton);
+
+            selectedWeekendDatesContainer.appendChild(item);
+        });
+
+        // Example: 2026-10-17,2026-10-24
+        weekendTrainingInput.value = selectedWeekends.join(",");
+    }
+
+    // Ensure the hidden input is updated before submitting
+    scheduleForm.addEventListener("submit", function() {
+        weekendTrainingInput.value = selectedWeekends.join(",");
+    });
+
+    // Show restored dates
+    updateWeekendDates();
+</script>
 
 </body>
 </html>
