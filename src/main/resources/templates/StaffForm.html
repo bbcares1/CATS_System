@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
@@ -67,15 +67,19 @@
   </head>
   <body>
     <div class="container">
-      <h2 th:text="${staff.userId == null} ? 'Create New Staff' : 'Edit Staff (ID: ' + ${staff.staffId} + ')'">
+      <h2
+        th:text="${staff.userId == null} ? 'Create New Staff' : 'Edit Staff (ID: ' + ${staff.staffId} + ')'"
+      >
         Staff Form
       </h2>
 
-      <form th:action="@{/admin/staffs/save}" th:object="${staff}" method="post">
-       
+      <form
+        th:action="@{/admin/staffs/save}"
+        th:object="${staff}"
+        method="post"
+      >
         <input type="hidden" th:field="*{userId}" />
 
-       
         <div class="form-group">
           <label for="name">Staff Name:</label>
           <input
@@ -88,7 +92,18 @@
           />
         </div>
 
-     
+        <div class="form-group">
+          <label for="staffId">Staff ID / Code:</label>
+          <input
+            type="text"
+            id="staffId"
+            th:field="*{staffId}"
+            class="form-control"
+            placeholder="e.g. S1003"
+            required
+          />
+        </div>
+
         <div class="form-group">
           <label for="role">Role:</label>
           <select id="role" th:field="*{role}" class="form-control" required>
@@ -99,10 +114,13 @@
           </select>
         </div>
 
-       
         <div class="form-group">
           <label for="manager">Manager:</label>
-          <select id="manager" th:field="*{manager.userId}" class="form-control">
+          <select
+            id="manager"
+            th:field="*{manager.userId}"
+            class="form-control"
+          >
             <option value="">-- Select Manager (Optional) --</option>
             <option
               th:each="m : ${managerList}"
@@ -115,7 +133,6 @@
           </select>
         </div>
 
-       
         <div class="form-group">
           <label for="trainingBudget">Annual Training Budget ($):</label>
           <input
@@ -144,7 +161,7 @@
         </div>
 
         <button type="submit" class="btn-submit">Save Staff Details</button>
-       
+
         <a th:href="@{/admin/staffs}" class="btn-cancel">Cancel</a>
       </form>
     </div>

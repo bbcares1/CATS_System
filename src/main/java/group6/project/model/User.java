@@ -29,20 +29,20 @@ public abstract class User {
     @Column(name = "user_id")
     private Integer userId;
     
-    @Column(name = "user_name",nullable = false, unique = true)
+   // @Column(name = "user_name",nullable = false, unique = true)
     private String userName;
 
-    @Column(name = "password",nullable = false)
+   // @Column(name = "password",nullable = false)
     private String password;
 
-    @Column(name = "name",nullable = false)
+   // @Column(name = "name",nullable = false)
     private String name;
 
-    @Column(name = "designation")
+   // @Column(name = "designation")
     private String designation; 
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "role",nullable = false)
+   // @Column(name = "role",nullable = false)
     private Roles role; 
 
 	public User( String userName, String password, String name, String designation, Roles role,
