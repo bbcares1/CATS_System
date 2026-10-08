@@ -36,6 +36,10 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestParam;
 import group6.project.service.CourseScheduleService;
 import group6.project.model.CourseApplication;
+import group6.project.model.User;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 
 @Controller
 @RequestMapping("/admin")
@@ -101,6 +105,7 @@ public class AdminController {
 
         return "StaffForm";
     }
+
 
     @PostMapping("/staffs/save")
     public String saveStaff(Staff staff) {
@@ -359,6 +364,91 @@ public class AdminController {
     public String deleteHierarchy(@PathVariable("id") Integer id) {
         adminService.deleteHierarchyById(id);
         return "redirect:/admin/hierarchy";
+    }
+
+    // CreateAccount
+    @PostMapping("/accounts/create")
+    public String createAccount(
+            @RequestParam String userName,
+            @RequestParam String name,
+            @RequestParam(required = false)
+                String designation,
+            @RequestParam String accountType,
+            @RequestParam(required = false)
+                String staffNo,
+            @RequestParam String password,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            adminService.createAccount(
+                userName,
+                name,
+                designation,
+                accountType,
+                staffNo,
+                password);
+
+            redirectAttributes.addFlashAttribute(
+                "successMessage",
+                "Account created successfully");
+
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute(
+                "errorMessage", e.getMessage());
+        }
+
+        return "redirect:/admin/showBudgetList";
+    }
+
+    // DeleteAccount
+    @PostMapping("/accounts/delete/{id}")
+    public String deleteAccount(
+            @PathVariable("id") Integer id,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            adminService.deleteAccount(id);
+
+            redirectAttributes.addFlashAttribute(
+                "successMessage",
+                "Account deleted successfully");
+
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute(
+                "errorMessage", e.getMessage());
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute(
+                "errorMessage",
+                "Account is referenced by other records");
+        }
+
+        return "redirect:/admin/showBudgetList";
+    }
+
+    // updateAccount
+    @PostMapping("/accounts/update/{id}")
+    public String updateAccount(
+            @PathVariable("id") Integer id,
+            @RequestParam String userName,
+            @RequestParam String name,
+            @RequestParam(required = false)
+                String designation,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            adminService.updateAccount(
+                id, userName, name, designation);
+
+            redirectAttributes.addFlashAttribute(
+                "successMessage",
+                "Account updated successfully");
+
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute(
+                "errorMessage", e.getMessage());
+        }
+
+        return "redirect:/admin/showBudgetList";
     }
 
 }

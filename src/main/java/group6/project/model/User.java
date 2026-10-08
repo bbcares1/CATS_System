@@ -1,5 +1,9 @@
 package group6.project.model;
 
+import java.lang.annotation.Inherited;
+
+import javax.annotation.processing.Generated;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
