@@ -1,26 +1,35 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-<link rel="stylesheet" th:href="@{/css/category.css}">
-<head>
-    <meta charset="UTF-8" />
-    <title>Add Course Category</title>
-</head>
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('Add course category', 'Admin', 'categories', ~{::#content})}">
 <body>
-    <h1>Add Course Category</h1>
+<section id="content">
+  <div class="cats-page-header">
+    <div>
+      <h1>Add course category</h1>
+      <p class="cats-sub">Create a category for grouping catalogue courses.</p>
+    </div>
+  </div>
 
-    <form
-    th:action="@{/admin/categories}"
-    th:object="${courseCategory}"
-    method="post"
-    >
-    <label for="categoryName">Category Name:</label>
-
-    <input type="text" id="categoryName" th:field="*{categoryName}" />
-
-    <button type="submit">Save</button>
-    </form>
-
-    <a th:href="@{/admin/categories}">Back to Categories</a>
+  <section class="card">
+    <div class="card-body">
+      <form th:action="@{/admin/categories}" th:object="${courseCategory}" method="post" class="cats-form" novalidate>
+        <div th:if="${#fields.hasAnyErrors()}" class="cats-error-summary" role="alert">
+          <div><h2>Check the category details</h2>
+            <ul><li th:each="error : ${#fields.allErrors()}" th:text="${error}">Please correct this field.</li></ul>
+          </div>
+        </div>
+        <div>
+          <label class="form-label" for="categoryName">Category name</label>
+          <input id="categoryName" th:field="*{categoryName}" class="form-control" maxlength="100" required>
+          <div class="cats-field-msg" th:if="${#fields.hasErrors('categoryName')}" th:errors="*{categoryName}"></div>
+        </div>
+        <div class="cats-form-footer">
+          <a class="btn btn-outline-secondary" th:href="@{/admin/categories}">Cancel</a>
+          <button type="submit" class="btn btn-primary">Add category</button>
+        </div>
+      </form>
+    </div>
+  </section>
+</section>
 </body>
 </html>

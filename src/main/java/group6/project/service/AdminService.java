@@ -25,9 +25,9 @@ import jakarta.transaction.Transactional;
 
 import group6.project.model.User;
 import group6.project.model.Admin;
+import group6.project.model.AccountForm;
 import group6.project.model.Manager;
 import group6.project.repo.UserRepo;
-
 
 @Service
 public class AdminService {
@@ -57,6 +57,10 @@ public class AdminService {
 
      @Transactional
      public void updateStaffBudget(Integer Id, Double new_budget, Integer new_days) {
+          if (new_budget == null || new_budget < 0 || new_days == null || new_days < 0) {
+               throw new IllegalArgumentException(
+                         "Training budget and days must be zero or greater");
+          }
 
           Optional<Staff> targeted_staff = staffRepo.findById(Id);
           if (targeted_staff.isEmpty()) {
@@ -79,19 +83,35 @@ public class AdminService {
           return staffRepo.findById(id);
      }
 
+     public List<Admin> getAllAdmins() {
+          return adminRepo.findAll();
+     }
+
      @Transactional
-     public void saveStaff(Staff form) {
+     public void saveStaff(Staff form) { // this function is use to edit existed staff i separate create and edit into
+                                         // two different method
           Staff target;
 
           if (form.getUserId() == null) {
 
                if (form.getRole() == Roles.MANAGER) {
                     target = new Manager();
-               } else {
+               } else if (form.getRole() == Roles.STAFF) {
                     target = new Staff();
+               } else {
+                    throw new IllegalArgumentException(
+                              "Only staff and manager records can be saved here");
                }
           } else {
-               target = staffRepo.findById(form.getUserId()).orElse(null);
+               Optional<Staff> optionalStaff = staffRepo.findById(form.getUserId());
+
+               if (optionalStaff.isPresent()) {
+
+                    target = optionalStaff.get();
+               } else {
+
+                    throw new IllegalArgumentException("Staff member not found: " + form.getUserId());
+               }
           }
 
           target.setName(form.getName());
@@ -101,6 +121,9 @@ public class AdminService {
           target.setTrainingBudget(form.getTrainingBudget());
           target.setTrainingDays(form.getTrainingDays());
           target.setRole(form.getRole());
+          if (form.getPassword() != null && !form.getPassword().isBlank()) {
+               target.setPassword(form.getPassword());
+          }
 
           if (form.getManager() != null && form.getManager().getUserId() != null) {
 
@@ -113,11 +136,75 @@ public class AdminService {
                target.setManager(null);
           }
 
-          if (form.getUserId() == null) {
+          staffRepo.save(target);
 
-               staffRepo.save(target);
+     }
+
+     @Transactional // this is used to create a new staff
+     public User createAccount(AccountForm form) {
+          if (form.getRole() == null) {
+               throw new IllegalArgumentException("Please select an account role");
           }
 
+          String username = form.getUserName().trim();
+          String name = form.getName().trim();
+
+          if (userRepo.findByUserName(username).isPresent()) {
+               throw new IllegalArgumentException("Username already exists");
+          }
+
+          if (form.getRole() != Roles.ADMIN
+                    && (form.getStaffId() == null
+                              || form.getStaffId().isBlank()
+                              || form.getTrainingBudget() == null
+                              || form.getTrainingBudget() < 0
+                              || form.getTrainingDays() == null
+                              || form.getTrainingDays() < 0)) {
+               throw new IllegalArgumentException(
+                         "Staff ID is required and training budget and days must be zero or greater");
+          }
+
+          User account;
+          switch (form.getRole()) {
+               case ADMIN -> {
+                    Admin admin = new Admin();
+                    admin.setStaffId(form.getStaffId());
+                    account = admin;
+               }
+               case MANAGER -> {
+                    Manager manager = new Manager();
+                    setEmployeeFields(manager, form);
+                    account = manager;
+               }
+               case STAFF -> {
+                    Staff staff = new Staff();
+                    setEmployeeFields(staff, form);
+                    account = staff;
+               }
+               default -> throw new IllegalArgumentException(
+                         "Please select a valid account role");
+          }
+
+          account.setUserName(username);
+          account.setName(name);
+          account.setDesignation(form.getDesignation());
+          account.setPassword(form.getPassword());
+          account.setRole(form.getRole());
+
+          return userRepo.save(account);
+     }
+
+     private void setEmployeeFields(Staff employee, AccountForm form) {
+          employee.setStaffId(form.getStaffId());
+          employee.setTrainingBudget(form.getTrainingBudget());
+          employee.setTrainingDays(form.getTrainingDays());
+
+          if (form.getManagerId() != null) {
+               Manager manager = managerRepo.findById(form.getManagerId())
+                         .orElseThrow(() -> new IllegalArgumentException(
+                                   "Selected manager was not found"));
+               employee.setManager(manager);
+          }
      }
 
      public void deleteStaffById(Integer id) {
@@ -161,8 +248,6 @@ public class AdminService {
           courseDetailRepo.deleteById(id);
      }
 
-     
-
      public List<ApprovalHierarchy> getAllApprovalHierarchy() {
           return approvalHierarchyRepo.findAllByOrderByLevelAsc();
      }
@@ -184,128 +269,9 @@ public class AdminService {
           throw new UnsupportedOperationException("Unimplemented method 'save'");
      }
 
+     public List<User> viewList() {
+          return userRepo.findAll();
+     }
 
-     
-    
-    public List<User> viewList() {
-        return userRepo.findAll();
-    }
-
-    
-    @Transactional
-    public User createAccount(
-            String userName,
-            String name,
-            String designation,
-            String accountType,
-            String staffNo,
-            String password,
-            String staffId
-          ) {
-
-        validateAccountFields(userName, name);
-
-        String username = userName.trim();
-
-        if (userRepo.findByUserName(username).isPresent()) {
-            throw new IllegalArgumentException(
-                "Username already exists");
-        }
-
-        User user;
-
-        switch (accountType) {
-            case "Admin":
-                Admin admin = new Admin();
-                admin.setStaffNo(staffNo);
-                user = admin;
-                break;
-
-            case "Manager":
-                Manager manager = new Manager();
-                manager.setStaffId(staffId);
-                user = manager;
-                break;
-
-            case "Staff":
-                user = new Staff();
-                break;
-
-            default:
-                throw new IllegalArgumentException(
-                    "Invalid account type");
-        }
-
-        user.setUserName(username);
-        user.setName(name.trim());
-        user.setDesignation(designation);
-
-        user.setPassword(password);
-
-        return userRepo.save(user);
-    }
-
-    
-    @Transactional
-    public void deleteAccount(Integer userId) {
-
-        User user = userRepo.findById(userId)
-            .orElseThrow(() ->
-                new IllegalArgumentException(
-                    "Account not found: " + userId));
-
-        userRepo.delete(user);
-        userRepo.flush();
-    }
-
-    
-    @Transactional
-    public User updateAccount(
-            Integer userId,
-            String userName,
-            String name,
-            String designation) {
-
-        validateAccountFields(userName, name);
-
-        User existingUser = userRepo.findById(userId)
-            .orElseThrow(() ->
-                new IllegalArgumentException(
-                    "Account not found: " + userId));
-
-        String username = userName.trim();
-
-        Optional<User> duplicate =
-            userRepo.findByUserName(username);
-
-        if (duplicate.isPresent()
-                && !duplicate.get().getUserId()
-                    .equals(userId)) {
-            throw new IllegalArgumentException(
-                "Username already exists");
-        }
-
-        existingUser.setUserName(username);
-        existingUser.setName(name.trim());
-        existingUser.setDesignation(designation);
-
-        return userRepo.save(existingUser);
-    }
-
-    private void validateAccountFields(
-            String userName, String name) {
-
-        if (userName == null ||
-                userName.trim().isEmpty()) {
-            throw new IllegalArgumentException(
-                "Username cannot be empty");
-        }
-
-        if (name == null ||
-                name.trim().isEmpty()) {
-            throw new IllegalArgumentException(
-                "Name cannot be empty");
-        }
-    }
 
 }

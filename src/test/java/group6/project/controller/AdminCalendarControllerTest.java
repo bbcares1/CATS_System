@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
+import org.springframework.mock.web.MockHttpSession;
 
 import group6.project.model.CourseApplication;
 import group6.project.service.AdminService;
@@ -68,7 +69,8 @@ public class AdminCalendarControllerTest {
                 null,
                 null,
                 null,
-                model);
+                model,
+                new MockHttpSession());
 
         assertEquals("CourseCalendar", viewName);
 
@@ -139,7 +141,8 @@ public class AdminCalendarControllerTest {
                 courseId,
                 requestedStartDate,
                 "",
-                model);
+                model,
+                new MockHttpSession());
 
         assertEquals("CourseCalendar", viewName);
 
@@ -229,7 +232,8 @@ public class AdminCalendarControllerTest {
                 courseId,
                 requestedStartDate,
                 weekendTrainingDates,
-                model);
+                model,
+                new MockHttpSession());
 
         assertEquals("CourseCalendar", viewName);
 
@@ -301,7 +305,8 @@ public class AdminCalendarControllerTest {
                 courseId,
                 requestedStartDate,
                 "",
-                model);
+                model,
+                new MockHttpSession());
 
         assertEquals("CourseCalendar", viewName);
 
@@ -317,5 +322,54 @@ public class AdminCalendarControllerTest {
         verify(courseScheduleService).getTrainingDates(
                 schedule,
                 Set.of());
+    }
+
+    @Test
+    void shouldRestoreLastCalculatedScheduleFromSession() {
+        Integer courseId = 9;
+        LocalDate requestedStartDate = LocalDate.of(2026, 11, 2);
+        CourseApplication course = new CourseApplication();
+        course.setCourseTitle("Session-restored course");
+        course.setTrainingDays(3.0);
+        CourseScheduleService.Schedule schedule = new CourseScheduleService.Schedule(
+                requestedStartDate,
+                requestedStartDate,
+                LocalDate.of(2026, 11, 4),
+                3.0);
+        MockHttpSession session = new MockHttpSession();
+
+        when(courseScheduleService.getAllCourses()).thenReturn(List.of(course));
+        when(excludedDaysService.getAllExcludedDays()).thenReturn(Collections.emptyList());
+        when(courseScheduleService.getCourse(courseId)).thenReturn(course);
+        when(courseScheduleService.calculateSchedule(requestedStartDate, 3.0, Set.of()))
+                .thenReturn(schedule);
+        when(courseScheduleService.getTrainingDates(schedule, Set.of()))
+                .thenReturn(List.of(
+                        requestedStartDate,
+                        LocalDate.of(2026, 11, 3),
+                        LocalDate.of(2026, 11, 4)));
+
+        adminController.showCourseCalendar(
+                "2026-11",
+                courseId,
+                requestedStartDate,
+                "",
+                new ExtendedModelMap(),
+                session);
+
+        Model restoredModel = new ExtendedModelMap();
+        String viewName = adminController.showCourseCalendar(
+                null,
+                null,
+                null,
+                null,
+                restoredModel,
+                session);
+
+        assertEquals("CourseCalendar", viewName);
+        assertEquals(courseId, restoredModel.getAttribute("selectedCourseId"));
+        assertEquals(requestedStartDate, restoredModel.getAttribute("requestedStartDate"));
+        assertEquals("2026-11", restoredModel.getAttribute("currentMonth"));
+        assertEquals(schedule, restoredModel.getAttribute("schedule"));
     }
 }

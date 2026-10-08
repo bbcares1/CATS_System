@@ -1,32 +1,40 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<link rel="stylesheet" th:href="@{/css/category.css}">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Delete Course Category</title>
-</head>
-
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('Delete course category', 'Admin', 'categories', ~{::#content})}">
 <body>
+<section id="content">
+  <div class="cats-page-header">
+    <div>
+      <h1>Delete a course category</h1>
+      <p class="cats-sub">Choose a category to remove from the catalogue.</p>
+    </div>
+    <a class="btn btn-outline-secondary" th:href="@{/admin/categories}">Back to categories</a>
+  </div>
 
-    <h1>Delete Course Category</h1>
-
-    <form th:action="@{/admin/categories/delete}" method="post">
-
-        <label for="categoryId">Select Category:</label>
-
-        <select id="categoryId" name="categoryId">
-            <option th:each="category : ${categories}"
-                    th:value="${category.categoryId}"
-                    th:text="${category.categoryName}">
-            </option>
-        </select>
-
-        <button type="submit">Delete</button>
-
-    </form>
-
-    <a th:href="@{/admin/categories}">Back to Categories</a>
-
+  <section class="card">
+    <div class="card-header">
+      <h2 class="cats-card-title">Categories</h2>
+      <p class="text-secondary small mb-0">A category in use by a course may not be removable.</p>
+    </div>
+    <div class="list-group list-group-flush">
+      <div class="list-group-item d-flex align-items-center justify-content-between gap-3"
+           th:each="category : ${categories}"
+           th:with="deleteId='delete-category-page-' + ${category.categoryId}">
+        <div>
+          <div class="fw-semibold" th:text="${category.categoryName}">Category name</div>
+          <div class="cats-cell-sub" th:text="${'Category ID ' + category.categoryId}">Category ID</div>
+        </div>
+        <div>
+          <button type="button" class="btn btn-sm btn-outline-danger"
+                  data-bs-toggle="modal" th:attr="data-bs-target='#' + ${deleteId}">Delete</button>
+          <div th:replace="~{fragments/ui :: confirm(${deleteId}, 'Delete course category', 'This permanently removes the category. A category used by a course may not be deleted.', @{/admin/categories/delete/{id}(id=${category.categoryId})}, 'Delete category', true)}"></div>
+        </div>
+      </div>
+      <div th:if="${#lists.isEmpty(categories)}">
+        <div th:replace="~{fragments/ui :: empty('tag', 'No categories to delete', 'There are no course categories in the catalogue.', ~{})}"></div>
+      </div>
+    </div>
+  </section>
+</section>
 </body>
 </html>

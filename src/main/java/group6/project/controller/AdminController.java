@@ -21,29 +21,30 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import group6.project.model.Admin;
+import group6.project.model.AccountForm;
 import group6.project.model.ApprovalHierarchy;
+import group6.project.model.CourseCategory;
 import group6.project.model.CourseDetail;
-import group6.project.model.ExcludedDays;
 import group6.project.model.Roles;
 import group6.project.model.Staff;
-import group6.project.repo.StaffRepo;
-import group6.project.model.User;
 import group6.project.service.AdminService;
 import group6.project.service.CourseCategoryService;
 import group6.project.service.ExcludedDaysService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.RequestParam;
 import group6.project.service.CourseScheduleService;
 import group6.project.model.CourseApplication;
-import group6.project.model.User;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+
+    private static final String CALENDAR_COURSE_ID = "adminCalendarCourseId";
+    private static final String CALENDAR_START_DATE = "adminCalendarStartDate";
+    private static final String CALENDAR_WEEKEND_DATES = "adminCalendarWeekendDates";
+    private static final String CALENDAR_MONTH = "adminCalendarMonth";
 
     private final AdminService adminService;
     private final CourseCategoryService courseCategoryService;
@@ -53,7 +54,8 @@ public class AdminController {
     public AdminController(
             AdminService adminService,
             CourseCategoryService courseCategoryService,
-            ExcludedDaysService excludedDaysService,CourseScheduleService courseScheduleService) {
+            ExcludedDaysService excludedDaysService,
+            CourseScheduleService courseScheduleService) {
        this.adminService = adminService;
        this.courseCategoryService = courseCategoryService;
        this.excludedDaysService = excludedDaysService;
@@ -84,7 +86,7 @@ public class AdminController {
         } else {
             Staff staff = selectedStaff.get();
             model.addAttribute("staff", staff);
-            model.addAttribute("role", Roles.values());
+            model.addAttribute("accountRoles", List.of(Roles.STAFF, Roles.MANAGER));
             model.addAttribute("managerList", adminService.getManagerList());
             return "StaffForm";
         }
@@ -94,80 +96,119 @@ public class AdminController {
     public String showStaffList(Model model) {
         List<Staff> staffs = adminService.getAllStaff();
         model.addAttribute("staffs", staffs);
+        model.addAttribute("admins", adminService.getAllAdmins());
         return "StaffList";
+    }
+
+    @GetMapping("/budgets")
+    public String showBudgetList(Model model) {
+        model.addAttribute("staffs", adminService.getAllStaff());
+        return "BudgetList";
+    }
+
+    @GetMapping("/budgets/edit/{id}")
+    public String editBudget(@PathVariable("id") Integer id, Model model) {
+        Optional<Staff> selectedStaff = adminService.getIdStaff(id);
+        if (selectedStaff.isEmpty()) {
+            return "redirect:/admin/budgets";
+        }
+        model.addAttribute("staff", selectedStaff.get());
+        return "ChangeBudget";
+    }
+
+    @PostMapping("/budgets/save")
+    public String saveBudget(
+            @ModelAttribute("staff") Staff staff,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        Optional<Staff> selectedStaff = staff.getUserId() == null
+                ? Optional.empty()
+                : adminService.getIdStaff(staff.getUserId());
+        if (selectedStaff.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Staff member could not be found");
+            return "redirect:/admin/budgets";
+        }
+        if (staff.getTrainingBudget() == null || staff.getTrainingBudget() < 0) {
+            result.rejectValue("trainingBudget", "invalid", "Budget must be zero or greater");
+        }
+        if (staff.getTrainingDays() == null || staff.getTrainingDays() < 0) {
+            result.rejectValue("trainingDays", "invalid", "Training days must be zero or greater");
+        }
+        if (result.hasErrors()) {
+            staff.setName(selectedStaff.get().getName());
+            staff.setStaffId(selectedStaff.get().getStaffId());
+            staff.setRole(selectedStaff.get().getRole());
+            model.addAttribute("staff", staff);
+            return "ChangeBudget";
+        }
+
+        adminService.updateStaffBudget(
+                staff.getUserId(), staff.getTrainingBudget(), staff.getTrainingDays());
+        redirectAttributes.addFlashAttribute("success", "Training entitlement updated successfully");
+        return "redirect:/admin/budgets";
     }
 
     @GetMapping("/staffs/add")
     public String createNewStaff(Model model) {
-        model.addAttribute("staff", new Staff());
-        model.addAttribute("role", Roles.values());
+        model.addAttribute("accountForm", new AccountForm());
+        model.addAttribute("accountRoles", Roles.values());
         model.addAttribute("managerList", adminService.getManagerList());
 
         return "StaffForm";
-   
- }
+    }
 
+    @PostMapping("/accounts/create")
+    public String createAccount(
+            @Valid @ModelAttribute("accountForm") AccountForm accountForm,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            model.addAttribute("accountRoles", Roles.values());
+            model.addAttribute("managerList", adminService.getManagerList());
+            return "StaffForm";
+        }
+
+        try {
+            adminService.createAccount(accountForm);
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            model.addAttribute("accountRoles", Roles.values());
+            model.addAttribute("managerList", adminService.getManagerList());
+            return "StaffForm";
+        }
+
+        redirectAttributes.addFlashAttribute(
+                "success", "Account created successfully");
+        return "redirect:/admin/staffs";
+    }
 
     @PostMapping("/staffs/save")
-    public String saveStaff(Staff staff) {
+    public String saveStaff(
+            @Valid @ModelAttribute("staff") Staff staff,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            model.addAttribute("managerList", adminService.getManagerList());
+            return "StaffForm";
+        }
         adminService.saveStaff(staff);
+        redirectAttributes.addFlashAttribute(
+                "success", "Staff details saved successfully");
         return "redirect:/admin/staffs";
     }
 
-    @GetMapping("/staffs/delete/{id}")
-    public String deleteById(@PathVariable("id") Integer id) {
-        adminService.deleteStaffById(id);
-        return "redirect:/admin/staffs";
-    }
-
-    // this part below is about excludeddays
-    // -------------------------------------
-
-    @GetMapping("/excludedDays")
-    public String showExcludedDays(Model model) {
-        List<ExcludedDays> dayList = excludedDaysService.getAllExcludedDays();
-        model.addAttribute("excludedDaysList", dayList);
-        model.addAttribute("newExcludedDay", new ExcludedDays());
-        return "ExcludedDaysList";
-    }
-
-    @PostMapping("/excludedDays/add")
-    public String addExcludedDays(@Valid @ModelAttribute("newExcludedDay") ExcludedDays excludedDays,
-            BindingResult result, Model model) {
-        if (result.hasErrors()) {
-            model.addAttribute(
-                    "excludedDaysList",
-                    excludedDaysService.getAllExcludedDays());
-            return "ExcludedDaysList";
-        }
-        excludedDaysService.addExcludedDay(excludedDays);
-        return "redirect:/admin/excludedDays";
-    }
-
-    @GetMapping("/excludedDays/edit/{id}")
-    public String showEditExcludedDay(
-            @PathVariable("id") Integer id, Model model) {
-        ExcludedDays excludedDay = excludedDaysService.getExcludedDayById(id);
-        model.addAttribute("excludedDay", excludedDay);
-        return "ExcludedDaysEdit";
-    }
-
-    @PostMapping("/excludedDays/edit/{id}")
-    public String updateExcludedDay(
+    @PostMapping("/staffs/delete/{id}")
+    public String deleteById(
             @PathVariable("id") Integer id,
-            @Valid @ModelAttribute("excludedDay") ExcludedDays excludedDay, BindingResult result) {
-        if (result.hasErrors()) {
-            return "ExcludedDaysEdit";
-        }
-        excludedDaysService.updateExcludedDay(id, excludedDay);
-        return "redirect:/admin/excludedDays";
+            RedirectAttributes redirectAttributes) {
+        adminService.deleteStaffById(id);
+        redirectAttributes.addFlashAttribute("success", "Staff account deleted successfully");
+        return "redirect:/admin/staffs";
     }
 
-    @GetMapping("/deleteExcludedDays/{id}")
-    public String deleteExcludedDays(@PathVariable("id") Integer id) {
-        excludedDaysService.deleteExcludedDay(id);
-        return "redirect:/admin/excludedDays";
-    }
     // this part below is about course schedule calendar
     // -------------------------------------------------
     private Set<LocalDate> parseWeekendTrainingDates(String dates) {
@@ -190,6 +231,8 @@ public class AdminController {
      }
     return selectedDates;
     }
+
+
     @GetMapping("/calendar")
     public String showCourseCalendar(
             @RequestParam(required = false) String month,
@@ -198,13 +241,50 @@ public class AdminController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate requestedStartDate,
             @RequestParam(required = false) String weekendTrainingDates,
-            Model model) {
+            Model model,
+            HttpSession session) {
+        if (courseId == null && requestedStartDate == null
+                && (weekendTrainingDates == null || weekendTrainingDates.isBlank())) {
+            courseId = (Integer) session.getAttribute(CALENDAR_COURSE_ID);
+            requestedStartDate = (LocalDate) session.getAttribute(CALENDAR_START_DATE);
+            weekendTrainingDates = (String) session.getAttribute(CALENDAR_WEEKEND_DATES);
+        }
+        if (month == null || month.isBlank()) {
+            month = (String) session.getAttribute(CALENDAR_MONTH);
+        }
+        return renderCourseCalendar(
+                month, courseId, requestedStartDate, weekendTrainingDates, model, session);
+    }
+
+    @PostMapping("/calendar")
+    public String calculateCourseCalendar(
+            @RequestParam(required = false) String month,
+            @RequestParam(required = false) Integer courseId,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate requestedStartDate,
+            @RequestParam(required = false) String weekendTrainingDates,
+            Model model,
+            HttpSession session) {
+        return renderCourseCalendar(
+                month, courseId, requestedStartDate, weekendTrainingDates, model, session);
+    }
+
+    private String renderCourseCalendar(
+            String month,
+            Integer courseId,
+            LocalDate requestedStartDate,
+            String weekendTrainingDates,
+            Model model,
+            HttpSession session) {
        // Load available courses
        model.addAttribute("courses",courseScheduleService.getAllCourses());
       // Generate the current month's calendar
        YearMonth selectedMonth = (month == null || month.isBlank())
         ? YearMonth.now()
         : YearMonth.parse(month);
+       session.setAttribute(CALENDAR_MONTH, selectedMonth.toString());
+       model.addAttribute("currentMonth", selectedMonth.toString());
         LocalDate firstDay = selectedMonth.atDay(1);
         LocalDate lastDay = selectedMonth.atEndOfMonth();
         // Generate calendar
@@ -213,12 +293,11 @@ public class AdminController {
             courseScheduleService.generateCalendars(
                     firstDay,lastDay));
        // Load holidays configured by Admin
-       model.addAttribute(
-            "holidayDates",
-            excludedDaysService.getAllExcludedDays()
+       List<LocalDate> holidayDates = excludedDaysService.getAllExcludedDays()
                     .stream()
-                    .map(ExcludedDays::getDate)
-                    .toList());
+                    .map(day -> day.getDate())
+                    .toList();
+       model.addAttribute("holidayDates", holidayDates);
         model.addAttribute(
               "excludedDays",
               excludedDaysService.getAllExcludedDays());
@@ -232,6 +311,13 @@ public class AdminController {
         // Keep the selected course when switching months
         Set<LocalDate> selectedWeekends =
                 parseWeekendTrainingDates(weekendTrainingDates);
+        boolean selectedExcludedDay = selectedWeekends.stream()
+                .anyMatch(excludedDaysService::isExcludedDay);
+        if (selectedExcludedDay) {
+            model.addAttribute(
+                    "scheduleError",
+                    "Excluded days cannot be selected for weekend training.");
+        }
         model.addAttribute(
             "weekendTrainingDates",
             weekendTrainingDates == null ? "" : weekendTrainingDates);
@@ -249,53 +335,16 @@ public class AdminController {
                      courseScheduleService.getTrainingDates(schedule,selectedWeekends));
         model.addAttribute("selectedCourseId", courseId);
         model.addAttribute("requestedStartDate", requestedStartDate);
+        session.setAttribute(CALENDAR_COURSE_ID, courseId);
+        session.setAttribute(CALENDAR_START_DATE, requestedStartDate);
+        session.setAttribute(
+                CALENDAR_WEEKEND_DATES,
+                weekendTrainingDates == null ? "" : weekendTrainingDates);
         }
       }
         return "CourseCalendar";
     }
-    @PostMapping("/calendar")
-    public String calculateCourseSchedule(
-            @RequestParam Integer courseId,@RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate requestedStartDate,
-            @RequestParam(required = false) String weekendTrainingDates,
-            Model model) {
-       CourseApplication course =courseScheduleService.getCourse(courseId);
-       Set<LocalDate> selectedWeekends =
-               parseWeekendTrainingDates(weekendTrainingDates);
-       if (course.getTrainingDays() == null || course.getTrainingDays() <= 0) {
-           throw new IllegalArgumentException(
-                "Training days are not available for this course.");
-       } 
-        CourseScheduleService.Schedule schedule =courseScheduleService.calculateSchedule(
-                requestedStartDate,
-                course.getTrainingDays(),
-                selectedWeekends);
-        model.addAttribute("courses",courseScheduleService.getAllCourses());
-        model.addAttribute("selectedCourse", course);
-        model.addAttribute("schedule", schedule);
-        model.addAttribute("selectedCourseId", courseId);
-        model.addAttribute("requestedStartDate", requestedStartDate);
-        YearMonth selectedMonth =YearMonth.from(schedule.actualStartDate());
-        model.addAttribute("calendars",
-                 courseScheduleService.generateCalendars(
-                         selectedMonth.atDay(1),
-                         selectedMonth.atEndOfMonth()));
-        model.addAttribute("previousMonth",
-                 selectedMonth.minusMonths(1).toString());
-        model.addAttribute("nextMonth",
-                 selectedMonth.plusMonths(1).toString());
-        model.addAttribute("holidayDates",
-                 excludedDaysService.getAllExcludedDays().stream().map    (ExcludedDays::getDate).toList());
-        model.addAttribute(
-              "excludedDays",
-              excludedDaysService.getAllExcludedDays());
-        model.addAttribute("trainingDates",
-                 courseScheduleService.getTrainingDates(schedule,selectedWeekends));
-        model.addAttribute("weekendTrainingDates",
-        weekendTrainingDates == null ? "" : weekendTrainingDates);
-        return "CourseCalendar";
-    }
+
     // -------------------------------------------------
 
     @GetMapping("/courses")
@@ -321,14 +370,44 @@ public class AdminController {
     }
 
     @PostMapping("/courses/save")
-    public String saveCourse(@ModelAttribute("course") CourseDetail course) {
+    public String saveCourse(
+            @Valid @ModelAttribute("course") CourseDetail course,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        Integer categoryId = course.getCourseCategory() == null
+                ? null
+                : course.getCourseCategory().getCategoryId();
+        Optional<CourseCategory> selectedCategory = categoryId == null
+                ? Optional.empty()
+                : courseCategoryService.getCategoryById(categoryId);
+        if (selectedCategory.isEmpty()) {
+            result.rejectValue(
+                    "courseCategory",
+                    "invalid",
+                    "Select an existing course category");
+        }
+        if (result.hasErrors()) {
+            model.addAttribute("courseList", adminService.getAllCourseDetails());
+            model.addAttribute("categories", courseCategoryService.getAllCategories());
+            return "CourseList";
+        }
+        CourseCategory category = selectedCategory.orElseThrow();
+        course.setCourseCategory(category);
+        if ("Internal Training".equalsIgnoreCase(category.getCategoryName())) {
+            course.setCourseFee(0.0);
+        }
         adminService.saveCourse(course);
+        redirectAttributes.addFlashAttribute("success", "Course saved successfully");
         return "redirect:/admin/courses";
     }
 
-    @GetMapping("/courses/delete/{id}")
-    public String deleteCourse(@PathVariable("id") Integer id) {
+    @PostMapping("/courses/delete/{id}")
+    public String deleteCourse(
+            @PathVariable("id") Integer id,
+            RedirectAttributes redirectAttributes) {
         adminService.deleteCourseById(id);
+        redirectAttributes.addFlashAttribute("success", "Course deleted successfully");
         return "redirect:/admin/courses";
     }
 
@@ -356,102 +435,28 @@ public class AdminController {
     }
 
     @PostMapping("/hierarchy/save")
-    public String saveHierarchy(@ModelAttribute("hierarchy") ApprovalHierarchy hierarchy) {
+    public String saveHierarchy(
+            @Valid @ModelAttribute("hierarchy") ApprovalHierarchy hierarchy,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            model.addAttribute("hierarchies", adminService.getAllApprovalHierarchy());
+            model.addAttribute("roles", Roles.values());
+            return "HierarchyList";
+        }
         adminService.saveHierarchy(hierarchy);
+        redirectAttributes.addFlashAttribute("success", "Approval level saved successfully");
         return "redirect:/admin/hierarchy";
     }
 
-    @GetMapping("/hierarchy/delete/{id}")
-    public String deleteHierarchy(@PathVariable("id") Integer id) {
+    @PostMapping("/hierarchy/delete/{id}")
+    public String deleteHierarchy(
+            @PathVariable("id") Integer id,
+            RedirectAttributes redirectAttributes) {
         adminService.deleteHierarchyById(id);
+        redirectAttributes.addFlashAttribute("success", "Approval level deleted successfully");
         return "redirect:/admin/hierarchy";
-    }
-
-
-    // CreateAccount
-    @PostMapping("/accounts/create")
-    public String createAccount(
-            @RequestParam String userName,
-            @RequestParam String name,
-            @RequestParam(required = false)
-                String designation,
-            @RequestParam String accountType,
-            @RequestParam(required = false)
-                String staffNo,
-            @RequestParam String password,
-            RedirectAttributes redirectAttributes) {
-
-        try {
-          /*  adminService.createAccount(
-                userName,
-                name,
-                designation,
-                accountType,
-                staffNo,
-                password);
-
-            redirectAttributes.addFlashAttribute(
-                "successMessage",
-                "Account created successfully");
-
-       */ 
-       } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute(
-                "errorMessage", e.getMessage());
-        }
-
-        return "redirect:/admin/showBudgetList";
-    }
-
-    // DeleteAccount
-    @PostMapping("/accounts/delete/{id}")
-    public String deleteAccount(
-            @PathVariable("id") Integer id,
-            RedirectAttributes redirectAttributes) {
-
-        try {
-            adminService.deleteAccount(id);
-
-            redirectAttributes.addFlashAttribute(
-                "successMessage",
-                "Account deleted successfully");
-
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute(
-                "errorMessage", e.getMessage());
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute(
-                "errorMessage",
-                "Account is referenced by other records");
-        }
-
-        return "redirect:/admin/showBudgetList";
-    }
-
-    // updateAccount
-    @PostMapping("/accounts/update/{id}")
-    public String updateAccount(
-            @PathVariable("id") Integer id,
-            @RequestParam String userName,
-            @RequestParam String name,
-            @RequestParam(required = false)
-                String designation,
-            RedirectAttributes redirectAttributes) {
-
-        try {
-            adminService.updateAccount(
-                id, userName, name, designation);
-
-            redirectAttributes.addFlashAttribute(
-                "successMessage",
-                "Account updated successfully");
-
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute(
-                "errorMessage", e.getMessage());
-        }
-
-        return "redirect:/admin/showBudgetList";
     }
 
 }

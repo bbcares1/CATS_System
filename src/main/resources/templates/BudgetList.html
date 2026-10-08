@@ -1,225 +1,54 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <title>员工培训额度列表</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 30px;
-      }
-      h2 {
-        color: #333;
-      }
-      table {
-        width: 80%;
-        border-collapse: collapse;
-        margin-top: 20px;
-      }
-      th,
-      td {
-        border: 1px solid #ddd;
-        padding: 10px;
-        text-align: left;
-      }
-      th {
-        background-color: #f2f2f2;
-      }
-      tr:hover {
-        background-color: #f9f9f9;
-      }
-      .btn-edit {
-        display: inline-block;
-        padding: 6px 12px;
-        background-color: #007bff;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        font-size: 14px;
-      }
-      .btn-edit:hover {
-        background-color: #0056b3;
-      }
-    </style>
-  </head>
-  <body>
-    <h2>员工培训额度管理列表</h2>
-
-    <table>
-      <thead>
-        <tr>
-          <th>员工 ID</th>
-          <th>员工编号</th>
-          <th>培训预算 (Training Budget)</th>
-          <th>培训天数 (Training Days)</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr th:each="s : ${staffs}">
-          <td th:text="${s.id}">1</td>
-          <td th:text="${s.staffId}">S001</td>
-          <td th:text="${s.trainingBudget}">2000.00</td>
-          <td th:text="${s.trainingDays}">10</td>
-          <td>
-            <a class="btn-edit" th:href="@{/admin/update/{id}(id=${s.id})}"
-              >修改额度</a
-            >
-            <a
-              class="btn-delete"
-              th:href="@{/admin/delete/{id}(id=${s.id})}"
-              onclick="return confirm('确定要删除该员工的额度记录吗？');"
-              >删除</a
-            >
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- ===================================== -->
-    <!-- Account Management Section            -->
-    <!-- ===================================== -->
-
-    <hr style="margin-top: 40px" />
-
-    <h2>账号管理 / Account Management</h2>
-
-    <!-- Messages -->
-    <p
-      th:if="${successMessage}"
-      th:text="${successMessage}"
-      style="color: green"
-    ></p>
-
-    <p th:if="${errorMessage}" th:text="${errorMessage}" style="color: red"></p>
-
-    <!-- Create Account -->
-    <h3>Create Account / 创建账号</h3>
-
-    <form th:action="@{/admin/accounts/create}" method="post">
-      <label>Username:</label>
-      <input type="text" name="userName" required maxlength="100" />
-
-      <label>Name:</label>
-      <input type="text" name="name" required maxlength="100" />
-
-      <label>Password:</label>
-      <input
-        type="password"
-        name="password"
-        placeholder="Enter password"
-        required
-      />
-
-      <label>Designation:</label>
-      <input type="text" name="designation" />
-
-      <label>Account Type:</label>
-      <select name="accountType" required>
-        <option value="User">User</option>
-        <option value="Manager">Manager</option>
-        <option value="Admin">Admin</option>
-      </select>
-
-      <label>Staff No (Admin/Manager):</label>
-      <input type="text" name="staffNo" />
-
-      <button type="submit">Create Account</button>
-    </form>
-
-    <!-- ViewList -->
-    <h3>View Account List / 账号列表</h3>
-
-    <table>
-      <thead>
-        <tr>
-          <th>User ID</th>
-          <th>Username</th>
-          <th>Name</th>
-          <th>Designation</th>
-          <th>Account Type</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr th:each="account : ${accounts}">
-          <td th:text="${account.userId}"></td>
-
-          <td th:text="${account.userName}"></td>
-
-          <td th:text="${account.name}"></td>
-
-          <td th:text="${account.designation}"></td>
-
-          <td th:text="${account.getClass().getSimpleName()}"></td>
-
-          <td>
-            <!-- Edit Account -->
-            <a
-              th:href="@{/admin/showBudgetList(
-                    editAccountId=${account.userId})}"
-            >
-              Edit
-            </a>
-
-            <!-- Delete Account -->
-            <form
-              th:action="@{/admin/accounts/delete/{id}(
-                    id=${account.userId})}"
-              method="post"
-              style="display: inline"
-              onsubmit="
-                return confirm('Are you sure you want to delete this account?');
-              "
-            >
-              <button type="submit">Delete</button>
-            </form>
-          </td>
-        </tr>
-
-        <tr th:if="${#lists.isEmpty(accounts)}">
-          <td colspan="6">No accounts found.</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- Update Account -->
-    <div th:if="${editAccount != null}">
-      <h3>Update Account / 修改账号</h3>
-
-      <form
-        th:action="@{/admin/accounts/update/{id}(
-        id=${editAccount.userId})}"
-        method="post"
-      >
-        <label>Username:</label>
-        <input
-          type="text"
-          name="userName"
-          th:value="${editAccount.userName}"
-          required
-        />
-
-        <label>Name:</label>
-        <input
-          type="text"
-          name="name"
-          th:value="${editAccount.name}"
-          required
-        />
-
-        <label>Designation:</label>
-        <input
-          type="text"
-          name="designation"
-          th:value="${editAccount.designation}"
-        />
-
-        <button type="submit">Save Changes</button>
-
-        <a th:href="@{/admin/showBudgetList}"> Cancel </a>
-      </form>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('Training entitlement', 'Admin', 'entitlement', ~{::#content})}">
+<body>
+<section id="content">
+  <div class="cats-page-header">
+    <div>
+      <h1>Training entitlement</h1>
+      <p class="cats-sub">Review and update each staff member’s annual budget and training days.</p>
     </div>
-  </body>
+    <a class="btn btn-outline-secondary" th:href="@{/admin/staffs}">Back to staff</a>
+  </div>
+
+  <section class="card" aria-labelledby="entitlement-table-title">
+    <div class="card-header">
+      <h2 id="entitlement-table-title" class="cats-card-title">Staff entitlement</h2>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col">Staff member</th>
+            <th scope="col">Staff ID</th>
+            <th scope="col" class="cats-num">Annual budget</th>
+            <th scope="col" class="cats-num">Training days</th>
+            <th scope="col" class="cats-row-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="s : ${staffs}">
+            <td>
+              <span class="fw-semibold" th:text="${s.name}">Name</span>
+              <div class="cats-cell-sub" th:text="${s.role}">STAFF</div>
+            </td>
+            <td th:text="${s.staffId}">S001</td>
+            <td class="cats-num" th:text="${s.trainingBudget != null ? '$' + #numbers.formatDecimal(s.trainingBudget, 1, 'COMMA', 2, 'POINT') : '—'}">$2,000.00</td>
+            <td class="cats-num" th:text="${s.trainingDays != null ? s.trainingDays : '—'}">10</td>
+            <td class="cats-row-actions">
+              <a class="btn btn-sm btn-outline-secondary"
+                 th:href="@{/admin/budgets/edit/{id}(id=${s.userId})}">Edit entitlement</a>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(staffs)}">
+            <td colspan="5">
+              <div th:replace="~{fragments/ui :: empty('users', 'No staff entitlements', 'Create staff accounts to assign training entitlements.', ~{})}"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+</body>
 </html>

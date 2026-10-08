@@ -1,56 +1,49 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<link rel="stylesheet" th:href="@{/css/category.css}">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Manage Course Categories</title>
-</head>
-
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('Course categories', 'Admin', 'categories', ~{::#content})}">
 <body>
+<section id="content">
+  <div class="cats-page-header">
+    <div>
+      <h1>Course categories</h1>
+      <p class="cats-sub">Organise catalogue courses by training type.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-secondary" th:href="@{/admin/categories/delete}">Delete a category</a>
+      <a class="btn btn-primary" th:href="@{/admin/categories/new}">Add category</a>
+    </div>
+  </div>
 
-    <h1>Manage Course Categories</h1>
-
-    <!-- Add button -->
-    <a th:href="@{/admin/categories/new}">
-        <button type="button">Add Category</button>
-    </a>
-
-    <br><br>
-
-    <table border="1">
+  <section class="card" aria-labelledby="category-table-title">
+    <div class="card-header">
+      <h2 id="category-table-title" class="cats-card-title">Categories</h2>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
         <thead>
-            <tr>
-                <th>No.</th>
-                <th>Category Name</th>
-                <th>Actions</th>
-            </tr>
+          <tr><th scope="col">Category</th><th scope="col">Category ID</th><th scope="col" class="cats-row-actions">Actions</th></tr>
         </thead>
-
         <tbody>
-            <tr th:each="category, status : ${categories}">
-
-                <!-- Display ID -->
-                <td th:text="${status.count}"></td>
-
-                <td th:text="${category.categoryName}"></td>
-
-                <td>
-                    <!-- Edit -->
-                    <a th:href="@{/admin/categories/edit/{id}(id=${category.categoryId})}">
-                        <button type="button">Edit</button>
-                    </a>
-
-                    <!-- Delete -->
-                    <a th:href="@{/admin/categories/delete}">
-                        <button type="button">Delete</button>
-                    </a>
-                </td>
-
-            </tr>
+          <tr th:each="category : ${categories}" th:with="deleteId='delete-category-' + ${category.categoryId}">
+            <td class="fw-semibold" th:text="${category.categoryName}">Category name</td>
+            <td th:text="${category.categoryId}">1</td>
+            <td class="cats-row-actions">
+              <a class="btn btn-sm btn-outline-secondary"
+                 th:href="@{/admin/categories/edit/{id}(id=${category.categoryId})}">Edit</a>
+              <button type="button" class="btn btn-sm btn-outline-danger"
+                      data-bs-toggle="modal" th:attr="data-bs-target='#' + ${deleteId}">Delete</button>
+              <div th:replace="~{fragments/ui :: confirm(${deleteId}, 'Delete course category', 'Deleting a category may be blocked if courses still use it.', @{/admin/categories/delete/{id}(id=${category.categoryId})}, 'Delete category', true)}"></div>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(categories)}">
+            <td colspan="3">
+              <div th:replace="~{fragments/ui :: empty('tag', 'No categories yet', 'Add a category before creating catalogue courses.', ~{})}"></div>
+            </td>
+          </tr>
         </tbody>
-    </table>
-
+      </table>
+    </div>
+  </section>
+</section>
 </body>
-
 </html>

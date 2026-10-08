@@ -1,314 +1,108 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <title>课程分类与目录管理</title>
-    <style>
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        margin: 30px;
-        background-color: #f8f9fa;
-      }
-      .container {
-        max-width: 900px;
-        margin: 0 auto;
-        background: #ffffff;
-        padding: 25px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      }
-      h2 {
-        color: #333;
-        margin-top: 0;
-        text-align: center;
-        border-bottom: 2px solid #007bff;
-        padding-bottom: 10px;
-      }
-      .nav-link {
-        display: inline-block;
-        margin-bottom: 20px;
-        color: #007bff;
-        text-decoration: none;
-        font-weight: bold;
-      }
-      .nav-link:hover {
-        text-decoration: underline;
-      }
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('Course catalogue', 'Admin', 'courses', ~{::#content})}">
+<body>
+<section id="content">
+  <div class="cats-page-header">
+    <div>
+      <h1>Course catalogue</h1>
+      <p class="cats-sub">Maintain the courses available for staff applications.</p>
+    </div>
+    <a class="btn btn-outline-secondary" th:href="@{/admin/categories}">Manage categories</a>
+  </div>
 
-      /* 表单样式 */
-      .form-card {
-        background: #f1f3f5;
-        padding: 20px;
-        border-radius: 6px;
-        margin-bottom: 30px;
-      }
-      .form-card h3 {
-        margin-top: 0;
-        color: #495057;
-      }
-      .form-group {
-        margin-bottom: 15px;
-      }
-      .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: 600;
-        color: #495057;
-      }
-      .form-control {
-        width: 100%;
-        padding: 8px 12px;
-        box-sizing: border-box;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        font-size: 14px;
-      }
-      .btn-submit {
-        background-color: #28a745;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: bold;
-      }
-      .btn-submit:hover {
-        background-color: #218838;
-      }
-      .btn-cancel {
-        background-color: #6c757d;
-        color: white;
-        padding: 10px 15px;
-        text-decoration: none;
-        border-radius: 4px;
-        margin-left: 10px;
-        font-size: 14px;
-      }
-
-      /* 表格样式 */
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-      }
-      th,
-      td {
-        border: 1px solid #dee2e6;
-        padding: 12px;
-        text-align: left;
-      }
-      th {
-        background-color: #007bff;
-        color: white;
-      }
-      tr:nth-child(even) {
-        background-color: #f8f9fa;
-      }
-      .badge {
-        padding: 4px 10px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: bold;
-        color: #0d6efd;
-        background-color: #e7f1ff; /* 浅蓝底深蓝字，非常清晰 */
-        display: inline-block;
-      }
-      .bg-internal {
-        background-color: #17a2b8;
-      }
-      .bg-external {
-        background-color: #ffc107;
-        color: #212529;
-      }
-      .bg-prof {
-        background-color: #6f42c1;
-      }
-      .btn-action {
-        margin-right: 8px;
-        text-decoration: none;
-        font-weight: bold;
-      }
-      .btn-edit {
-        color: #007bff;
-      }
-      .btn-delete {
-        color: #dc3545;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <a th:href="@{/admin/showBudgetList}" class="nav-link"
-        >← 返回员工管理主页</a
-      >
-      <h2>课程分类与目录管理 (Course Categories & Catalogue)</h2>
-
-      <!-- 新增 / 修改 课程表单 -->
-      <div class="form-card">
-        <h3
-          th:text="${course.courseId == null} ? '新增课程' : '修改课程 (ID: ' + ${course.courseId} + ')'"
-        >
-          新增课程
-        </h3>
-
-        <form
-          th:action="@{/admin/courses/save}"
-          th:object="${course}"
-          method="post"
-        >
-          <!-- 隐藏域：自动映射 courseId -->
-          <input type="hidden" th:field="*{courseId}" />
-
-          <div class="form-group">
-            <label for="title">课程名称 (Title)：</label>
-            <input
-              type="text"
-              id="title"
-              th:field="*{title}"
-              class="form-control"
-              placeholder="例如: Java Spring Boot 实战"
-              required
-            />
+  <section class="card mb-4">
+    <div class="card-header">
+      <h2 class="cats-card-title" th:text="${course.courseId == null ? 'Add course' : 'Edit course'}">Add course</h2>
+    </div>
+    <div class="card-body">
+      <form th:action="@{/admin/courses/save}" th:object="${course}" method="post" class="cats-form" novalidate>
+        <input type="hidden" th:field="*{courseId}">
+        <div th:if="${#fields.hasAnyErrors()}" class="cats-error-summary" role="alert">
+          <div><h2>Check the course details</h2>
+            <ul><li th:each="error : ${#fields.allErrors()}" th:text="${error}">Please correct this field.</li></ul>
           </div>
-
-          <div class="form-group">
-            <label for="category">课程分类：</label>
-            <!-- 绑定到 courseCategory.categoryId -->
-            <select
-              id="category"
-              th:field="*{courseCategory.categoryId}"
-              class="form-control"
-              required
-            >
-              <option value="">-- 请选择课程分类 --</option>
-              <option
-                th:each="cat : ${categories}"
-                th:value="${cat.categoryId}"
-                th:text="${cat.categoryName}"
-              >
-                分类名称
-              </option>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="title">Course title</label>
+            <input id="title" th:field="*{title}" class="form-control" maxlength="255" required>
+            <div class="cats-field-msg" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="category">Category</label>
+            <select id="category" th:field="*{courseCategory.categoryId}" class="form-select" data-course-category required>
+              <option value="">Select a category</option>
+              <option th:each="cat : ${categories}" th:value="${cat.categoryId}" th:text="${cat.categoryName}">Category</option>
             </select>
+            <div class="cats-field-msg" th:if="${#fields.hasErrors('courseCategory')}" th:errors="*{courseCategory}"></div>
           </div>
-
-          <div class="form-group">
-            <label for="courseFee">课程费用 ($ Course Fee)：</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              id="courseFee"
-              th:field="*{courseFee}"
-              class="form-control"
-              placeholder="例如: 500.00"
-              required
-            />
+          <div class="col-md-6">
+            <label class="form-label" for="courseFee">Course fee</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" min="0" step="0.01" id="courseFee"
+                     th:field="*{courseFee}" class="form-control" data-course-fee required>
+            </div>
+            <div class="cats-field-msg" th:if="${#fields.hasErrors('courseFee')}" th:errors="*{courseFee}"></div>
+            <div class="form-text">Internal training is automatically set to $0.</div>
           </div>
-
-          <div class="form-group">
-            <label for="courseDescription">课程描述 (Description)：</label>
-            <textarea
-              id="courseDescription"
-              th:field="*{courseDescription}"
-              class="form-control"
-              rows="3"
-              placeholder="填写课程简介..."
-            ></textarea>
+          <div class="col-12">
+            <label class="form-label" for="courseDescription">Description</label>
+            <textarea id="courseDescription" th:field="*{courseDescription}" class="form-control" rows="3"></textarea>
+            <div class="cats-field-msg" th:if="${#fields.hasErrors('courseDescription')}" th:errors="*{courseDescription}"></div>
           </div>
+        </div>
+        <div class="cats-form-footer">
+          <a class="btn btn-outline-secondary" th:href="@{/admin/courses}">Cancel</a>
+          <button class="btn btn-primary" type="submit"
+                  th:text="${course.courseId == null ? 'Add course' : 'Save changes'}">Add course</button>
+        </div>
+      </form>
+    </div>
+  </section>
 
-          <button
-            type="submit"
-            class="btn-submit"
-            th:text="${course.courseId == null} ? '保存课程' : '更新课程'"
-          >
-            保存课程
-          </button>
-          <a
-            th:if="${course.courseId != null}"
-            th:href="@{/admin/courses}"
-            class="btn-cancel"
-            >取消编辑</a
-          >
-        </form>
-      </div>
-
-      <!-- 课程列表表格 -->
-      <h3>已录入课程列表</h3>
-      <table>
+  <section class="card" aria-labelledby="course-table-title">
+    <div class="card-header">
+      <h2 id="course-table-title" class="cats-card-title">Available courses</h2>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
         <thead>
           <tr>
-            <th style="width: 8%">ID</th>
-            <th style="width: 25%">课程名称</th>
-            <th style="width: 22%">课程分类</th>
-            <th style="width: 15%">费用</th>
-            <th style="width: 18%">描述</th>
-            <th style="width: 12%">操作</th>
+            <th scope="col">Course</th>
+            <th scope="col">Category</th>
+            <th scope="col" class="cats-num">Fee</th>
+            <th scope="col">Description</th>
+            <th scope="col" class="cats-row-actions">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr th:each="c : ${courseList}">
-            <td th:text="${c.courseId}">1</td>
-            <td th:text="${c.title}">Spring Boot 进阶</td>
+          <tr th:each="c : ${courseList}" th:with="deleteId='delete-course-' + ${c.courseId}">
             <td>
-              <!-- ✅ 修复：直接获取实体的 categoryName 字段，不再调用 .name() 方法 -->
-              <span
-                class="badge"
-                th:text="${c.courseCategory != null ? c.courseCategory.categoryName : '未分类'}"
-              >
-                InternalTraining
-              </span>
+              <span class="fw-semibold" th:text="${c.title}">Course title</span>
+              <div class="cats-cell-sub" th:text="${'ID ' + c.courseId}">ID 1</div>
             </td>
-            <td
-              th:text="${c.courseFee != null} ? '$' + ${#numbers.formatDecimal(c.courseFee, 1, 'COMMA', 2, 'POINT')} : '$0.00'"
-            >
-              $0.00
-            </td>
-            <td th:text="${c.courseDescription}">课程简介</td>
-            <td>
-              <a
-                class="btn-action btn-edit"
-                th:href="@{/admin/courses/edit/{id}(id=${c.courseId})}"
-                >编辑</a
-              >
-              <a
-                class="btn-action btn-delete"
-                th:href="@{/admin/courses/delete/{id}(id=${c.courseId})}"
-                onclick="return confirm('确定要删除这门课程吗？');"
-                >删除</a
-              >
+            <td><span th:replace="~{fragments/ui :: tag(${c.courseCategory != null ? c.courseCategory.categoryName : 'Uncategorised'})}"></span></td>
+            <td class="cats-num" th:text="${c.courseFee != null ? '$' + #numbers.formatDecimal(c.courseFee, 1, 'COMMA', 2, 'POINT') : '—'}">$0.00</td>
+            <td th:text="${c.courseDescription != null and !#strings.isEmpty(c.courseDescription) ? c.courseDescription : '—'}">Course description</td>
+            <td class="cats-row-actions">
+              <a class="btn btn-sm btn-outline-secondary"
+                 th:href="@{/admin/courses/edit/{id}(id=${c.courseId})}">Edit</a>
+              <button type="button" class="btn btn-sm btn-outline-danger"
+                      data-bs-toggle="modal" th:attr="data-bs-target='#' + ${deleteId}">Delete</button>
+              <div th:replace="~{fragments/ui :: confirm(${deleteId}, 'Delete course', 'This permanently removes this course from the catalogue.', @{/admin/courses/delete/{id}(id=${c.courseId})}, 'Delete course', true)}"></div>
             </td>
           </tr>
           <tr th:if="${#lists.isEmpty(courseList)}">
-            <td colspan="6" style="text-align: center; color: #888">
-              暂无课程数据，请通过上方表单添加。
+            <td colspan="5">
+              <div th:replace="~{fragments/ui :: empty('book', 'No courses in the catalogue', 'Add a course to make it available for applications.', ~{})}"></div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-
-    <script>
-      // 前端控制：当选择 Internal Training 时，自动将学费填 0 并设置为只读
-      function handleCategoryChange() {
-        const categorySelect = document.getElementById("courseCategory");
-        const feeInput = document.getElementById("courseFee");
-
-        if (
-          categorySelect.value === "INTERNAL_TRAINING" ||
-          categorySelect.value === "InternalTraining"
-        ) {
-          feeInput.value = "0.0";
-          feeInput.readOnly = true;
-        } else {
-          feeInput.readOnly = false;
-        }
-      }
-
-      // 页面加载时自动执行一次校验
-      window.onload = function () {
-        handleCategoryChange();
-      };
-    </script>
-  </body>
+  </section>
+</section>
+</body>
 </html>
