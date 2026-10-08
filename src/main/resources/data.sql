@@ -1,45 +1,52 @@
--- 插入测试员工额度数据 (Staff 表)
-INSERT INTO staff (staff_id, training_budget, training_days) VALUES 
-('S1001', 3000.00, 10),
-('S1002', 2500.00, 8),
-('S1003', 4500.00, 12),
-('S1004', 1800.00, 5),
-('S1005', 5000.00, 15);
+-- CATS System - LOCAL TEST DATA ONLY
+-- Use with a disposable local database and Hibernate create-drop.
+-- Do not commit test credentials or this seed file to the shared main branch.
 
--- 插入系统用户数据 (User 表 - 包含 Admin/Manager/Staff 账号)
-INSERT INTO user (dtype, name, user_name, staff_no, designation) VALUES 
-('Admin', 'Alice Wong', 'admin_alice', 'A001', 'System Administrator'),
-('Manager', 'Bob Tan', 'mgr_bob', 'M001', 'Department Manager'),
-('User', 'Charlie Lee', 'staff_charlie', 'S1001', 'Software Engineer'),
-('User', 'Diana Chen', 'staff_diana', 'S1002', 'QA Analyst');
+-- 1. Excluded days: simulated dates for calendar testing
+INSERT INTO excluded_days (date, description) VALUES
+('2026-10-01', 'Public Holiday'),
+('2026-10-02', 'Public Holiday'),
+('2026-10-14', 'Company Holiday'),
+('2026-10-22', 'Training Centre Closed'),
+('2026-10-23', 'Company Holiday'),
+('2026-11-05', 'Company Event'),
+('2026-11-16', 'Company Holiday'),
+('2026-11-17', 'Training Centre Closed'),
+('2026-12-24', 'Company Holiday'),
+('2026-12-25', 'Christmas Day'),
+('2026-12-31', 'Year-End Closure'),
+('2027-01-01', 'New Year Closure');
 
+-- 2. Course categories
+INSERT INTO course_category (category_id, category_name) VALUES
+(1, 'Internal Training'),
+(2, 'External Course'),
+(3, 'Professional Certification');
 
---- 1. 插入排除日期 (ExcludedDays) 测试数据
-INSERT INTO excluded_days (date, description)
-VALUES ('2026-10-01', 'Public Holiday');
+-- 3. Course catalogue
+INSERT INTO course_detail (title, course_fee, course_description, category_id) VALUES
+('Hands-on Java Spring Boot', 500.00, 'In-depth guide to Spring Boot framework and practical application development.', 1),
+('AWS Solutions Architect Certification', 1200.00, 'Official AWS training for Cloud Solutions Architect certification exam preparation.', 3),
+('Agile Project Management Workshop', 850.00, 'Interactive external workshop covering Scrum practices and Agile methodologies.', 2);
 
-INSERT INTO excluded_days (date, description)
-VALUES ('2026-10-02', 'Public Holiday');
+-- 4. Parent user (JOINED inheritance). Non-login test account only.
+INSERT INTO users (user_id, user_name, password, name, designation, role) VALUES
+(1001, 'staff_calendar_test', 'NOT_FOR_LOGIN', 'Calendar Test Staff', 'Software Engineer', 'STAFF');
 
-INSERT INTO excluded_days (date, description)
-VALUES ('2026-12-25', 'Christmas Day');
+-- 5. Child staff; user_id references users.user_id
+INSERT INTO staff (user_id, staff_id, training_budget, training_days) VALUES
+(1001, 'S1001', 3000.00, 20);
 
--- 1. Insert Course Categories
-INSERT INTO course_category (category_id, category_name) VALUES (1, 'Internal Training');
-INSERT INTO course_category (category_id, category_name) VALUES (2, 'External Course');
-INSERT INTO course_category (category_id, category_name) VALUES (3, 'Professional Certification');
-
--- 2. Insert Course Details
-INSERT INTO course_detail (title, course_fee, course_description, category_id) 
-VALUES ('Hands-on Java Spring Boot', 500.00, 'In-depth guide to Spring Boot framework and practical application development.', 1);
-
-INSERT INTO course_detail (title, course_fee, course_description, category_id) 
-VALUES ('AWS Solutions Architect Certification', 1200.00, 'Official AWS training for Cloud Solutions Architect certification exam preparation.', 3);
-
-INSERT INTO course_detail (title, course_fee, course_description, category_id) 
-VALUES ('Agile Project Management Workshop', 850.00, 'Interactive external workshop covering Scrum practices and Agile methodologies.', 2);
-
--- 3. 插入员工 (Staff) 测试数据
-INSERT INTO staff (staff_id, training_budget, training_days) VALUES ('S1001', 2000.0, 10);
-INSERT INTO staff (staff_id, training_budget, training_days) VALUES ('S1002', 1500.0, 7);
-INSERT INTO staff (staff_id, training_budget, training_days) VALUES ('S1003', 3000.0, 14);
+-- 6. Course applications for Calendar dropdown.
+-- Dates below are seed metadata; the calendar recomputes its own dates
+-- from the selected requested start date, training_days and excluded days.
+INSERT INTO course_application
+(course_title, training_days, course_fee, course_start_date, course_end_date, staff_id, status)
+VALUES
+('Java Training', 15.0, 500.00, '2026-10-12', '2026-11-02', 1001, 'APPLIED'),
+('Python Programming', 20.0, 350.00, '2026-10-19', '2026-11-13', 1001, 'APPLIED'),
+('AWS Cloud Computing', 10.0, 1200.00, '2026-10-15', '2026-10-28', 1001, 'APPLIED'),
+('Spring Boot Development', 12.5, 600.00, '2026-10-20', '2026-11-05', 1001, 'APPLIED'),
+('Data Analytics with SQL', 5.0, 450.00, '2026-11-03', '2026-11-09', 1001, 'APPLIED'),
+('Cybersecurity Fundamentals', 20.0, 900.00, '2026-10-28', '2026-11-24', 1001, 'APPLIED'),
+('Agile Project Management', 7.5, 300.00, '2026-12-21', '2026-12-30', 1001, 'APPLIED');
