@@ -29,6 +29,9 @@ public class CourseApplication {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer courseId;
 
+    @jakarta.persistence.Version
+    private Long version;
+
     private double courseFee;
 
     private LocalDate courseStartDate;
@@ -55,6 +58,10 @@ public class CourseApplication {
 
     private LocalDateTime submittedAt;
     private LocalDateTime updatedAt;
+    @ManyToOne
+    @JoinColumn(name = "reviewed_by_id")
+    private Manager reviewedBy;
+
     private LocalDateTime reviewedAt;
     private String decisionReason;
     private String experienceComments;

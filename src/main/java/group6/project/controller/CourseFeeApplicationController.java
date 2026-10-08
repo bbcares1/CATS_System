@@ -32,11 +32,11 @@ public class CourseFeeApplicationController {
     @GetMapping("/course-fee-applications")
     public String getAllApplications(Model model) {
         model.addAttribute("feeApplications", courseFeeApplicationService.getAllApplications());
-        return "coure-fee-applications-list";
+        return "course-fee-applications-list";
     }
 
     //View single claim
-    @GetMapping("/course-fee-applicaitions/{id}")
+    @GetMapping({"/course-fee-applications/{id}", "/course-fee-applicaitions/{id}"})
     public String getFeeApplication(@PathVariable ("id") Integer applicationId, Model model){
         Optional<CourseFeeApplication> existingApplication = courseFeeApplicationService.getApplicationById(applicationId);
 
@@ -52,7 +52,7 @@ public class CourseFeeApplicationController {
     }
 
     //Submit claim form
-    @GetMapping("/course-fee-applicaitions/new")
+    @GetMapping({"/course-fee-applications/new", "/course-fee-applicaitions/new"})
     public String showSubmitForm(Model model){
         CourseFeeApplication courseFeeApplication = new CourseFeeApplication();
         model.addAttribute("feeApplication", courseFeeApplication);

@@ -37,17 +37,17 @@
             </tr>
         </thead>
         <tbody>
-          
+
             <tr th:each="s : ${staffs}">
-                <td th:text="${s.id}">1</td>
+                <td th:text="${s.userId}">1</td>
                 <td th:text="${s.staffId}">S001</td>
                 <td th:text="${s.trainingBudget}">2000.00</td>
                 <td th:text="${s.trainingDays}">10</td>
                 <td>
-                
-                    <a class="btn-edit" th:href="@{/admin/update/{id}(id=${s.id})}">修改额度</a>
-                    <a class="btn-delete" 
-       th:href="@{/admin/delete/{id}(id=${s.id})}" 
+
+                    <a class="btn-edit" th:href="@{/admin/update/{id}(id=${s.userId})}">修改额度</a>
+                    <a class="btn-delete"
+       th:href="@{/admin/delete/{id}(id=${s.userId})}"
        onclick="return confirm('确定要删除该员工的额度记录吗？');">删除</a>
                 </td>
             </tr>

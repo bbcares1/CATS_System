@@ -14,7 +14,13 @@ public class ManagerService {
 
     private final ManagerRepo managerRepo;
 
-    public ManagerService(ManagerRepo managerRepo) {
+    private final CourseApplicationService courseApplicationService;
+    private final StaffService staffService;
+
+    public ManagerService(ManagerRepo managerRepo, CourseApplicationService courseApplicationService,
+            StaffService staffService) {
+        this.courseApplicationService = courseApplicationService;
+        this.staffService = staffService;
         this.managerRepo = managerRepo;
     }
 
@@ -34,19 +40,36 @@ public class ManagerService {
                         HttpStatus.NOT_FOUND, "Manager not found with staffNo: " + staffNo));
     }
 
-    // The methods below come from the class diagram.
-    // They will be filled in once CourseApplication and CourseFeeApplication are ready.
-
-    public String approveCourseApplication() {
-        throw new UnsupportedOperationException("Not implemented");
+    public Manager requireManager(java.security.Principal principal, jakarta.servlet.http.HttpSession session) {
+        String username = principal == null ? null : principal.getName();
+        if (principal == null && session != null) {
+            Object user = session.getAttribute("currentUser");
+            if (user == null) user = session.getAttribute("loggedInUser");
+            if (user instanceof group6.project.model.User account && account.getUserId() != null) {
+                return managerRepo.findById(account.getUserId()).orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please sign in as a manager."));
+            }
+            if (user instanceof String name) username = name;
+        }
+        if (username == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please sign in as a manager.");
+        return managerRepo.findByUserName(username).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please sign in as a manager."));
     }
 
-    public String rejectCourseApplication() {
-        throw new UnsupportedOperationException("Not implemented");
+    public List<group6.project.model.CourseApplication> pendingApplications(Manager manager) {
+        return courseApplicationService.pendingForManager(manager);
     }
 
-    public void employeeCourseHistory() {
-        throw new UnsupportedOperationException("Not implemented");
+    public group6.project.model.CourseApplication approveCourseApplication(Integer id, Manager manager, String reason) {
+        return courseApplicationService.review(id, manager, true, reason);
+    }
+
+    public group6.project.model.CourseApplication rejectCourseApplication(Integer id, Manager manager, String reason) {
+        return courseApplicationService.review(id, manager, false, reason);
+    }
+
+    public List<group6.project.model.CourseApplication> employeeCourseHistory(Integer staffId, Manager manager) {
+        return courseApplicationService.employeeCourseHistory(staffService.getStaff(staffId), manager);
     }
 
     public void approveFeeClaim() {

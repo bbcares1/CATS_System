@@ -12,19 +12,22 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
+@Table(name = "`user`")
+@Inheritance(strategy = jakarta.persistence.InheritanceType.SINGLE_TABLE)
 @Getter
 @Setter
-@EqualsAndHashCode 
-@NoArgsConstructor 
+@EqualsAndHashCode
+@NoArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
-    
-    
+
+
     private String userName;
 
-    private Enum role;
+    @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+    private Roles role;
 
     private String designation;
 

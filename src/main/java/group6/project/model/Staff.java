@@ -14,9 +14,9 @@ import lombok.Setter;
 @EqualsAndHashCode(callSuper = true)
 public class Staff extends User {
 
-    private String staffId;
+    @jakarta.persistence.ManyToOne
+    @jakarta.persistence.JoinColumn(name = "manager_id")
+    private Manager manager;
 
-    private Double trainingBudget;
 
-    private Integer trainingDays;
 }

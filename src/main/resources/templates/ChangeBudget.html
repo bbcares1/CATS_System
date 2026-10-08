@@ -85,7 +85,7 @@
     <form th:action="@{/admin/save}" th:object="${staff}" method="post">
         
         <!-- 隐藏域：保存主键 id，用于告诉 JPA 要更新哪条记录 -->
-        <input type="hidden" th:field="*{id}" />
+        <input type="hidden" th:field="*{userId}" />
 
         <!-- 员工编号：设置为 readonly 只能查看，不能修改 -->
         <div class="form-group">

@@ -21,25 +21,24 @@ public class ExcludedDaysController{
     @GetMapping
     public String getAllExcludedDays(Model model) {
         model.addAttribute(
-            "excludedDays",
+            "excludedDaysList",
             excludedDaysService.getAllExcludedDays()
         );
-        return "excluded-days";
+        model.addAttribute("newExcludedDay", new ExcludedDays());
+        return "ExcludedDaysList";
     }
 
     @GetMapping("/add")
     public String showAddForm(Model model) {
-       model.addAttribute(
-        "excludedDay", new ExcludedDays()
-    );
-    return "excluded-days-add";
-}
+       return getAllExcludedDays(model);
+    }
 
     @PostMapping("/add")
     public String addExcludedDay(
-            @Valid @ModelAttribute("excludedDay") ExcludedDays excludedDay,BindingResult result) {
+            @Valid @ModelAttribute("newExcludedDay") ExcludedDays excludedDay,BindingResult result, Model model) {
         if (result.hasErrors()) {
-            return "excluded-days-add";
+            model.addAttribute("excludedDaysList", excludedDaysService.getAllExcludedDays());
+            return "ExcludedDaysList";
     }
         excludedDaysService.addExcludedDay(excludedDay);
         return "redirect:/excluded-days";
@@ -52,7 +51,7 @@ public class ExcludedDaysController{
        ExcludedDays excludedDay =
                excludedDaysService.getExcludedDayById(id);
        model.addAttribute("excludedDay", excludedDay);
-       return "excluded-days-edit";
+       return "ExcludedDaysEdit";
 }
 
     @PostMapping("/edit/{id}")
@@ -60,7 +59,7 @@ public class ExcludedDaysController{
             @PathVariable Integer id,
             @Valid @ModelAttribute("excludedDay") ExcludedDays excludedDay,BindingResult result) {
         if (result.hasErrors()) {
-        return "excluded-days-edit";
+        return "ExcludedDaysEdit";
     }
         excludedDaysService.updateExcludedDay(id, excludedDay);
         return "redirect:/excluded-days";

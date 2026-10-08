@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>员工测试身份</title></head>
+<body>
+<h1>员工测试身份</h1>
+<p>仅用于本地 dev 环境；此入口不验证密码，不是正式登录。</p>
+<form method="post" th:action="@{/dev/staff-login}">
+<label>选择员工 <select name="username" required>
+<option th:each="staff : ${staffAccounts}" th:value="${staff.userName}"
+        th:text="${staff.name + ' (' + staff.userName + ')'}"
+        th:selected="${staff.userName == 'staff_charlie'}"></option>
+</select></label>
+<button type="submit">以此员工身份进入课程申请</button>
+</form>
+</body></html>

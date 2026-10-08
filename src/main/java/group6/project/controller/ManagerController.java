@@ -34,4 +34,29 @@ public class ManagerController {
     public Manager getManagerByStaffNo(@PathVariable String staffNo) {
         return managerService.getManagerByStaffNo(staffNo);
     }
+    @GetMapping("/me/course-applications")
+    public List<group6.project.model.CourseApplication> pendingApplications(
+            java.security.Principal principal, jakarta.servlet.http.HttpSession session) {
+        return managerService.pendingApplications(managerService.requireManager(principal, session));
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/me/course-applications/{id}/approve")
+    public group6.project.model.CourseApplication approve(@PathVariable Integer id,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String reason,
+            java.security.Principal principal, jakarta.servlet.http.HttpSession session) {
+        return managerService.approveCourseApplication(id, managerService.requireManager(principal, session), reason);
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/me/course-applications/{id}/reject")
+    public group6.project.model.CourseApplication reject(@PathVariable Integer id,
+            @org.springframework.web.bind.annotation.RequestParam String reason,
+            java.security.Principal principal, jakarta.servlet.http.HttpSession session) {
+        return managerService.rejectCourseApplication(id, managerService.requireManager(principal, session), reason);
+    }
+
+    @GetMapping("/me/staff/{staffId}/course-applications")
+    public List<group6.project.model.CourseApplication> employeeCourseHistory(@PathVariable Integer staffId,
+            java.security.Principal principal, jakarta.servlet.http.HttpSession session) {
+        return managerService.employeeCourseHistory(staffId, managerService.requireManager(principal, session));
+    }
 }

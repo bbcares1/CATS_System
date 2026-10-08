@@ -63,7 +63,7 @@ public class AdminController {
 
     @PostMapping("/save")
     public String postMethodName(Staff staff) {
-        adminService.save(staff);
+        adminService.updateStaffBudget(staff.getUserId(), staff.getTrainingBudget(), staff.getTrainingDays());
         return "redirect:/admin/showBudgetList";
     }
 

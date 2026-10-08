@@ -291,12 +291,11 @@
     <script>
       // 前端控制：当选择 Internal Training 时，自动将学费填 0 并设置为只读
       function handleCategoryChange() {
-        const categorySelect = document.getElementById("courseCategory");
+        const categorySelect = document.getElementById("category");
         const feeInput = document.getElementById("courseFee");
 
         if (
-          categorySelect.value === "INTERNAL_TRAINING" ||
-          categorySelect.value === "InternalTraining"
+          categorySelect.selectedOptions[0]?.textContent.trim() === "Internal Training"
         ) {
           feeInput.value = "0.0";
           feeInput.readOnly = true;
@@ -308,6 +307,7 @@
       // 页面加载时自动执行一次校验
       window.onload = function () {
         handleCategoryChange();
+        document.getElementById("category").addEventListener("change", handleCategoryChange);
       };
     </script>
   </body>

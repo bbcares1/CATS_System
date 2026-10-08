@@ -71,7 +71,7 @@
             <dt>Status</dt>
             <dd th:text="${application.status}"></dd>
             <dt>Manager decision / reason</dt>
-            <dd th:text="${application.decisionReason ?: 'Pending review'}"></dd>
+            <dd th:text="${application.decisionReason ?: (application.reviewedAt == null ? 'Pending review' : 'No reason provided')}"></dd>
             <dt>Experience comments</dt>
             <dd th:text="${application.experienceComments ?: '—'}"></dd>
         </dl>

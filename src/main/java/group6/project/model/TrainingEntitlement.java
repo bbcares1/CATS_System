@@ -27,6 +27,7 @@ public class TrainingEntitlement {
     private Integer id;
 
     @NotNull(message = "Year is required")
+    @jakarta.persistence.Column(name = "`year`")
     private Integer year;
 
     @ManyToOne

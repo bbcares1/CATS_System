@@ -11,6 +11,11 @@ public interface CourseApplicationRepo extends JpaRepository<CourseApplication,I
     List<CourseApplication> findByApplicant_UserIdAndCourseStartDateBetweenOrderByCourseStartDateAsc(
             Integer userId, java.time.LocalDate from, java.time.LocalDate to);
 
+    List<CourseApplication> findByApplicant_Manager_UserIdAndStatusInOrderBySubmittedAtAsc(
+            Integer managerId, List<ApplicationStatus> statuses);
+
+    List<CourseApplication> findByApplicant_UserIdOrderByCourseStartDateDesc(Integer staffId);
+
     List<CourseApplication> findByApplicant_UserIdAndStatusIn(
             Integer userId, List<ApplicationStatus> statuses);
 }
