@@ -1,0 +1,395 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <title>Training Calendar</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet"
+          th:href="@{/css/bootstrap.min.css}">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .training-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .calendar-card {
+            background-color: white;
+            padding: 24px;
+            border-radius: 10px;
+        }
+
+        .calendar-scroll {
+            overflow-x: auto;
+        }
+
+        .training-calendar {
+            width: 100%;
+            min-width: 850px;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        .training-calendar th,
+        .training-calendar td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        .training-calendar th {
+            text-align: center;
+            background-color: #e9eef5;
+        }
+
+        .training-calendar td {
+            height: 125px;
+            vertical-align: top;
+            overflow-wrap: anywhere;
+        }
+
+        /* Saturday and Sunday */
+        .weekend {
+            background-color: #f1f3f5;
+        }
+
+        /* Empty calendar cells */
+        .empty-day {
+            background-color: #fafafa;
+        }
+
+        /* Date number */
+        .date-number {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        /* Approved training */
+        .course-event {
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 5px;
+            background-color: #dbeafe;
+            color: #1e40af;
+            font-size: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        /* Approved training conflicting with excluded day */
+        .course-conflict {
+            background-color: #fff3cd;
+            border: 1px solid #e7b85c;
+            color: #754b00;
+        }
+
+        .course-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .course-employee,
+        .course-category,
+        .course-duration {
+            margin-top: 4px;
+        }
+
+        .conflict-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        /* Admin excluded day description */
+        .excluded-label {
+            padding: 5px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            background-color: #ffe6e6;
+            color: #842029;
+            font-size: 12px;
+            text-align: center;
+            overflow-wrap: anywhere;
+        }
+
+        /* Legend */
+        .legend-color {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            margin-right: 5px;
+            vertical-align: middle;
+            border: 1px solid #ddd;
+        }
+
+        .legend-training {
+            background-color: #dbeafe;
+            border-color: #93c5fd;
+        }
+
+        .legend-conflict {
+            background-color: #fff3cd;
+            border-color: #e7b85c;
+        }
+
+        .legend-excluded {
+            background-color: #ffe6e6;
+            border-color: #f1aeb5;
+        }
+
+        .legend-weekend {
+            background-color: #f1f3f5;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+
+            .calendar-card {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="training-container">
+
+    <h1 class="text-center mb-4">
+        Training Calendar
+    </h1>
+
+    <div class="calendar-card">
+
+        <!-- Month Navigation -->
+        <div class="d-flex justify-content-between
+                    align-items-center flex-wrap gap-3 mb-4">
+
+            <!-- Previous Month -->
+            <a class="btn btn-outline-primary"
+               th:href="@{/training/calendar(month=${previousMonth})}">
+                &larr; Previous
+            </a>
+
+            <!-- Month Selection -->
+            <form th:action="@{/training/calendar}"
+                  method="get"
+                  class="d-flex align-items-center gap-2">
+
+                <label for="monthSelect"
+                       class="fw-bold mb-0">
+                    Select Month:
+                </label>
+
+                <input type="month"
+                       id="monthSelect"
+                       name="month"
+                       class="form-control"
+                       th:value="${selectedMonth}"
+                       onchange="this.form.submit()">
+
+            </form>
+
+            <!-- Next Month -->
+            <a class="btn btn-outline-primary"
+               th:href="@{/training/calendar(month=${nextMonth})}">
+                Next &rarr;
+            </a>
+
+        </div>
+
+        <!-- Calendar Heading -->
+        <h2 class="mb-3"
+            th:text="${calendar.month + ' ' + calendar.year}">
+            OCTOBER 2026
+        </h2>
+
+        <!-- Calendar Table -->
+        <div class="calendar-scroll">
+
+            <table class="training-calendar">
+
+                <thead>
+                    <tr>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                        <th>Sunday</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <!-- One row for each week -->
+                    <tr th:each="week : ${calendar.weeks}">
+
+                        <!-- One cell for each day -->
+                        <td th:each="day, dayStat : ${week}"
+                            th:classappend="${day == null}
+                                ? 'empty-day'
+                                : (${dayStat.index >= 5}
+                                    ? 'weekend' : '')">
+
+                            <!-- Date Number -->
+                            <div th:if="${day != null}"
+                                 class="date-number"
+                                 th:text="${day.dayOfMonth}">
+                            </div>
+
+                            <!-- Only process valid calendar dates -->
+                            <th:block th:if="${day != null}">
+
+                                <!-- Admin Excluded Day Descriptions -->
+                                <th:block th:if="${excludedDays != null}">
+
+                                    <div th:each="excludedDay : ${excludedDays}"
+                                         th:if="${excludedDay.date != null
+                                             and excludedDay.date.equals(day)}"
+                                         class="excluded-label"
+                                         th:text="${excludedDay.description}">
+                                        Holiday Description
+                                    </div>
+
+                                </th:block>
+
+                                <!-- Approved Training Dates -->
+                                <th:block th:if="${trainingByDate != null}">
+
+                                    <div th:each="training : ${trainingByDate.get(day)}"
+                                         class="course-event"
+                                         th:classappend="${excludedDates != null
+                                             and excludedDates.contains(day)}
+                                             ? 'course-conflict' : ''">
+
+                                        <!-- Conflict Warning -->
+                                        <div th:if="${excludedDates != null
+                                                    and excludedDates.contains(day)}"
+                                             class="conflict-label">
+                                            &#9888; Conflict
+                                        </div>
+
+                                        <!-- Course Title -->
+                                        <div class="course-title"
+                                             th:text="${training.courseApplication.courseTitle}">
+                                            Java Training
+                                        </div>
+
+                                        <!-- Employee Name -->
+                                        <div class="course-employee">
+
+                                            Employee:
+
+                                            <span th:text="${training.courseApplication.applicant.name}">
+                                                Alice
+                                            </span>
+
+                                        </div>
+
+                                        <!-- Course Category -->
+                                        <div class="course-category">
+
+                                            Category:
+
+                                            <span th:text="${training.courseApplication.courseCategory}">
+                                                INTERNAL_TRAINING
+                                            </span>
+
+                                        </div>
+
+                                        <!-- Training Duration -->
+                                        <div class="course-duration">
+
+                                            Duration:
+
+                                            <span th:text="${training.trainingDuration}">
+                                                1.0
+                                            </span>
+
+                                            day(s)
+
+                                        </div>
+
+                                        <!-- Conflict Explanation -->
+                                        <div th:if="${excludedDates != null
+                                                    and excludedDates.contains(day)}"
+                                             class="mt-2">
+
+                                            Approved training overlaps
+                                            an Admin Excluded Day.
+                                            Admin review required.
+
+                                        </div>
+
+                                    </div>
+
+                                </th:block>
+
+                            </th:block>
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- Legend -->
+        <div class="d-flex flex-wrap gap-4 mt-3">
+
+            <div>
+                <span class="legend-color legend-training"></span>
+                Approved Training
+            </div>
+
+            <div>
+                <span class="legend-color legend-conflict"></span>
+                Excluded Day Conflict
+            </div>
+
+            <div>
+                <span class="legend-color legend-excluded"></span>
+                Admin Excluded Day
+            </div>
+
+            <div>
+                <span class="legend-color legend-weekend"></span>
+                Weekend
+            </div>
+
+        </div>
+
+        <!-- Information -->
+        <p class="text-muted mt-3 mb-0">
+
+            Only officially saved and approved training dates
+            are displayed.
+
+            Approved training schedules remain visible
+            if they conflict with newly configured excluded days.
+
+        </p>
+
+    </div>
+
+</div>
+
+</body>
+</html>

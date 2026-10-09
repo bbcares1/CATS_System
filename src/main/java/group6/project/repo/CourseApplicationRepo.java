@@ -35,4 +35,21 @@ public interface CourseApplicationRepo extends JpaRepository<CourseApplication,I
     Optional<CourseApplication> findForManager(
             @Param("applicationId") Integer applicationId,
             @Param("managerId") Integer managerId);
+        
+    // Find all approved courses overlapping the selected month
+    @Query("""
+            SELECT a
+            FROM CourseApplication a
+            JOIN FETCH a.applicant s
+            WHERE a.status = :status
+              AND a.courseStartDate <= :monthEnd
+              AND a.courseEndDate >= :monthStart
+            ORDER BY a.courseStartDate, a.courseId
+            """)
+    List<CourseApplication> findApprovedCoursesForCalendar(
+            @Param("status") ApplicationStatus status,
+            @Param("monthStart") java.time.LocalDate monthStart,
+            @Param("monthEnd") java.time.LocalDate monthEnd);
+
 }
+
