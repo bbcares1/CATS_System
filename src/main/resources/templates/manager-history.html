@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Team course history', 'Manager', 'history', ~{::#content})}">
+<body><section id="content" class="cats-stack">
+<div class="cats-page-header"><div><h1>Team course history</h1><p class="cats-sub" th:text="${'Direct reports · ' + year}"></p></div><a class="btn btn-outline-secondary" th:href="@{/manager/home}">Back to dashboard</a></div>
+<form class="card card-body" method="get" th:action="@{/manager/history}">
+<label for="employeeId" class="form-label">Select team member</label>
+<div class="d-flex gap-2"><select class="form-select" name="employeeId" id="employeeId" required>
+<option value="">Choose a team member</option><option th:each="employee : ${employees}" th:value="${employee.employeeId}" th:selected="${employee.employeeId == employeeId}" th:text="${employee.name + ' · ' + employee.staffId}"></option>
+</select><button class="btn btn-primary">Show history</button></div></form>
+<div class="card card-body">
+<p th:if="${#lists.isEmpty(employees)}" class="cats-sub">No team members are assigned to you.</p>
+<p th:if="${employeeId == null and !#lists.isEmpty(employees)}" class="cats-sub">Choose a team member to view their current-year courses.</p>
+<p th:if="${employeeId != null and #lists.isEmpty(courses)}" class="cats-sub">No course applications for this year.</p>
+<div class="table-responsive" th:unless="${#lists.isEmpty(courses)}"><table class="table"><thead><tr><th>Course</th><th>Category</th><th>Period</th><th>Days</th><th>Fee (SGD)</th><th>Status</th></tr></thead><tbody>
+<tr th:each="course : ${courses}"><td><a th:href="@{/manager/applications/{id}(id=${course.applicationId})}" th:text="${course.title}"></a></td><td th:text="${course.category.displayName}"></td><td th:text="${course.startDate + ' – ' + course.endDate}"></td><td th:text="${course.trainingDays}"></td><td th:text="${#numbers.formatDecimal(course.fee,1,2)}"></td><td><span th:replace="~{fragments/ui :: status(${course.status})}"></span></td></tr>
+</tbody></table></div></div>
+</section></body></html>

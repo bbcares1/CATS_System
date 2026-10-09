@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -170,6 +171,43 @@ class ManagerControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    // Pending details have a reason field and a version-bound decision form.
+    @Test
+    void pendingDetailsShowTheDecisionForm() throws Exception {
+        when(managerService.getApplicationForManager(1,10)).thenReturn(application(ApplicationStatus.APPLIED));
+        mockMvc.perform(get("/manager/applications/10").sessionAttr("user",manager()))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("name=\"version\"")))
+                .andExpect(content().string(containsString("Reason for approving or rejecting")));
+    }
+
+    // The browser cannot replace session identity with a posted manager ID.
+    @Test
+    void decisionUsesTheSignedInManager() throws Exception {
+        mockMvc.perform(post("/manager/applications/10/decision").sessionAttr("user",manager())
+                .param("managerId","99").param("decision","approve").param("reason","Useful training").param("version","0"))
+                .andExpect(redirectedUrl("/manager/approvals"));
+        verify(managerService).decide(1,10,"approve","Useful training",0L);
+    }
+
+    // Anonymous decisions never call the approval service.
+    @Test
+    void anonymousDecisionReturnsToLogin() throws Exception {
+        mockMvc.perform(post("/manager/applications/10/decision").param("decision","approve")
+                .param("reason","Useful training").param("version","0"))
+                .andExpect(redirectedUrl("/employee/login"));
+        verifyNoInteractions(managerService);
+    }
+
+    // The team-history selector is a rendered MVC page with a useful empty state.
+    @Test
+    void historyRequiresLoginAndShowsAnEmptyTeam() throws Exception {
+        mockMvc.perform(get("/manager/history")).andExpect(redirectedUrl("/employee/login"));
+        when(managerService.getSubordinates(1)).thenReturn(List.of());
+        mockMvc.perform(get("/manager/history").sessionAttr("user",manager()))
+                .andExpect(status().isOk()).andExpect(view().name("manager-history"))
+                .andExpect(content().string(containsString("No team members are assigned to you.")));
+    }
+
     private Manager manager() {
         Manager manager = new Manager();
         manager.setUserId(1);
@@ -185,6 +223,6 @@ class ManagerControllerTest {
                 "Improve our system design.", "Share the learning with the team.", status,
                 LocalDateTime.of(2026, 10, 9, 10, 0), null,
                 status == ApplicationStatus.REJECTED ? LocalDateTime.of(2026, 10, 9, 11, 0) : null,
-                status == ApplicationStatus.REJECTED ? "Conflicts with a project deadline." : null, null);
+                status == ApplicationStatus.REJECTED ? "Conflicts with a project deadline." : null, null, null, 0L);
     }
 }

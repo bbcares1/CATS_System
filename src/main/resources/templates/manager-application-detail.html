@@ -47,10 +47,49 @@
     </div>
   </div>
 
+  <!-- Allowance use and staffing information help the manager assess this request. -->
+  <div class="card mb-4" th:if="${support != null}">
+    <div class="card-header"><h2 class="cats-card-title">Decision support</h2></div>
+    <div class="card-body">
+      <h3 class="fs-6" th:text="${support.currentYear + ' annual allowance'}"></h3>
+      <dl class="cats-dl">
+        <dt>Annual days / budget limit</dt><dd th:text="${support.currentAllowance.dayLimit + ' days / SGD ' + support.currentAllowance.budget}"></dd>
+        <dt>Approved / completed days</dt><dd th:text="${support.currentAllowance.committedDays}"></dd>
+        <dt>Approved / completed fees</dt><dd th:text="${support.currentAllowance.committedBudget}"></dd>
+        <dt>Pending days reserved</dt><dd th:text="${support.currentAllowance.usedDays - support.currentAllowance.committedDays}"></dd>
+        <dt>Pending fees reserved</dt><dd th:text="${support.currentAllowance.usedBudget - support.currentAllowance.committedBudget}"></dd>
+        <dt>Remaining days / budget</dt><dd th:text="${support.currentAllowance.remainingDays + ' days / SGD ' + support.currentAllowance.remainingBudget}"></dd>
+      </dl>
+      <p class="cats-sub" th:if="${support.requestYear != support.currentYear}"
+         th:text="${'Request-year allowance (' + support.requestYear + '): ' + support.requestAllowance.remainingDays + ' remaining days / SGD ' + support.requestAllowance.remainingBudget}"></p>
+      <h3 class="fs-6">Other team members with Approved courses during this period</h3>
+      <p class="cats-sub" th:if="${#lists.isEmpty(support.overlapping)}">No other approved courses overlap this period.</p>
+      <div class="table-responsive" th:unless="${#lists.isEmpty(support.overlapping)}"><table class="table">
+        <thead><tr><th>Employee</th><th>Course</th><th>Period</th></tr></thead><tbody>
+        <tr th:each="other : ${support.overlapping}"><td th:text="${other.applicantName}"></td>
+          <td><a th:href="@{/manager/applications/{id}(id=${other.applicationId})}" th:text="${other.title}"></a></td>
+          <td th:text="${other.startDate + ' – ' + other.endDate}"></td></tr>
+        </tbody></table></div>
+    </div>
+  </div>
+
+  <!-- Only pending applications show a decision form; the service checks the state again. -->
+  <div class="card mb-4" th:if="${a.status.name() == 'APPLIED' or a.status.name() == 'UPDATED'}">
+    <div class="card-header"><h2 class="cats-card-title">Decision</h2></div>
+    <form class="card-body" method="post" th:action="@{/manager/applications/{id}/decision(id=${a.applicationId})}">
+      <input type="hidden" name="version" th:value="${a.version}">
+      <label for="reason" class="form-label">Reason for approving or rejecting</label>
+      <textarea class="form-control mb-3" name="reason" id="reason" maxlength="2000" required th:text="${decisionReason}"></textarea>
+      <div class="d-flex gap-2"><button class="btn btn-primary" name="decision" value="approve">Approve application</button>
+        <button class="btn btn-outline-danger" name="decision" value="reject" onclick="return confirm('Reject this application?');">Reject application</button></div>
+    </form>
+  </div>
+
   <div class="card" th:if="${a.reviewedAt != null or !#strings.isEmpty(a.decisionReason) or !#strings.isEmpty(a.experienceComments)}">
     <div class="card-header"><h2 class="cats-card-title">Decision and course feedback</h2></div>
     <div class="card-body">
       <dl class="cats-dl mb-0">
+        <dt th:if="${a.reviewerName != null}">Reviewed by</dt><dd th:if="${a.reviewerName != null}" th:text="${a.reviewerName}"></dd>
         <dt th:if="${a.reviewedAt != null}">Reviewed</dt>
         <dd th:if="${a.reviewedAt != null}" th:text="${#temporals.format(a.reviewedAt, 'd MMM yyyy HH:mm')}">10 Oct 2026 10:00</dd>
         <dt th:if="${!#strings.isEmpty(a.decisionReason)}">Decision reason</dt>

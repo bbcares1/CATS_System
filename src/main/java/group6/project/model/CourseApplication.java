@@ -15,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,13 @@ public class CourseApplication {
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer courseId;
+
+    @Version
+    private Long version;
+
+    @ManyToOne
+    @JoinColumn(name = "reviewer_id")
+    private Manager reviewer;
 
     @Column(precision = 12, scale = 2, nullable = false)
     private BigDecimal courseFee = BigDecimal.ZERO;

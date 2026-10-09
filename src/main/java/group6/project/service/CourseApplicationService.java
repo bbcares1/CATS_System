@@ -123,7 +123,8 @@ public class CourseApplicationService {
         }
         Summary annual = summaryForYear(staff, year, excludedId);
         return new Summary(requested, annual.remainingDays(), annual.remainingBudget(),
-                annual.usedDays(), annual.usedBudget(), annual.dayLimit(), annual.budget());
+                annual.usedDays(), annual.usedBudget(), annual.dayLimit(), annual.budget(),
+                annual.committedDays(), annual.committedBudget());
     }
 
     // Completed courses consume allowance too; cancelled, rejected and deleted courses do not.
@@ -135,12 +136,18 @@ public class CourseApplicationService {
         double days = used.stream().mapToDouble(a -> a.getTrainingDays() == null ? 0 : a.getTrainingDays()).sum();
         BigDecimal fees = used.stream().map(CourseApplication::getCourseFee)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        var committed = used.stream().filter(a -> a.getStatus() == ApplicationStatus.APPROVED
+                || a.getStatus() == ApplicationStatus.COMPLETED).toList();
+        double committedDays = committed.stream().mapToDouble(a -> a.getTrainingDays() == null ? 0 : a.getTrainingDays()).sum();
+        BigDecimal committedFees = committed.stream().map(CourseApplication::getCourseFee)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         return new Summary(0, Math.max(0, limit - days), budget.subtract(fees).max(BigDecimal.ZERO),
-                days, fees, limit, budget);
+                days, fees, limit, budget, committedDays, committedFees);
     }
 
     public record Summary(double requestedDays, double remainingDays, BigDecimal remainingBudget,
-            double usedDays, BigDecimal usedBudget, double dayLimit, BigDecimal budget) {}
+            double usedDays, BigDecimal usedBudget, double dayLimit, BigDecimal budget,
+            double committedDays, BigDecimal committedBudget) {}
 
     // Manager approval reuses the same reservations and overlap rules without requiring a new start date.
     public void validateForApproval(CourseApplication course) {

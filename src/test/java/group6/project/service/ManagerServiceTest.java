@@ -1,6 +1,6 @@
 package group6.project.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -38,6 +40,9 @@ class ManagerServiceTest {
 
     @Mock
     private CourseApplicationRepo courseApplicationRepo;
+
+    @Mock private CourseApplicationService policy;
+    @Mock private group6.project.repo.StaffRepo staffRepo;
 
     @InjectMocks
     private ManagerService managerService;
@@ -166,6 +171,74 @@ class ManagerServiceTest {
                 () -> managerService.getApplicationForManager(1, 99));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
+    }
+
+    // Approving and rejecting both require a reason before any application is changed.
+    @ParameterizedTest
+    @ValueSource(strings = {"approve", "reject"})
+    void eitherDecisionRequiresAReason(String decision) {
+        when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
+        var error=assertThrows(ResponseStatusException.class,()->managerService.decide(1,10,decision," ",0L));
+        assertEquals(HttpStatus.BAD_REQUEST,error.getStatusCode());
+        verifyNoInteractions(courseApplicationRepo,policy);
+    }
+
+    // Either pending state can be decided; the reviewer, reason and timestamp are persisted together.
+    @ParameterizedTest
+    @ValueSource(strings = {"approve", "reject"})
+    void decisionRecordsReviewerAndReason(String decision) {
+        Manager reviewer=manager();
+        CourseApplication course=application(10,2,"S002",ApplicationStatus.UPDATED);
+        course.setVersion(0L);
+        when(managerRepo.findById(1)).thenReturn(Optional.of(reviewer));
+        when(courseApplicationRepo.findApplicantIdForManager(10,1)).thenReturn(Optional.of(2));
+        when(courseApplicationRepo.lockForManager(10,1)).thenReturn(Optional.of(course));
+        managerService.decide(1,10,decision,"  Relevant to the role.  ",0L);
+        assertEquals("approve".equals(decision)?ApplicationStatus.APPROVED:ApplicationStatus.REJECTED,course.getStatus());
+        assertSame(reviewer,course.getReviewer());
+        assertEquals("Relevant to the role.",course.getDecisionReason());
+        assertNotNull(course.getReviewedAt());
+        verify(courseApplicationRepo).save(course);
+        if("approve".equals(decision)) verify(policy).validateForApproval(course);
+        else verify(policy,never()).validateForApproval(any());
+    }
+
+    // A stale review page cannot decide an edited request.
+    @Test
+    void staleVersionRejectsTheDecisionWithoutSaving() {
+        CourseApplication course=application(10,2,"S002",ApplicationStatus.APPLIED);
+        course.setVersion(1L);
+        when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
+        when(courseApplicationRepo.findApplicantIdForManager(10,1)).thenReturn(Optional.of(2));
+        when(courseApplicationRepo.lockForManager(10,1)).thenReturn(Optional.of(course));
+        var error=assertThrows(ResponseStatusException.class,()->managerService.decide(1,10,"approve","Useful",0L));
+        assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
+        verify(courseApplicationRepo,never()).save(any());
+        verify(policy,never()).validateForApproval(any());
+    }
+
+    // Repeated decisions cannot replace the original reviewer or reason.
+    @Test
+    void alreadyApprovedApplicationCannotBeDecidedAgain() {
+        CourseApplication course=application(10,2,"S002",ApplicationStatus.APPROVED);
+        course.setVersion(1L);
+        when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
+        when(courseApplicationRepo.findApplicantIdForManager(10,1)).thenReturn(Optional.of(2));
+        when(courseApplicationRepo.lockForManager(10,1)).thenReturn(Optional.of(course));
+        var error=assertThrows(ResponseStatusException.class,()->managerService.decide(1,10,"reject","Changed my mind",1L));
+        assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
+        verify(courseApplicationRepo,never()).save(any());
+    }
+
+    // Selecting another team's application fails before any reservation or review write.
+    @Test
+    void anotherTeamCannotDecideThisApplication() {
+        when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
+        when(courseApplicationRepo.findApplicantIdForManager(10,1)).thenReturn(Optional.empty());
+        var error=assertThrows(ResponseStatusException.class,()->managerService.decide(1,10,"approve","Useful",0L));
+        assertEquals(HttpStatus.NOT_FOUND,error.getStatusCode());
+        verifyNoInteractions(policy);
+        verify(courseApplicationRepo,never()).save(any());
     }
 
     private Manager manager() {

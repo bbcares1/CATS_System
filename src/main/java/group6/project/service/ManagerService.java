@@ -20,15 +20,21 @@ import group6.project.model.Manager;
 import group6.project.model.Staff;
 import group6.project.repo.CourseApplicationRepo;
 import group6.project.repo.ManagerRepo;
+import group6.project.repo.StaffRepo;
 
 @Service
 public class ManagerService {
 
+    private final CourseApplicationService policy;
+    private final StaffRepo staffRepo;
     private final ManagerRepo managerRepo;
     private final CourseApplicationRepo courseApplicationRepo;
 
-    public ManagerService(ManagerRepo managerRepo, CourseApplicationRepo courseApplicationRepo) {
+    public ManagerService(ManagerRepo managerRepo, CourseApplicationRepo courseApplicationRepo,
+            CourseApplicationService policy, StaffRepo staffRepo) {
         this.managerRepo = managerRepo;
+        this.policy = policy;
+        this.staffRepo = staffRepo;
         this.courseApplicationRepo = courseApplicationRepo;
     }
 
@@ -84,7 +90,8 @@ public class ManagerService {
                 application.getWorkDissemination(), application.getStatus(),
                 application.getSubmittedAt(), application.getUpdatedAt(),
                 application.getReviewedAt(), application.getDecisionReason(),
-                application.getExperienceComments());
+                application.getExperienceComments(), application.getReviewer() == null ? null : application.getReviewer().getName(),
+                application.getVersion());
     }
 
     public record ApplicationGroup(Integer employeeId, String employeeName, String staffId,
@@ -99,25 +106,83 @@ public class ManagerService {
             LocalDate startDate, LocalDate endDate, Double trainingDays, String halfDayPeriod,
             BigDecimal fee, String justification, String workDissemination, ApplicationStatus status,
             LocalDateTime submittedAt, LocalDateTime updatedAt, LocalDateTime reviewedAt,
-            String decisionReason, String experienceComments) {
+            String decisionReason, String experienceComments, String reviewerName, Long version) {
     }
 
-    // The methods below come from the class diagram.
-    // They will be filled in once CourseApplication and CourseFeeApplication are ready.
-
-    public String approveCourseApplication() {
-        throw new UnsupportedOperationException("Not implemented");
+    // Require a reason for either decision and check the version the manager actually reviewed.
+    @Transactional
+    public void decide(Integer managerId, Integer applicationId, String decision, String reason, Long version) {
+        Manager reviewer = getManager(managerId);
+        if (!"approve".equals(decision) && !"reject".equals(decision)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose approve or reject.");
+        }
+        if (reason == null || reason.isBlank() || reason.trim().length() > 2000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A decision reason is required (up to 2000 characters).");
+        }
+        Integer employeeId = courseApplicationRepo.findApplicantIdForManager(applicationId, managerId)
+                .orElseThrow(ManagerService::notFound);
+        Staff employee = new Staff(); employee.setUserId(employeeId);
+        policy.lockEmployee(employee);
+        CourseApplication course = courseApplicationRepo.lockForManager(applicationId, managerId)
+                .orElseThrow(ManagerService::notFound);
+        if (version == null || !version.equals(course.getVersion())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This application changed. Review the latest details before deciding.");
+        }
+        if (course.getStatus() != ApplicationStatus.APPLIED && course.getStatus() != ApplicationStatus.UPDATED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This application has already been decided or withdrawn.");
+        }
+        if ("approve".equals(decision)) {
+            try { policy.validateForApproval(course); }
+            catch (IllegalArgumentException e) { throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage()); }
+        }
+        course.setStatus("approve".equals(decision) ? ApplicationStatus.APPROVED : ApplicationStatus.REJECTED);
+        course.setReviewer(reviewer);
+        course.setDecisionReason(reason.trim());
+        course.setReviewedAt(LocalDateTime.now());
+        course.setUpdatedAt(course.getReviewedAt());
+        courseApplicationRepo.save(course);
     }
 
-    public String rejectCourseApplication() {
-        throw new UnsupportedOperationException("Not implemented");
+    // Show committed use separately from pending reservations, plus other approved courses in this period.
+    @Transactional(readOnly = true)
+    public DecisionSupport getDecisionSupport(Integer managerId, Integer applicationId) {
+        getManager(managerId);
+        CourseApplication course = courseApplicationRepo.findForManager(applicationId, managerId)
+                .orElseThrow(ManagerService::notFound);
+        int currentYear = LocalDate.now().getYear();
+        int requestYear = course.getCourseStartDate().getYear();
+        var overlapping = courseApplicationRepo.findApprovedDuring(managerId, course.getApplicant().getUserId(),
+                ApplicationStatus.APPROVED, course.getCourseStartDate(), course.getCourseEndDate()).stream()
+                .filter(other -> policy.overlaps(course, other)).map(ManagerService::toView).toList();
+        return new DecisionSupport(currentYear, policy.summaryForYear(course.getApplicant(), currentYear, null),
+                requestYear, policy.summaryForYear(course.getApplicant(), requestYear, null), overlapping);
     }
 
-    public void employeeCourseHistory() {
-        throw new UnsupportedOperationException("Not implemented");
+    // Return current direct reports only; the manager's own courses stay in the Staff workspace.
+    @Transactional(readOnly = true)
+    public List<EmployeeView> getSubordinates(Integer managerId) {
+        getManager(managerId);
+        return staffRepo.findByManager_UserId(managerId).stream()
+                .filter(staff -> !managerId.equals(staff.getUserId()))
+                .map(staff -> new EmployeeView(staff.getUserId(), staff.getName(), staff.getStaffId())).toList();
     }
 
-    public void approveFeeClaim() {
-        throw new UnsupportedOperationException("Not implemented");
+    // The selected employee must still report to this manager before any annual history is returned.
+    @Transactional(readOnly = true)
+    public List<ApplicationView> getEmployeeHistory(Integer managerId, Integer employeeId) {
+        getSubordinates(managerId).stream().filter(staff -> staff.employeeId().equals(employeeId))
+                .findFirst().orElseThrow(ManagerService::notFound);
+        Staff employee = new Staff(); employee.setUserId(employeeId);
+        return policy.findForStaffAndYear(employee, LocalDate.now().getYear()).stream()
+                .map(ManagerService::toView).toList();
     }
+
+    // Use the same response for a missing application and one belonging to another team.
+    private static ResponseStatusException notFound() {
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Course application or employee not found.");
+    }
+
+    public record DecisionSupport(int currentYear, CourseApplicationService.Summary currentAllowance,
+            int requestYear, CourseApplicationService.Summary requestAllowance, List<ApplicationView> overlapping) {}
+    public record EmployeeView(Integer employeeId, String name, String staffId) {}
 }
