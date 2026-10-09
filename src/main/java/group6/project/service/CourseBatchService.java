@@ -56,6 +56,10 @@ public class CourseBatchService {
             courseBatch.getCourseEndDate()
         );
 
+        existing.setTrainingDays(
+            courseBatch.getTrainingDays()
+        );
+
         validateBatch(existing);
 
         CourseBatch saved =
@@ -80,6 +84,14 @@ public class CourseBatchService {
 
     if (courseBatch.getCourseEndDate().isBefore(courseBatch.getCourseStartDate())){
       throw new IllegalArgumentException("End date cannot be before start date");
+    }
+
+    Double trainingDays = courseBatch.getTrainingDays();
+    if (trainingDays == null || !Double.isFinite(trainingDays)
+        || trainingDays <= 0 || trainingDays % 0.5 != 0) {
+      throw new IllegalArgumentException(
+          "Training days must be a positive whole or half-day amount"
+      );
     }
 
     if (courseBatch.getCapacity() == null ||

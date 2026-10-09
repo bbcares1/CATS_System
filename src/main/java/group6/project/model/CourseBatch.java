@@ -1,6 +1,5 @@
 package group6.project.model;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import group6.project.model.CourseDetail;
@@ -36,6 +35,8 @@ public class CourseBatch {
     private LocalDate courseStartDate;
 
     private LocalDate courseEndDate;
+
+    private Double trainingDays;
 
     private Integer capacity;
 }

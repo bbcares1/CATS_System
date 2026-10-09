@@ -18,9 +18,11 @@ import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 import org.springframework.mock.web.MockHttpSession;
 
-import group6.project.model.CourseApplication;
+import group6.project.model.CourseBatch;
+import group6.project.model.CourseDetail;
 import group6.project.service.AdminService;
 import group6.project.service.CourseCategoryService;
+import group6.project.service.CourseBatchService;
 import group6.project.service.ExcludedDaysService;
 import group6.project.service.CourseScheduleService;
 
@@ -38,6 +40,9 @@ public class AdminCalendarControllerTest {
     @Mock
     private CourseScheduleService courseScheduleService;
 
+    @Mock
+    private CourseBatchService courseBatchService;
+
     private AdminController adminController;
 
     @BeforeEach
@@ -49,14 +54,15 @@ public class AdminCalendarControllerTest {
                 adminService,
                 courseCategoryService,
                 excludedDaysService,
-                courseScheduleService);
+                courseScheduleService,
+                courseBatchService);
     }
 
     // Test 1: Display selected month
     @Test
     void shouldDisplaySelectedMonth() {
 
-        when(courseScheduleService.getAllCourses())
+        when(courseBatchService.getAllBatches())
                 .thenReturn(Collections.emptyList());
 
         when(excludedDaysService.getAllExcludedDays())
@@ -91,11 +97,15 @@ public class AdminCalendarControllerTest {
     @Test
     void shouldKeepCourseWhenSwitchingMonths() {
 
-        CourseApplication course = new CourseApplication();
-        course.setCourseTitle("Java Training");
-        course.setTrainingDays(5.0);
+        CourseBatch batch = new CourseBatch();
+        batch.setBatchId(1L);
+        batch.setCourseStartDate(LocalDate.of(2026, 10, 29));
+        batch.setTrainingDays(5.0);
+        CourseDetail detail = new CourseDetail();
+        detail.setTitle("Java Training");
+        batch.setCourseDetail(detail);
 
-        Integer courseId = 1;
+        Long batchId = 1L;
 
         LocalDate requestedStartDate =
                 LocalDate.of(2026, 10, 29);
@@ -114,14 +124,14 @@ public class AdminCalendarControllerTest {
                 LocalDate.of(2026, 11, 3),
                 LocalDate.of(2026, 11, 4));
 
-        when(courseScheduleService.getAllCourses())
+        when(courseBatchService.getAllBatches())
                 .thenReturn(Collections.emptyList());
 
         when(excludedDaysService.getAllExcludedDays())
                 .thenReturn(Collections.emptyList());
 
-        when(courseScheduleService.getCourse(courseId))
-                .thenReturn(course);
+        when(courseBatchService.getBatchById(batchId))
+                .thenReturn(java.util.Optional.of(batch));
 
         when(courseScheduleService.calculateSchedule(
                 requestedStartDate,
@@ -138,7 +148,7 @@ public class AdminCalendarControllerTest {
 
         String viewName = adminController.showCourseCalendar(
                 "2026-11",
-                courseId,
+                batchId,
                 requestedStartDate,
                 "",
                 model,
@@ -147,8 +157,8 @@ public class AdminCalendarControllerTest {
         assertEquals("CourseCalendar", viewName);
 
         assertEquals(
-                course,
-                model.getAttribute("selectedCourse"));
+                batch,
+                model.getAttribute("selectedBatch"));
 
         assertEquals(
                 schedule,
@@ -159,8 +169,8 @@ public class AdminCalendarControllerTest {
                 model.getAttribute("trainingDates"));
 
         assertEquals(
-                courseId,
-                model.getAttribute("selectedCourseId"));
+                batchId,
+                model.getAttribute("selectedBatchId"));
 
         assertEquals(
                 requestedStartDate,
@@ -175,11 +185,15 @@ public class AdminCalendarControllerTest {
     @Test
     void shouldKeepWeekendDatesWhenSwitchingMonths() {
 
-        CourseApplication course = new CourseApplication();
-        course.setCourseTitle("Java Training");
-        course.setTrainingDays(15.0);
+        CourseBatch batch = new CourseBatch();
+        batch.setBatchId(1L);
+        batch.setCourseStartDate(LocalDate.of(2026, 10, 12));
+        batch.setTrainingDays(15.0);
+        CourseDetail detail = new CourseDetail();
+        detail.setTitle("Java Training");
+        batch.setCourseDetail(detail);
 
-        Integer courseId = 1;
+        Long batchId = 1L;
 
         LocalDate requestedStartDate =
                 LocalDate.of(2026, 10, 12);
@@ -205,14 +219,14 @@ public class AdminCalendarControllerTest {
                 LocalDate.of(2026, 10, 24),
                 LocalDate.of(2026, 10, 30));
 
-        when(courseScheduleService.getAllCourses())
+        when(courseBatchService.getAllBatches())
                 .thenReturn(Collections.emptyList());
 
         when(excludedDaysService.getAllExcludedDays())
                 .thenReturn(Collections.emptyList());
 
-        when(courseScheduleService.getCourse(courseId))
-                .thenReturn(course);
+        when(courseBatchService.getBatchById(batchId))
+                .thenReturn(java.util.Optional.of(batch));
 
         when(courseScheduleService.calculateSchedule(
                 requestedStartDate,
@@ -229,7 +243,7 @@ public class AdminCalendarControllerTest {
 
         String viewName = adminController.showCourseCalendar(
                 "2026-10",
-                courseId,
+                batchId,
                 requestedStartDate,
                 weekendTrainingDates,
                 model,
@@ -259,11 +273,15 @@ public class AdminCalendarControllerTest {
     @Test
     void shouldUseDefaultWhenNoWeekendDatesSelected() {
 
-        CourseApplication course = new CourseApplication();
-        course.setCourseTitle("Python Programming");
-        course.setTrainingDays(3.0);
+        CourseBatch batch = new CourseBatch();
+        batch.setBatchId(2L);
+        batch.setCourseStartDate(LocalDate.of(2026, 10, 12));
+        batch.setTrainingDays(3.0);
+        CourseDetail detail = new CourseDetail();
+        detail.setTitle("Python Programming");
+        batch.setCourseDetail(detail);
 
-        Integer courseId = 2;
+        Long batchId = 2L;
 
         LocalDate requestedStartDate =
                 LocalDate.of(2026, 10, 12);
@@ -275,14 +293,14 @@ public class AdminCalendarControllerTest {
                         LocalDate.of(2026, 10, 14),
                         3.0);
 
-        when(courseScheduleService.getAllCourses())
+        when(courseBatchService.getAllBatches())
                 .thenReturn(Collections.emptyList());
 
         when(excludedDaysService.getAllExcludedDays())
                 .thenReturn(Collections.emptyList());
 
-        when(courseScheduleService.getCourse(courseId))
-                .thenReturn(course);
+        when(courseBatchService.getBatchById(batchId))
+                .thenReturn(java.util.Optional.of(batch));
 
         when(courseScheduleService.calculateSchedule(
                 requestedStartDate,
@@ -302,7 +320,7 @@ public class AdminCalendarControllerTest {
 
         String viewName = adminController.showCourseCalendar(
                 "2026-10",
-                courseId,
+                batchId,
                 requestedStartDate,
                 "",
                 model,
@@ -326,11 +344,15 @@ public class AdminCalendarControllerTest {
 
     @Test
     void shouldRestoreLastCalculatedScheduleFromSession() {
-        Integer courseId = 9;
+        Long batchId = 9L;
         LocalDate requestedStartDate = LocalDate.of(2026, 11, 2);
-        CourseApplication course = new CourseApplication();
-        course.setCourseTitle("Session-restored course");
-        course.setTrainingDays(3.0);
+        CourseBatch batch = new CourseBatch();
+        batch.setBatchId(batchId);
+        batch.setCourseStartDate(requestedStartDate);
+        batch.setTrainingDays(3.0);
+        CourseDetail detail = new CourseDetail();
+        detail.setTitle("Session-restored course");
+        batch.setCourseDetail(detail);
         CourseScheduleService.Schedule schedule = new CourseScheduleService.Schedule(
                 requestedStartDate,
                 requestedStartDate,
@@ -338,9 +360,9 @@ public class AdminCalendarControllerTest {
                 3.0);
         MockHttpSession session = new MockHttpSession();
 
-        when(courseScheduleService.getAllCourses()).thenReturn(List.of(course));
+        when(courseBatchService.getAllBatches()).thenReturn(List.of(batch));
         when(excludedDaysService.getAllExcludedDays()).thenReturn(Collections.emptyList());
-        when(courseScheduleService.getCourse(courseId)).thenReturn(course);
+        when(courseBatchService.getBatchById(batchId)).thenReturn(java.util.Optional.of(batch));
         when(courseScheduleService.calculateSchedule(requestedStartDate, 3.0, Set.of()))
                 .thenReturn(schedule);
         when(courseScheduleService.getTrainingDates(schedule, Set.of()))
@@ -351,7 +373,7 @@ public class AdminCalendarControllerTest {
 
         adminController.showCourseCalendar(
                 "2026-11",
-                courseId,
+                batchId,
                 requestedStartDate,
                 "",
                 new ExtendedModelMap(),
@@ -367,7 +389,7 @@ public class AdminCalendarControllerTest {
                 session);
 
         assertEquals("CourseCalendar", viewName);
-        assertEquals(courseId, restoredModel.getAttribute("selectedCourseId"));
+        assertEquals(batchId, restoredModel.getAttribute("selectedBatchId"));
         assertEquals(requestedStartDate, restoredModel.getAttribute("requestedStartDate"));
         assertEquals("2026-11", restoredModel.getAttribute("currentMonth"));
         assertEquals(schedule, restoredModel.getAttribute("schedule"));

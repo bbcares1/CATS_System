@@ -129,7 +129,7 @@ public class AdminService {
 
                Integer managerId = form.getManager().getUserId();
 
-               Staff managerObj = staffRepo.findById(managerId).orElse(null);
+               Manager managerObj = managerRepo.findById(managerId).orElse(null);
                target.setManager(managerObj);
           } else {
 

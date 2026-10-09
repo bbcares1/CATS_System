@@ -24,6 +24,7 @@ import group6.project.model.Admin;
 import group6.project.model.AccountForm;
 import group6.project.model.ApprovalHierarchy;
 import group6.project.model.CourseCategory;
+import group6.project.model.CourseBatch;
 import group6.project.model.CourseDetail;
 import group6.project.model.Roles;
 import group6.project.model.Staff;
@@ -33,7 +34,7 @@ import group6.project.service.ExcludedDaysService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import group6.project.service.CourseScheduleService;
-import group6.project.model.CourseApplication;
+import group6.project.service.CourseBatchService;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
@@ -41,7 +42,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/admin")
 public class AdminController {
 
-    private static final String CALENDAR_COURSE_ID = "adminCalendarCourseId";
+    private static final String CALENDAR_BATCH_ID = "adminCalendarBatchId";
     private static final String CALENDAR_START_DATE = "adminCalendarStartDate";
     private static final String CALENDAR_WEEKEND_DATES = "adminCalendarWeekendDates";
     private static final String CALENDAR_MONTH = "adminCalendarMonth";
@@ -50,16 +51,19 @@ public class AdminController {
     private final CourseCategoryService courseCategoryService;
     private final ExcludedDaysService excludedDaysService;
     private final CourseScheduleService courseScheduleService;
+    private final CourseBatchService courseBatchService;
 
     public AdminController(
             AdminService adminService,
             CourseCategoryService courseCategoryService,
             ExcludedDaysService excludedDaysService,
-            CourseScheduleService courseScheduleService) {
+            CourseScheduleService courseScheduleService,
+            CourseBatchService courseBatchService) {
        this.adminService = adminService;
        this.courseCategoryService = courseCategoryService;
        this.excludedDaysService = excludedDaysService;
        this.courseScheduleService = courseScheduleService;
+       this.courseBatchService = courseBatchService;
     }
 
 
@@ -236,16 +240,16 @@ public class AdminController {
     @GetMapping("/calendar")
     public String showCourseCalendar(
             @RequestParam(required = false) String month,
-            @RequestParam(required = false) Integer courseId,
+            @RequestParam(required = false) Long batchId,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate requestedStartDate,
             @RequestParam(required = false) String weekendTrainingDates,
             Model model,
             HttpSession session) {
-        if (courseId == null && requestedStartDate == null
+        if (batchId == null && requestedStartDate == null
                 && (weekendTrainingDates == null || weekendTrainingDates.isBlank())) {
-            courseId = (Integer) session.getAttribute(CALENDAR_COURSE_ID);
+            batchId = (Long) session.getAttribute(CALENDAR_BATCH_ID);
             requestedStartDate = (LocalDate) session.getAttribute(CALENDAR_START_DATE);
             weekendTrainingDates = (String) session.getAttribute(CALENDAR_WEEKEND_DATES);
         }
@@ -253,13 +257,13 @@ public class AdminController {
             month = (String) session.getAttribute(CALENDAR_MONTH);
         }
         return renderCourseCalendar(
-                month, courseId, requestedStartDate, weekendTrainingDates, model, session);
+                month, batchId, requestedStartDate, weekendTrainingDates, model, session);
     }
 
     @PostMapping("/calendar")
     public String calculateCourseCalendar(
             @RequestParam(required = false) String month,
-            @RequestParam(required = false) Integer courseId,
+            @RequestParam(required = false) Long batchId,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate requestedStartDate,
@@ -267,18 +271,17 @@ public class AdminController {
             Model model,
             HttpSession session) {
         return renderCourseCalendar(
-                month, courseId, requestedStartDate, weekendTrainingDates, model, session);
+                month, batchId, requestedStartDate, weekendTrainingDates, model, session);
     }
 
     private String renderCourseCalendar(
             String month,
-            Integer courseId,
+            Long batchId,
             LocalDate requestedStartDate,
             String weekendTrainingDates,
             Model model,
             HttpSession session) {
-       // Load available courses
-       model.addAttribute("courses",courseScheduleService.getAllCourses());
+       model.addAttribute("batches", courseBatchService.getAllBatches());
       // Generate the current month's calendar
        YearMonth selectedMonth = (month == null || month.isBlank())
         ? YearMonth.now()
@@ -321,27 +324,33 @@ public class AdminController {
         model.addAttribute(
             "weekendTrainingDates",
             weekendTrainingDates == null ? "" : weekendTrainingDates);
-        if (courseId != null && requestedStartDate != null) {
-            CourseApplication course =courseScheduleService.getCourse(courseId);
-        if (course.getTrainingDays() != null && course.getTrainingDays() > 0) {
-            CourseScheduleService.Schedule schedule =
-                    courseScheduleService.calculateSchedule(
-                            requestedStartDate,
-                            course.getTrainingDays(),
-                            selectedWeekends);
-        model.addAttribute("selectedCourse", course);
-        model.addAttribute("schedule", schedule);
-        model.addAttribute("trainingDates",
-                     courseScheduleService.getTrainingDates(schedule,selectedWeekends));
-        model.addAttribute("selectedCourseId", courseId);
-        model.addAttribute("requestedStartDate", requestedStartDate);
-        session.setAttribute(CALENDAR_COURSE_ID, courseId);
-        session.setAttribute(CALENDAR_START_DATE, requestedStartDate);
-        session.setAttribute(
-                CALENDAR_WEEKEND_DATES,
-                weekendTrainingDates == null ? "" : weekendTrainingDates);
+        if (batchId != null) {
+            CourseBatch batch = courseBatchService.getBatchById(batchId)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Course batch was not found."));
+            if (requestedStartDate == null) {
+                requestedStartDate = batch.getCourseStartDate();
+            }
+            model.addAttribute("selectedBatch", batch);
+            model.addAttribute("selectedBatchId", batchId);
+            model.addAttribute("requestedStartDate", requestedStartDate);
+            if (requestedStartDate != null && batch.getTrainingDays() != null) {
+                CourseScheduleService.Schedule schedule =
+                        courseScheduleService.calculateSchedule(
+                                requestedStartDate,
+                                batch.getTrainingDays(),
+                                selectedWeekends);
+                model.addAttribute("schedule", schedule);
+                model.addAttribute(
+                        "trainingDates",
+                        courseScheduleService.getTrainingDates(schedule, selectedWeekends));
+                session.setAttribute(CALENDAR_BATCH_ID, batchId);
+                session.setAttribute(CALENDAR_START_DATE, requestedStartDate);
+                session.setAttribute(
+                        CALENDAR_WEEKEND_DATES,
+                        weekendTrainingDates == null ? "" : weekendTrainingDates);
+            }
         }
-      }
         return "CourseCalendar";
     }
 

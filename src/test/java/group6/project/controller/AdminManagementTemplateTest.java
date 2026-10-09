@@ -29,6 +29,8 @@ import group6.project.service.AdminService;
 import group6.project.service.CourseApplicationService;
 import group6.project.service.CourseCategoryService;
 import group6.project.service.CourseScheduleService;
+import group6.project.service.CourseBatchService;
+import group6.project.model.CourseBatch;
 import group6.project.service.ExcludedDaysService;
 import group6.project.repo.CourseCategoryRepository;
 
@@ -60,9 +62,13 @@ class AdminManagementTemplateTest {
     @MockitoBean
     private CourseScheduleService courseScheduleService;
 
+    @MockitoBean
+    private CourseBatchService courseBatchService;
+
     private Staff staff;
     private CourseCategory category;
     private CourseDetail course;
+    private CourseBatch batch;
     private ApprovalHierarchy hierarchy;
     private ExcludedDays holiday;
 
@@ -86,6 +92,14 @@ class AdminManagementTemplateTest {
         course.setTitle("Spring");
         course.setCourseFee(50.0);
         course.setCourseCategory(category);
+
+        batch = new CourseBatch();
+        batch.setBatchId(18L);
+        batch.setCourseDetail(course);
+        batch.setCourseStartDate(LocalDate.of(2026, 10, 12));
+        batch.setCourseEndDate(LocalDate.of(2026, 10, 16));
+        batch.setTrainingDays(5.0);
+        batch.setCapacity(20);
 
         hierarchy = new ApprovalHierarchy();
         hierarchy.setHierarchyId(3);
@@ -113,6 +127,7 @@ class AdminManagementTemplateTest {
                 org.mockito.ArgumentMatchers.any(LocalDate.class),
                 org.mockito.ArgumentMatchers.any(LocalDate.class)))
                 .thenReturn(List.of(new CourseScheduleService.CalendarMonth("OCTOBER", 2026, List.of())));
+        when(courseBatchService.getAllBatches()).thenReturn(List.of(batch));
     }
 
     @Test
@@ -124,6 +139,8 @@ class AdminManagementTemplateTest {
         mockMvc.perform(get("/admin/calendar"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Calculate a course schedule")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Course batch")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Spring (Batch 18, 5.0 days)")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("OCTOBER 2026")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("cats-calendar-table")));
         mockMvc.perform(get("/admin/staffs/add")).andExpect(status().isOk());

@@ -24,14 +24,15 @@
           <input type="hidden" name="month" th:value="${currentMonth}">
           <div class="row g-3">
             <div class="col-lg-6">
-              <label class="form-label" for="courseId">Course</label>
-              <select id="courseId" name="courseId" class="form-select" required>
-                <option value="">Select a course</option>
-                <option th:each="course : ${courses}"
-                        th:value="${course.courseId}"
-                        th:text="${course.courseTitle}"
-                        th:selected="${selectedCourseId != null and selectedCourseId == course.courseId}">
-                  Course
+              <label class="form-label" for="batchId">Course batch</label>
+              <select id="batchId" name="batchId" class="form-select" required>
+                <option value="">Select a course batch</option>
+                <option th:each="batch : ${batches}"
+                        th:value="${batch.batchId}"
+                        th:text="${batch.courseDetail.title + ' (Batch ' + batch.batchId + ', ' + batch.trainingDays + ' days)'}"
+                        th:attr="data-start-date=${batch.courseStartDate}"
+                        th:selected="${selectedBatchId != null and selectedBatchId == batch.batchId}">
+                  Course batch
                 </option>
               </select>
             </div>
@@ -67,7 +68,8 @@
       </div>
       <div class="card-body">
         <dl class="cats-calendar-summary">
-          <div><dt>Course</dt><dd th:text="${selectedCourse.courseTitle}">Course name</dd></div>
+          <div><dt>Course</dt><dd th:text="${selectedBatch.courseDetail.title}">Course name</dd></div>
+          <div><dt>Batch</dt><dd th:text="${selectedBatch.batchId}">1</dd></div>
           <div><dt>Training days</dt><dd th:text="${schedule.trainingDays}">15</dd></div>
           <div><dt>Requested start</dt><dd th:text="${#temporals.format(schedule.requestedStartDate, 'd MMM yyyy')}">12 Oct 2026</dd></div>
           <div><dt>Actual start</dt><dd th:text="${#temporals.format(schedule.actualStartDate, 'd MMM yyyy')}">12 Oct 2026</dd></div>
@@ -81,11 +83,11 @@
         <h2 id="calendar-title" class="cats-card-title">Course calendar</h2>
         <nav class="d-flex gap-2" aria-label="Calendar month navigation" th:if="${previousMonth != null}">
           <a class="btn btn-sm btn-outline-secondary"
-             th:href="@{/admin/calendar(month=${previousMonth},courseId=${selectedCourseId},requestedStartDate=${requestedStartDate},weekendTrainingDates=${weekendTrainingDates})}">
+             th:href="@{/admin/calendar(month=${previousMonth},batchId=${selectedBatchId},requestedStartDate=${requestedStartDate},weekendTrainingDates=${weekendTrainingDates})}">
             Previous month
           </a>
           <a class="btn btn-sm btn-outline-secondary"
-             th:href="@{/admin/calendar(month=${nextMonth},courseId=${selectedCourseId},requestedStartDate=${requestedStartDate},weekendTrainingDates=${weekendTrainingDates})}">
+             th:href="@{/admin/calendar(month=${nextMonth},batchId=${selectedBatchId},requestedStartDate=${requestedStartDate},weekendTrainingDates=${weekendTrainingDates})}">
             Next month
           </a>
         </nav>
@@ -110,7 +112,7 @@
                       <div th:each="excludedDay : ${excludedDays}" th:if="${excludedDay.date.equals(day)}"
                            class="cats-calendar-holiday" th:text="${excludedDay.description}">Public holiday</div>
                       <div th:if="${trainingDates != null and trainingDates.contains(day)}" class="cats-calendar-training">
-                        <span th:text="${selectedCourse.courseTitle}">Course</span>
+                        <span th:text="${selectedBatch.courseDetail.title}">Course</span>
                         <strong th:if="${day.equals(schedule.actualStartDate())}">Start</strong>
                         <strong th:if="${day.equals(schedule.actualEndDate())}">End</strong>
                       </div>
