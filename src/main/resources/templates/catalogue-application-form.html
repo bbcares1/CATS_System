@@ -110,7 +110,7 @@
             <button form="apply-form" name="action" value="preview" class="btn btn-outline-secondary" formnovalidate>
               Check allowance
             </button>
-            <button form="apply-form" name="action" value="submit" class="btn btn-primary">
+          <button form="apply-form" name="action" value="submit" class="btn btn-primary" th:disabled="${!canApply}">
               Submit application
             </button>
           </div>

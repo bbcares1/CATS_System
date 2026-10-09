@@ -25,6 +25,10 @@ public class CourseCategoryService {
         if (label == null || label.isBlank() || label.trim().length() > 255) {
             throw new IllegalArgumentException("Category name is required and cannot exceed 255 characters.");
         }
+        if (categories.existsByCategoryNameIgnoreCaseAndCategoryIdNot(label.trim(), id)) {
+            throw new IllegalArgumentException("Category name already exists.");
+        }
         category.setCategoryName(label.trim());
+        categories.saveAndFlush(category);
     }
 }

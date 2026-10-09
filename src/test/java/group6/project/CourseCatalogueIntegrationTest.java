@@ -33,6 +33,8 @@ class CourseCatalogueIntegrationTest {
     @Autowired CourseBatchService schedules;
     @Autowired CourseApplicationService policy;
     @Autowired UserRepo users;
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
+    @Autowired jakarta.persistence.EntityManager entities;
     Staff employee; CourseDetail course; CourseBatch batch; LocalDate day; MockMvc mvc;
 
     // Use actual migrations, persisted offers and MVC rendering, with rollback after each case.
@@ -148,6 +150,46 @@ class CourseCatalogueIntegrationTest {
         mvc.perform(post("/admin/courses/save").session(session(admin)).param("title", ""))
                 .andExpect(status().isOk()).andExpect(model().hasErrors());
         mvc.perform(get("/staff/apply/other").session(session(employee))).andExpect(status().isOk());
+    }
+
+    // A renamed label from the old Admin page still keeps its V2 business type on upgrade.
+    @Test
+    void migrationRestoresCategoryTypesUsingStableSeedIdentities() {
+        entities.flush();
+        jdbc.update("update course_category set category_name='Renamed internal label', kind=null where category_id=1");
+        jdbc.execute((org.springframework.jdbc.core.ConnectionCallback<Void>) connection -> {
+            new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(
+                    new org.springframework.core.io.ClassPathResource("db/migration/V8__restore_seeded_category_types.sql"))
+                    .populate(connection);
+            return null;
+        });
+        entities.clear();
+        CourseCategory restored = categories.findById(1).orElseThrow();
+        assertEquals("Renamed internal label", restored.getCategoryName());
+        assertEquals(CourseCategoryType.INTERNAL_TRAINING, restored.getKind());
+    }
+
+    // Duplicate labels produce a useful flash message instead of a database constraint 500.
+    @Test
+    void duplicateCategoryRenameReturnsValidation() throws Exception {
+        Admin admin = new Admin(); admin.setUserName("category_admin"); admin.setName("Category admin"); admin.setPassword("test");
+        admin.setRole(Roles.ADMIN); admin = users.saveAndFlush(admin);
+        String label = categories.findById(2).orElseThrow().getCategoryName();
+        mvc.perform(post("/admin/categories/1/rename").session(session(admin)).param("label", label))
+                .andExpect(redirectedUrl("/admin/categories"))
+                .andExpect(flash().attribute("error", "Category name already exists."));
+    }
+
+    // A fully booked offer still shows its schedule, but cannot send staff to an unusable Apply form.
+    @Test
+    void fullScheduledOffersDoNotAdvertiseAnApplyAction() throws Exception {
+        batch.setCapacity(1); batches.saveAndFlush(batch);
+        catalogue.submit(course.getCourseId(), form(), employee);
+        String html = mvc.perform(get("/staff/courses/" + course.getCourseId()).session(session(employee)))
+                .andExpect(status().isOk()).andExpect(model().attribute("canApply", false))
+                .andReturn().getResponse().getContentAsString();
+        assertFalse(html.contains("Apply for this course"));
+        assertTrue(html.contains("No sessions have places available"));
     }
 
     // Every request carries the catalogue and schedule versions shown to this employee.

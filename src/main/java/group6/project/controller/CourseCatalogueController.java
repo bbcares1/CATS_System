@@ -46,8 +46,11 @@ public class CourseCatalogueController {
     // The details page explains the course before the employee starts a short application.
     @GetMapping("/staff/courses/{id}")
     public String details(@PathVariable Integer id, Model model) {
-        model.addAttribute("course", catalogue.offer(id));
-        model.addAttribute("batches", catalogue.schedules(id));
+        var course = catalogue.offer(id);
+        var batches = catalogue.schedules(id);
+        model.addAttribute("course", course);
+        model.addAttribute("batches", batches);
+        model.addAttribute("canApply", course.isCustomDatesAllowed() || batches.stream().anyMatch(b -> b.places() > 0));
         return "catalogue-course-detail";
     }
 
@@ -120,7 +123,9 @@ public class CourseCatalogueController {
     private String applicationModel(Integer id, CatalogueApplicationForm form, Model model) {
         var course = catalogue.offer(id); form.setCourseVersion(course.getVersion());
         model.addAttribute("course", course); model.addAttribute("form", form);
-        model.addAttribute("batches", catalogue.schedules(id));
+        var batches = catalogue.schedules(id);
+        model.addAttribute("batches", batches);
+        model.addAttribute("canApply", course.isCustomDatesAllowed() || batches.stream().anyMatch(b -> b.places() > 0));
         model.addAttribute("today", LocalDate.now().plusDays(1));
         return "catalogue-application-form";
     }

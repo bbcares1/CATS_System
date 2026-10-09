@@ -54,10 +54,10 @@
               <li th:each="b : ${batches}" th:text="${b.label()}">
               </li>
             </ul>
-            <p th:if="${#lists.isEmpty(batches) and !course.customDatesAllowed}" class="text-secondary">
-              No future sessions are available. Please check back later.
+            <p th:if="${!canApply}" class="text-secondary">
+              No sessions have places available. Please check back later.
             </p>
-            <a class="btn btn-primary" th:if="${course.customDatesAllowed or !#lists.isEmpty(batches)}" th:href="@{/staff/courses/{id}/apply(id=${course.courseId})}">
+            <a class="btn btn-primary" th:if="${canApply}" th:href="@{/staff/courses/{id}/apply(id=${course.courseId})}">
               Apply for this course
             </a>
           </div>

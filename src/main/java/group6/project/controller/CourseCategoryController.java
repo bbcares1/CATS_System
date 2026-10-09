@@ -1,6 +1,7 @@
 package group6.project.controller;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -26,7 +27,9 @@ public class CourseCategoryController {
     @PostMapping("/{id}/rename")
     public String rename(@PathVariable Integer id, @RequestParam String label, RedirectAttributes redirect) {
         try { categories.rename(id, label); redirect.addFlashAttribute("success", "Category name saved."); }
-        catch (IllegalArgumentException e) { redirect.addFlashAttribute("error", e.getMessage()); }
+        catch (IllegalArgumentException | DataIntegrityViolationException e) {
+            redirect.addFlashAttribute("error", e instanceof DataIntegrityViolationException ? "Category name already exists." : e.getMessage());
+        }
         return "redirect:/admin/categories";
     }
 }
