@@ -45,6 +45,14 @@ public interface CourseFeeApplicationRepo
   // Reports need payment totals, never the receipt/certificate blobs.
   @Query("select c.courseApplication.courseId as courseId, c.applicationStatus as status, c.amount as amount, c.reimbursedAt as paidAt from CourseFeeApplication c where c.courseApplication.courseId in :ids")
   List<ClaimTotal> totalsForCourses(@Param("ids") List<Integer> ids);
+  // Batch-only claims have no application ID but still belong to the employee's report.
+  @Query("select u.name as employee, u.staffId as staffId, d.title as title, k.kind as category, b.courseStartDate as startDate, b.courseEndDate as endDate, c.amount as amount, c.applicationStatus as status, c.reimbursedAt as paidAt from CourseFeeApplication c join c.applicant u join c.courseBatch b left join b.courseDetail d left join d.courseCategory k where c.courseApplication is null and u.userId in :ids and b.courseStartDate <= :to and b.courseEndDate >= :from order by b.courseStartDate,c.applicationId")
+  List<LegacyClaimTotal> legacyForReport(@Param("ids") List<Integer> ids,@Param("from") java.time.LocalDate from,@Param("to") java.time.LocalDate to);
+  interface LegacyClaimTotal {
+    String getEmployee(); String getStaffId(); String getTitle(); group6.project.model.CourseCategoryType getCategory();
+    java.time.LocalDate getStartDate(); java.time.LocalDate getEndDate(); java.math.BigDecimal getAmount();
+    ApplicationStatus getStatus(); java.time.LocalDateTime getPaidAt();
+  }
   interface ClaimTotal {
     Integer getCourseId(); ApplicationStatus getStatus(); java.math.BigDecimal getAmount(); java.time.LocalDateTime getPaidAt();
   }

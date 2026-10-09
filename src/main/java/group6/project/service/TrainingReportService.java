@@ -46,7 +46,19 @@ public class TrainingReportService {
             rows.add(new Row(a.getApplicant().getName(),a.getApplicant().getStaffId(),a.getCourseTitle(),a.getCourseCategory(),
                     a.getCourseStartDate(),a.getCourseEndDate(),a.getTrainingDays(),a.getCourseFee(),a.getStatus(),
                     c==null?null:c.getStatus(),c!=null && c.getStatus()==ApplicationStatus.APPROVED?c.getAmount():BigDecimal.ZERO,
-                    c!=null && c.getPaidAt()!=null?c.getAmount():BigDecimal.ZERO));
+                    c!=null && c.getPaidAt()!=null?c.getAmount():BigDecimal.ZERO,false));
+        }
+        // Imported batch claims have no approved course record; keep their payments in the ledger,
+        // but do not invent training reservations or attendance for them.
+        if (!attendanceOnly && !selected.isEmpty()) {
+            for (var claim : claims.legacyForReport(selected.stream().map(User::getUserId).toList(),from,to)) {
+                if (category!=null && category!=claim.getCategory()) continue;
+                rows.add(new Row(claim.getEmployee(),claim.getStaffId(),claim.getTitle()==null?"Legacy claim":claim.getTitle(),
+                        claim.getCategory(),claim.getStartDate(),claim.getEndDate(),null,BigDecimal.ZERO,null,claim.getStatus(),
+                        claim.getStatus()==ApplicationStatus.APPROVED?claim.getAmount():BigDecimal.ZERO,
+                        claim.getPaidAt()!=null?claim.getAmount():BigDecimal.ZERO,true));
+            }
+            rows.sort(Comparator.comparing(Row::start).thenComparing(Row::employee));
         }
         var annual=selected.stream().map(u->new Annual(u.getName(),u.getStaffId(),policy.summaryForYear(u,from.getYear(),null))).toList();
         BigDecimal committed=rows.stream().filter(r->r.status()==ApplicationStatus.APPROVED || r.status()==ApplicationStatus.COMPLETED)
@@ -61,7 +73,7 @@ public class TrainingReportService {
         StringBuilder csv=new StringBuilder("\uFEFFEmployee,Staff ID,Course,Category,Start,End,Full course days,Full course fee,Status,Claim status,Approved claim,Reimbursed\r\n");
         for(Row r:report.rows()) {
             Object[] cells={r.employee(),r.staffId(),r.title(),r.category()==null?"":r.category().getDisplayName(),r.start(),r.end(),
-                    r.days(),r.fee(),r.status(),r.claimStatus(),r.approvedClaim(),r.reimbursed()};
+                    r.days(),r.legacy()?null:r.fee(),r.legacy()?"Legacy claim":r.status(),r.claimStatus(),r.approvedClaim(),r.reimbursed()};
             csv.append(Arrays.stream(cells).map(this::csvCell).collect(java.util.stream.Collectors.joining(","))).append("\r\n");
         }
         return csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
@@ -75,7 +87,7 @@ public class TrainingReportService {
     }
 
     public record Row(String employee,String staffId,String title,CourseCategoryType category,LocalDate start,LocalDate end,
-            Double days,BigDecimal fee,ApplicationStatus status,ApplicationStatus claimStatus,BigDecimal approvedClaim,BigDecimal reimbursed) {}
+            Double days,BigDecimal fee,ApplicationStatus status,ApplicationStatus claimStatus,BigDecimal approvedClaim,BigDecimal reimbursed,boolean legacy) {}
     public record Employee(Integer id,String name,String staffId) {}
     public record Annual(String name,String staffId,CourseApplicationService.Summary summary) {}
     public record Report(List<Row> rows,List<Employee> employees,List<Annual> annual,BigDecimal committedFees,BigDecimal approvedClaims,BigDecimal reimbursed) {}

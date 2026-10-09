@@ -138,15 +138,16 @@
                   </span>
                 </td>
                 <td>
-                  <span th:text="${r.days}">
+                  <span th:text="${r.days ?: '—'}">
                   </span>
                   days
-                  <div th:text="'$' + ${r.fee}">
+                  <div th:text="${r.legacy ? 'No linked course record' : '$' + r.fee}">
                   </div>
                 </td>
                 <td>
-                  <span th:replace="~{fragments/ui :: status(${r.status})}">
-                  </span>
+                  <span th:if="${r.legacy}" class="cats-tag">Legacy claim</span>
+                  <th:block th:unless="${r.legacy}"><span th:replace="~{fragments/ui :: status(${r.status})}">
+                  </span></th:block>
                 </td>
                 <td>
                   <span th:text="'$' + ${r.approvedClaim}">

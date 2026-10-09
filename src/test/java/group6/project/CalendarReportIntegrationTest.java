@@ -24,6 +24,9 @@ class CalendarReportIntegrationTest {
     @Autowired UserRepo users;
     @Autowired CourseApplicationRepo applications;
     @Autowired CourseFeeApplicationRepo claims;
+    @Autowired CourseBatchRepo batches;
+    @Autowired CourseDetailRepo offers;
+    @Autowired CourseCategoryRepository categories;
     @Autowired ExcludedDaysRepo holidays;
     @Autowired ExcludedDaysService holidayService;
     @Autowired TrainingCalendarService calendar;
@@ -98,6 +101,27 @@ class CalendarReportIntegrationTest {
                 .andExpect(status().isOk()).andExpect(model().attribute("rows",org.hamcrest.Matchers.hasSize(1)));
         mvc.perform(get("/manager/reports.csv").session(session(bob)).param("from",from.toString()).param("to",to.toString()).param("attendanceOnly","true"))
                 .andExpect(status().isOk()).andExpect(content().bytes(reports.csv(attendance)));
+    }
+
+    // Imported batch claims contribute to payments without inventing attendance or course reservations.
+    @Test void reportsIncludeBatchOnlyLegacyClaimsInTheCorrectScope() throws Exception {
+        LocalDate day=LocalDate.of(LocalDate.now().getYear()-1,3,3);
+        var offer=new CourseDetail();offer.setTitle("Legacy paid training");offer.setCourseFee(new BigDecimal("200"));
+        offer.setCourseCategory(categories.findAll().stream().filter(c->c.getKind()==CourseCategoryType.EXTERNAL_COURSE).findFirst().orElseThrow());offer=offers.saveAndFlush(offer);
+        var batch=new CourseBatch();batch.setCourseDetail(offer);batch.setCourseStartDate(day);batch.setCourseEndDate(day);batch=batches.saveAndFlush(batch);
+        var claim=new CourseFeeApplication();claim.setApplicant(sam);claim.setCourseBatch(batch);claim.setAmount(new BigDecimal("200"));
+        claim.setApplicationStatus(ApplicationStatus.APPROVED);claim.setReimbursedAt(LocalDateTime.now());claims.saveAndFlush(claim);
+        var report=reports.report(bob,day,day,null,null,false);
+        assertEquals(1,report.rows().size());assertTrue(report.rows().getFirst().legacy());
+        assertEquals(0,new BigDecimal("200").compareTo(report.approvedClaims()));assertEquals(0,new BigDecimal("200").compareTo(report.reimbursed()));
+        assertEquals(0,report.committedFees().signum());
+        assertTrue(reports.report(peer,day,day,null,null,false).rows().isEmpty());
+        assertTrue(reports.report(bob,day.plusDays(1),day.plusDays(1),null,null,false).rows().isEmpty());
+        assertTrue(reports.report(bob,day,day,CourseCategoryType.INTERNAL_TRAINING,null,false).rows().isEmpty());
+        assertTrue(reports.report(bob,day,day,null,null,true).rows().isEmpty());
+        mvc.perform(get("/admin/reports").session(session(admin)).param("from",day.toString()).param("to",day.toString()))
+                .andExpect(status().isOk()).andExpect(content().string(org.hamcrest.Matchers.containsString("Legacy paid training")));
+        assertTrue(new String(reports.csv(report),java.nio.charset.StandardCharsets.UTF_8).contains("Legacy claim"));
     }
 
     // Admin holiday changes cannot invalidate active periods, but a label correction remains safe.
