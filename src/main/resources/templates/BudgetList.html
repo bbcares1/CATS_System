@@ -1,7 +1,0 @@
-<!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Annual allowances', 'Admin', 'entitlement', ~{::#content})}">
-<body><section id="content" class="cats-stack">
-<div class="cats-page-header"><div><h1>Annual training allowances</h1><p class="cats-sub">Allocate days and budget separately for each employee and year.</p></div></div>
-<form method="get" th:action="@{/admin/entitlements}" class="card card-body"><label class="form-label" for="year">Year</label><input class="form-control" id="year" name="year" type="number" min="2000" max="2100" th:value="${year}" required><button class="btn btn-outline-secondary">Show</button></form>
-<div class="card card-body"><div class="cats-table-wrap" tabindex="0"><table class="table"><thead><tr><th>Employee</th><th>Staff ID</th><th>Days limit / reserved</th><th>Budget / reserved</th><th></th></tr></thead><tbody><tr th:each="row : ${rows}"><td th:text="${row.staff.name}"></td><td th:text="${row.staff.staffId}"></td><td th:text="${row.summary.dayLimit + ' / ' + row.summary.usedDays}"></td><td th:text="${row.summary.budget + ' / ' + row.summary.usedBudget}"></td><td><a th:href="@{/admin/entitlements/{id}(id=${row.staff.userId},year=${year})}">Edit allowance</a></td></tr></tbody></table></div><p th:if="${#lists.isEmpty(rows)}">No employees have been added yet.</p></div>
-</section></body></html>

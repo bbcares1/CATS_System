@@ -91,3 +91,21 @@ Admin also manages all account types at `/admin/accounts`. Blank edit passwords 
 Old application, claim and holiday GET routes redirect to these pages. Old POST handlers are retired; use the current forms. All protected prefixes reload the account behind session `user`. Claims and attachments are restricted to the owner or assigned Manager. Reviewers can only decide requests assigned to them; team history still uses direct reports. Password fields are excluded from JSON. Every modifying form, including login, uploads and logout, requires its session CSRF token. Use the rendered forms; GET logout bookmarks do not end a session. Other-course edits require the saved row version.
 
 Admin can repair unassigned pre-upgrade requests at `/admin/reviews`; the saved ID and decision history stay intact. Legacy batch-only claims use the available catalogue fee during upgrade; verify it against the receipt before recording payment. Records with missing applicants or course data require an explicit import review, rather than guessing ownership. Claim queues, personal claims and payment lists use paged metadata; evidence loads only on an authorized single-claim route.
+
+## Where to change code
+
+Keep page handling in `controller`, business rules in `service`, queries/locks in `repo`, and entities/form inputs in `model`. Use the shared layout and `cats.css` before adding page-specific styles.
+
+| Change | Start here |
+| --- | --- |
+| Login, sessions and form protection | `UserService`, `AuthInterceptor`, `CsrfProtection` |
+| Dates, allowances and application states | `CourseApplicationService` |
+| Accounts, reporting managers and assigned reviewers | `AccountAdminService`, `ApprovalRoutingService` |
+| Catalogue selection, snapshots and session capacity | `CourseCatalogueService`, `CourseDetailService`, `CourseBatchService` |
+| Claims, private evidence, decisions and payment | `CourseFeeApplicationService` |
+| Attendance calendar and reports/CSV | `TrainingCalendarService`, `TrainingReportService` |
+| Annual limits and holidays | `TrainingEntitlementService`, `ExcludedDaysService` |
+
+Keep one copy of each rule in its service. Calendar attendance comes from approved applications; claims do not reserve the course fee again. Preserve legacy records with missing data for explicit review instead of inventing applicants or attendance.
+
+See [DEMO.md](DEMO.md) for a short walkthrough and [DEPLOYMENT.md](DEPLOYMENT.md) for private deployment and recovery.

@@ -298,3 +298,6 @@ h1, h2, h3 { text-wrap: balance; }
 .cats-login-panel h1 { margin: 16px 0 8px; }
 .cats-logout { width: 100%; border: 0; background: transparent; color: inherit; display: flex; align-items: center; gap: 12px; text-align: left; padding: 10px 12px; position: relative; }
 .cats-logout:hover { background: rgba(255,255,255,.08); }
+
+/* Leave room for the native select arrow beside the page-size value. */
+.cats-pagination .form-select { min-width: 5rem; }

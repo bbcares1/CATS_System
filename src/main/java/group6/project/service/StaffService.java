@@ -1,39 +1,37 @@
 package group6.project.service;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import org.springframework.stereotype.Service;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.web.multipart.MultipartFile;
 import group6.project.model.ApplicationStatus;
 import group6.project.model.CourseApplication;
 import group6.project.model.CourseFeeApplication;
-import group6.project.model.CourseCategoryType;
 import group6.project.model.Staff;
-import group6.project.repo.CourseApplicationRepo;
 import group6.project.repo.CourseFeeApplicationRepo;
 import group6.project.repo.StaffRepo;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class StaffService {
     private final StaffRepo staffRepo;
     private final CourseApplicationService courseApplicationService;
-    private final CourseApplicationRepo courseApplicationRepo;
     private final CourseFeeApplicationService courseFeeApplicationService;
     private final CourseFeeApplicationRepo courseFeeApplicationRepo;
 
-    public StaffService(StaffRepo staffRepo, CourseApplicationService courseApplicationService,
-            CourseApplicationRepo courseApplicationRepo, CourseFeeApplicationService courseFeeApplicationService,
+    // Keep personal course and claim operations behind the Staff module's service contract.
+    public StaffService(
+            StaffRepo staffRepo,
+            CourseApplicationService courseApplicationService,
+            CourseFeeApplicationService courseFeeApplicationService,
             CourseFeeApplicationRepo courseFeeApplicationRepo) {
         this.staffRepo = staffRepo;
         this.courseApplicationService = courseApplicationService;
-        this.courseApplicationRepo = courseApplicationRepo;
         this.courseFeeApplicationService = courseFeeApplicationService;
         this.courseFeeApplicationRepo = courseFeeApplicationRepo;
     }
@@ -43,10 +41,12 @@ public class StaffService {
         return staffRepo.findAll();
     }
 
+    // Read the current reporting relationship rather than a role-level hierarchy.
     public List<Staff> getStaffByManager(Integer managerId) {
         return staffRepo.findByManager_UserId(managerId);
     }
 
+    // Look up an employee identity for the existing Staff module.
     public Staff getStaff(Integer id) {
         return staffRepo.findById(id).orElse(null);
     }
@@ -57,6 +57,7 @@ public class StaffService {
         return courseApplicationService.findForStaffAndYear(staff, year);
     }
 
+    // Use the owner check before returning any personal application.
     public CourseApplication getCourseApplication(Integer id, Staff staff) {
         return courseApplicationService.getOwned(id, staff);
     }
@@ -68,11 +69,13 @@ public class StaffService {
     }
 
     // Every workspace uses the same allowance totals and validation rules.
-    public CourseApplicationService.Summary summary(CourseApplication form, Staff staff, Integer id) {
+    public CourseApplicationService.Summary summary(
+            CourseApplication form, Staff staff, Integer id) {
         return courseApplicationService.summary(form, staff, id);
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
+    // New requests become Applied; pending edits reuse the shared policy.
     public CourseApplication saveApplication(Integer id, CourseApplication form, Staff staff) {
         if (id == null) {
             form.setCourseId(null);
@@ -97,23 +100,40 @@ public class StaffService {
     }
 
     // Fee claims: Retrieve claims and eligible courses.
-    public org.springframework.data.domain.Page<group6.project.model.ClaimSummary> getClaims(Staff staff,int page,int size) {
-        return courseFeeApplicationService.personal(staff.getUserId(),page,size);
+    public org.springframework.data.domain.Page<group6.project.model.ClaimSummary> getClaims(
+            Staff staff, int page, int size) {
+        return courseFeeApplicationService.personal(staff.getUserId(), page, size);
     }
 
     // Eligibility and upload checks live in the claim service for both employee roles.
-    public List<CourseApplication> getClaimableCourses(Staff staff) { return courseFeeApplicationService.eligible(staff); }
-
-    public void submitClaim(Integer courseId, boolean paidPersonally, MultipartFile receipt,
-            MultipartFile certificate, Staff staff, Integer approvalManagerId) {
-        courseFeeApplicationService.submit(courseId, paidPersonally, receipt, certificate, staff, approvalManagerId);
+    public List<CourseApplication> getClaimableCourses(Staff staff) {
+        return courseFeeApplicationService.eligible(staff);
     }
 
-    // Claim details and downloads belong to the submitting employee, including a Manager's own claims.
+    // Delegate eligibility, reviewer and evidence checks to the claim workflow.
+    public void submitClaim(
+            Integer courseId,
+            boolean paidPersonally,
+            MultipartFile receipt,
+            MultipartFile certificate,
+            Staff staff,
+            Integer approvalManagerId) {
+        courseFeeApplicationService.submit(
+                courseId, paidPersonally, receipt, certificate, staff, approvalManagerId);
+    }
+
+    // Claim details and downloads belong to the submitting employee, including a Manager's own
+    // claims.
     public CourseFeeApplication getClaim(Integer id, Staff staff) {
-        CourseFeeApplication claim = courseFeeApplicationRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Claim not found."));
-        if (claim.getApplicant() == null || !staff.getUserId().equals(claim.getApplicant().getUserId())) {
+        CourseFeeApplication claim =
+                courseFeeApplicationRepo
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "Claim not found."));
+        if (claim.getApplicant() == null
+                || !staff.getUserId().equals(claim.getApplicant().getUserId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Claim not found.");
         }
         return claim;

@@ -1,10 +1,5 @@
-
 package group6.project.model;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-import java.math.BigDecimal;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,24 +11,26 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-import lombok.EqualsAndHashCode;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "course_application")
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode
 public class CourseApplication {
     @Id
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer courseId;
 
-    @Version
-    private Long version;
+    @Version private Long version;
 
     @ManyToOne
     @JoinColumn(name = "reviewer_id")
@@ -43,10 +40,10 @@ public class CourseApplication {
     @JoinColumn(name = "approval_manager_id")
     private User approvalManager;
 
-    @jakarta.persistence.Transient
-    private Integer approvalManagerId;
+    @jakarta.persistence.Transient private Integer approvalManagerId;
 
-    // Catalogue references explain the source; the stored course fields remain the application snapshot.
+    // Catalogue references explain the source; the stored course fields remain the application
+    // snapshot.
     @ManyToOne
     @JoinColumn(name = "catalogue_course_id")
     private CourseDetail catalogueCourse;
@@ -68,10 +65,13 @@ public class CourseApplication {
     private CourseCategoryType courseCategory;
 
     private String trainingProvider;
+
     @Column(length = 2000)
     private String justification;
+
     @Column(length = 2000)
     private String workDissemination;
+
     private Double trainingDays;
     private String halfDayPeriod;
 
@@ -85,24 +85,10 @@ public class CourseApplication {
     private LocalDateTime submittedAt;
     private LocalDateTime updatedAt;
     private LocalDateTime reviewedAt;
+
     @Column(length = 2000)
     private String decisionReason;
+
     @Column(length = 2000)
     private String experienceComments;
-
-    public ApplicationStatus getApplicationStatus() {
-        return status;
-    }
-
-    public void setApplicationStatus(ApplicationStatus status) {
-        this.status = status;
-    }
-
-    public String getReason() {
-        return justification;
-    }
-
-    public void setReason(String reason) {
-        this.justification = reason;
-    }
 }

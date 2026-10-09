@@ -86,6 +86,7 @@
           </table>
         </div>
       </div>
-    </section>
+    <th:block th:if="${pageData != null}"><div th:replace="~{fragments/list-pagination :: pager(${pageData}, '/admin/excludedDays', null, null)}"></div></th:block>
+</section>
   </body>
 </html>

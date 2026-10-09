@@ -1,6 +1,5 @@
 package group6.project.model;
 
-import java.math.BigDecimal;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,17 +10,17 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "training_entitlement")
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode
 public class TrainingEntitlement {
 
     @Id
