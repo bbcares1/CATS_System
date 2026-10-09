@@ -3,7 +3,6 @@ package group6.project.controller;
 import java.util.List;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Optional;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,12 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import group6.project.model.Admin;
-import group6.project.model.ApprovalHierarchy;
 import group6.project.model.ExcludedDays;
-import group6.project.model.Roles;
-import group6.project.service.AdminService;
 import group6.project.service.TrainingEntitlementService;
-import group6.project.service.CourseCategoryService;
 import group6.project.service.ExcludedDaysService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -31,18 +26,12 @@ import jakarta.validation.Valid;
 public class AdminController {
 
     private final TrainingEntitlementService entitlements;
-    private final AdminService adminService;
-    private final CourseCategoryService courseCategoryService;
     private final ExcludedDaysService excludedDaysService;
 
     public AdminController(
-            AdminService adminService,
             TrainingEntitlementService entitlements,
-            CourseCategoryService courseCategoryService,
             ExcludedDaysService excludedDaysService) {
-       this.adminService = adminService;
        this.entitlements = entitlements;
-       this.courseCategoryService = courseCategoryService;
        this.excludedDaysService = excludedDaysService;
 }
 
@@ -147,38 +136,7 @@ public class AdminController {
 
    
 
-    //this part below is about Approval Hierarchy
-    // ----------------------------------------
-
-    @GetMapping("/hierarchy")
-    public String showAllHierarchy(Model model) {
-        model.addAttribute("hierarchies", adminService.getAllApprovalHierarchy());
-        model.addAttribute("hierarchy", new ApprovalHierarchy());
-        model.addAttribute("roles", Roles.values());
-        return "HierarchyList";
-    }
-
-    @GetMapping("/hierarchy/edit/{id}")
-    public String editHierarchy(@PathVariable("id") Integer id, Model model) {
-        Optional<ApprovalHierarchy> hierarchySelected = adminService.getHierarchyById(id);
-        if (hierarchySelected.isPresent()) {
-            model.addAttribute("hierarchy", hierarchySelected.get());
-            model.addAttribute("hierarchies", adminService.getAllApprovalHierarchy());
-            model.addAttribute("roles", Roles.values());
-            return "HierarchyList";
-        }
-        return "redirect:/admin/hierarchy";
-    }
-
-    @PostMapping("/hierarchy/save")
-    public String saveHierarchy(@ModelAttribute("hierarchy") ApprovalHierarchy hierarchy) {
-        adminService.saveHierarchy(hierarchy);
-        return "redirect:/admin/hierarchy";
-    }
-
-    @GetMapping("/hierarchy/delete/{id}")
-    public String deleteHierarchy(@PathVariable("id") Integer id) {
-        adminService.deleteHierarchyById(id);
-        return "redirect:/admin/hierarchy";
-    }
+    // Reporting managers now use actual employee identities, rather than unused role-level rows.
+    @GetMapping({"/hierarchy", "/staffs"})
+    public String accountsEntry() { return "redirect:/admin/accounts"; }
 }

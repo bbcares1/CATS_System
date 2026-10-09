@@ -52,7 +52,7 @@ Sidebar keys:
 | --- | --- |
 | Staff | `dashboard`, `apply`, `history`, `fees` |
 | Manager | `dashboard`, `staff` |
-| Admin | `dashboard`, `entitlement`, `hierarchy`, `categories`, `courses`, `batches`, `holidays` |
+| Admin | `dashboard`, `accounts`, `entitlement`, `categories`, `courses`, `batches`, `holidays` |
 
 When you add a page, add its link in `fragments/layout.html` and its key to this table.
 

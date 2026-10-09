@@ -22,8 +22,8 @@ public class UserService {
         if (userName == null || password == null) {
             return null;
         }
-        return userRepo.findByUserName(userName)
-                .filter(user -> password.equals(user.getPassword()))
+        return userRepo.findByUserName(userName.trim().toLowerCase(java.util.Locale.ROOT))
+                .filter(user -> user.isActive() && password.equals(user.getPassword()))
                 .orElse(null);
     }
 
@@ -32,7 +32,10 @@ public class UserService {
         Object value = session == null ? null : session.getAttribute("user");
         if (!(value instanceof User user) || user.getUserId() == null) return null;
         User current = userRepo.findById(user.getUserId()).orElse(null);
-        if (current == null) session.removeAttribute("user");
+        if (current == null || !current.isActive() || !java.util.Objects.equals(user.getVersion(), current.getVersion())) {
+            session.removeAttribute("user");
+            return null;
+        }
         else session.setAttribute("user", current);
         return current;
     }

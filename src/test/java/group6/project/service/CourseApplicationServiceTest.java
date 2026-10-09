@@ -53,6 +53,18 @@ class CourseApplicationServiceTest {
         lenient().when(applicationRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
+    // The write-time identity check also covers an account disabled after the route's session check.
+    @Test
+    void disabledOrChangedAccountCannotSubmitAnApplication() {
+        staff.setActive(false);
+        assertThrows(IllegalArgumentException.class, () -> service.create(valid(CourseCategoryType.EXTERNAL_COURSE), staff));
+        staff.setActive(true); staff.setVersion(0L);
+        Staff current = new Staff(); current.setUserId(7); current.setVersion(1L);
+        when(employees.lockById(7)).thenReturn(Optional.of(current));
+        assertThrows(IllegalArgumentException.class, () -> service.create(valid(CourseCategoryType.EXTERNAL_COURSE), staff));
+        verify(applicationRepo, never()).save(any());
+    }
+
     @Test
     void internalHalfDayIsFreeAndConsumesHalfDay() {
         CourseApplication application = valid(CourseCategoryType.INTERNAL_TRAINING);

@@ -42,6 +42,10 @@ public interface CourseApplicationRepo extends JpaRepository<CourseApplication,I
 
     boolean existsByCatalogueBatch_BatchId(Long batchId);
 
+    // Historical participants prevent physical account deletion.
+    boolean existsByApplicant_UserIdOrReviewer_UserId(Integer applicantId, Integer reviewerId);
+    boolean existsByApplicant_UserIdAndStatusIn(Integer id, List<ApplicationStatus> statuses);
+
     // Read identity without caching an application before its employee lock is acquired.
     @Query("""
             select a.applicant.userId from CourseApplication a

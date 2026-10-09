@@ -37,7 +37,7 @@ public class CourseApplication {
 
     @ManyToOne
     @JoinColumn(name = "reviewer_id")
-    private Manager reviewer;
+    private User reviewer;
 
     // Catalogue references explain the source; the stored course fields remain the application snapshot.
     @ManyToOne
@@ -70,7 +70,7 @@ public class CourseApplication {
 
     @ManyToOne
     @JoinColumn(name = "staff_id", nullable = false)
-    private Staff applicant;
+    private User applicant;
 
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status = ApplicationStatus.APPLIED;

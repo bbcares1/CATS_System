@@ -71,7 +71,7 @@
             </div>
             <div class="form-check">
               <input type="checkbox" class="form-check-input" th:field="*{customDatesAllowed}">
-              <label for="customDatesAllowed" class="form-check-label">
+            <label th:for="${#ids.prev('customDatesAllowed')}" class="form-check-label">
                 Allow employees to request custom dates
               </label>
               <p class="form-text">
@@ -80,7 +80,7 @@
             </div>
             <div class="form-check">
               <input type="checkbox" class="form-check-input" th:field="*{active}">
-              <label for="active" class="form-check-label">
+            <label th:for="${#ids.prev('active')}" class="form-check-label">
                 Publish in the employee catalogue
               </label>
             </div>

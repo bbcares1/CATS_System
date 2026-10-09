@@ -36,6 +36,8 @@ For local overrides, copy `.env.example` to `.env`. Compose reads that file; an 
 
 The full suite uses isolated H2 with the real schema migrations. Check MySQL behaviour too:
 
+After pulling changes to model or service signatures, run `./mvnw -B -ntp clean test` once to remove stale compiled classes.
+
 ```sh
 docker compose -f compose.test.yml up -d --wait
 ./mvnw -B -ntp "-Dspring.profiles.active=mysql-test" test
@@ -47,6 +49,10 @@ The test container uses port 3308 and a disposable database. It never connects t
 ## Database changes
 
 Flyway migrations live in `src/main/resources/db/migration`. Add a new version for each schema change. JPA validates the result; do not use `create-drop`, edit applied migrations, or run the old manual ALTER scripts.
+
+The Java hierarchy remains `User → Staff → Manager` and `User → Admin`. Accounts now use one `users` table: the role selects the JPA subtype, and applications, reviewers and annual allowances reference the stable `user_id`. Role changes keep that identity and history. `staff_id` is the readable unique Staff ID for all accounts. The old role-level setup rows are retained in `legacy_approvalhierarchy`; the actual reporting hierarchy uses `users.manager_id`.
+
+Migrations only move forward. Use the newest integration branch with its updated database; an older application version should use a separate database. Preserve a database backup before switching storage models.
 
 Existing `group6` data is not migrated by this setup. Preserve it and plan a separate import if needed.
 
@@ -73,5 +79,7 @@ Run with `SPRING_PROFILES_ACTIVE=prod` and set `CATS_DB_URL`, `CATS_DB_USER`, `C
 | Staff (including Manager) | `/staff/home`, `/staff/apply`, `/staff/personal`, `/staff/applications/{id}`, `/staff/fee` |
 | Manager | `/manager/home`, `/manager/approvals`, `/manager/applications/{id}`, `/manager/history` |
 | Admin | `/admin/home`, `/admin/entitlements`, `/admin/courses`, `/admin/categories`, `/admin/batches`, `/admin/excludedDays` |
+
+Admin also manages all account types at `/admin/accounts`. Blank edit passwords keep the current password; stored passwords never appear in forms. Changes expire old sessions. Reassign reports before removing Manager access and resolve pending employee requests before disabling them or changing to Admin. Delete is only for unused accounts; disable accounts with history instead. At least one active Admin must remain. Employee annual limits are maintained separately.
 
 Old application, claim and holiday GET routes redirect to these pages. Old POST handlers are retired; use the current forms. All protected prefixes reload the account behind session `user`. Claims and attachments are restricted to their owner. Manager decisions are restricted to direct reports. Password fields are excluded from JSON. Upload validation and CSRF protection are completed in the following safety/deployment slice.

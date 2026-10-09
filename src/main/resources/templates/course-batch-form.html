@@ -83,7 +83,7 @@
             </div>
             <div class="form-check">
               <input type="checkbox" class="form-check-input" th:field="*{active}">
-              <label class="form-check-label" for="active">
+            <label class="form-check-label" th:for="${#ids.prev('active')}">
                 Available for new bookings
               </label>
             </div>

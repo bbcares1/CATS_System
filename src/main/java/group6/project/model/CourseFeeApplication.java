@@ -37,7 +37,7 @@ public class CourseFeeApplication {
 
     @ManyToOne 
     @JoinColumn (name = "staff_id")
-    private Staff applicant;
+    private User applicant;
 
     @ManyToOne 
     @JoinColumn (name = "batch_id")

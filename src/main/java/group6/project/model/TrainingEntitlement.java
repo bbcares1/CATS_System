@@ -33,7 +33,7 @@ public class TrainingEntitlement {
 
     @ManyToOne
     @JoinColumn(name = "staff_id", nullable = false)
-    private Staff staff;
+    private User staff;
 
     @Column(nullable = false)
     private Double dayLimit = 0d;

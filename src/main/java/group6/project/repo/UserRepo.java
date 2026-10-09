@@ -1,11 +1,25 @@
 package group6.project.repo;
 
+import java.util.List;
+import java.util.Optional;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
 import group6.project.model.User;
 
-import java.util.Optional;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-
-public interface UserRepo extends JpaRepository<User,Integer>{
+public interface UserRepo extends JpaRepository<User, Integer> {
     Optional<User> findByUserName(String userName);
+    boolean existsByUserNameIgnoreCaseAndUserIdNot(String name, Integer id);
+    boolean existsByStaffIdIgnoreCaseAndUserIdNot(String staffId, Integer id);
+    boolean existsByEmailIgnoreCaseAndUserIdNot(String email, Integer id);
+
+    // Serialize small-team account edits so role assignments and last-Admin checks cannot race.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from User u order by u.userId")
+    List<User> lockAccounts();
+
+    // Changing the discriminator requires clearing managed objects before loading the new subtype.
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(value = "update users set role=:role, version=version+1 where user_id=:id", nativeQuery = true)
+    int changeRole(@Param("id") Integer id, @Param("role") String role);
 }

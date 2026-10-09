@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Isolation;
 import group6.project.model.ApplicationStatus;
 import group6.project.model.CourseApplication;
 import group6.project.model.CourseCategoryType;
+import group6.project.model.User;
 import group6.project.model.Staff;
 import group6.project.repo.CourseApplicationRepo;
 import group6.project.repo.ExcludedDaysRepo;
@@ -40,13 +41,13 @@ public class CourseApplicationService {
     }
 
     // Keep soft-deleted and cancelled records in the employee's annual history.
-    public List<CourseApplication> findForStaffAndYear(Staff staff, int year) {
+    public List<CourseApplication> findForStaffAndYear(User staff, int year) {
         return applications.findByApplicant_UserIdAndCourseStartDateBetweenOrderByCourseStartDateAsc(
                 staff.getUserId(), LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
     }
 
     // A caller cannot select another employee's application by changing a URL.
-    public CourseApplication getOwned(Integer id, Staff staff) {
+    public CourseApplication getOwned(Integer id, User staff) {
         CourseApplication course = applications.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Course application was not found."));
         if (course.getApplicant() == null || !staff.getUserId().equals(course.getApplicant().getUserId())) {
@@ -57,7 +58,7 @@ public class CourseApplicationService {
 
     // Copy only applicant-editable fields; status, identity and review data come from the server.
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public CourseApplication create(CourseApplication form, Staff staff) {
+    public CourseApplication create(CourseApplication form, User staff) {
         lockEmployee(staff);
         validateAndPrepare(form, staff, null, true);
         CourseApplication course = new CourseApplication();
@@ -71,7 +72,7 @@ public class CourseApplicationService {
 
     // Editing releases this application's old reservation before checking the replacement.
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public CourseApplication update(Integer id, CourseApplication form, Staff staff) {
+    public CourseApplication update(Integer id, CourseApplication form, User staff) {
         lockEmployee(staff);
         CourseApplication course = getOwned(id, staff);
         requirePending(course);
@@ -98,7 +99,7 @@ public class CourseApplicationService {
 
     // Delete means withdraw a pending request, while keeping its history.
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public void delete(Integer id, Staff staff) {
+    public void delete(Integer id, User staff) {
         lockEmployee(staff);
         CourseApplication course = getOwned(id, staff);
         requirePending(course);
@@ -107,7 +108,7 @@ public class CourseApplicationService {
 
     // Only an approved booking can be cancelled and release its allowance.
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public void cancel(Integer id, Staff staff) {
+    public void cancel(Integer id, User staff) {
         lockEmployee(staff);
         CourseApplication course = getOwned(id, staff);
         requireStatus(course, ApplicationStatus.APPROVED, "Only Approved applications can be cancelled.");
@@ -116,7 +117,7 @@ public class CourseApplicationService {
 
     // Completion is available from the day after the course ends and retains its allowance use.
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public void complete(Integer id, String comments, Staff staff) {
+    public void complete(Integer id, String comments, User staff) {
         lockEmployee(staff);
         CourseApplication course = getOwned(id, staff);
         requireStatus(course, ApplicationStatus.APPROVED, "Only Approved applications can be completed.");
@@ -128,7 +129,7 @@ public class CourseApplicationService {
     }
 
     // A partial form still shows the employee's current allowance without needing every field.
-    public Summary summary(CourseApplication form, Staff staff, Integer excludedId) {
+    public Summary summary(CourseApplication form, User staff, Integer excludedId) {
         int year = form.getCourseStartDate() == null ? LocalDate.now().getYear()
                 : form.getCourseStartDate().getYear();
         double requested = 0;
@@ -143,7 +144,7 @@ public class CourseApplicationService {
     }
 
     // Completed courses consume allowance too; cancelled, rejected and deleted courses do not.
-    public Summary summaryForYear(Staff staff, int year, Integer excludedId) {
+    public Summary summaryForYear(User staff, int year, Integer excludedId) {
         var allowance = entitlements.findByStaff_UserIdAndYear(staff.getUserId(), year);
         double limit = allowance.map(e -> e.getDayLimit()).orElse(0d);
         BigDecimal budget = allowance.map(e -> e.getBudget()).orElse(BigDecimal.ZERO);
@@ -170,13 +171,17 @@ public class CourseApplicationService {
     }
 
     // One employee lock prevents concurrent requests from both seeing the same remaining allowance.
-    public void lockEmployee(Staff staff) {
-        employees.lockById(staff.getUserId())
+    public void lockEmployee(User staff) {
+        Staff current = employees.lockById(staff.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Employee was not found."));
+        if (!current.isActive() || staff.getVersion() != null
+                && !java.util.Objects.equals(staff.getVersion(), current.getVersion())) {
+            throw new IllegalArgumentException("Your account changed or was disabled. Sign in again before continuing.");
+        }
     }
 
     // Apply server-side rules once, regardless of which page submits the request.
-    private void validateAndPrepare(CourseApplication form, Staff staff, Integer excludedId, boolean future) {
+    private void validateAndPrepare(CourseApplication form, User staff, Integer excludedId, boolean future) {
         if (form.getCourseTitle() == null || form.getCourseTitle().isBlank()
                 || form.getCourseCategory() == null || form.getCourseStartDate() == null
                 || form.getCourseEndDate() == null || form.getJustification() == null
@@ -268,7 +273,7 @@ public class CourseApplicationService {
     }
 
     // Exclude the edited request so its existing reservation is not counted twice.
-    private List<CourseApplication> reservedApplications(Staff staff, int year, Integer excludedId) {
+    private List<CourseApplication> reservedApplications(User staff, int year, Integer excludedId) {
         return applications.findByApplicant_UserIdAndStatusIn(staff.getUserId(), RESERVED_STATUSES).stream()
                 .filter(a -> a.getCourseStartDate() != null && a.getCourseStartDate().getYear() == year)
                 .filter(a -> excludedId == null || !excludedId.equals(a.getCourseId())).toList();

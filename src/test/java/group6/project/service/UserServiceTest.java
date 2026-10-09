@@ -57,6 +57,19 @@ class UserServiceTest {
         verifyNoInteractions(repo);
     }
 
+    // Disabled users cannot authenticate, and a changed account version revokes a saved session.
+    @Test
+    void disabledAccountsAndChangedVersionsAreRejected() {
+        UserRepo repo = mock(UserRepo.class); UserService service = new UserService(repo);
+        Staff saved = new Staff(); saved.setUserId(7); saved.setVersion(1L); saved.setPassword("test"); saved.setActive(false);
+        when(repo.findByUserName("alex")).thenReturn(Optional.of(saved));
+        assertNull(service.authenticate("alex", "test"));
+        Staff old = new Staff(); old.setUserId(7); old.setVersion(0L);
+        var session = new org.springframework.mock.web.MockHttpSession(); session.setAttribute("user", old);
+        saved.setActive(true); when(repo.findById(7)).thenReturn(Optional.of(saved));
+        assertNull(service.currentUser(session)); assertNull(session.getAttribute("user"));
+    }
+
     // Even an accidental JSON response must not include the password property or value.
     @Test
     void userSerializationDoesNotExposePasswords() throws Exception {

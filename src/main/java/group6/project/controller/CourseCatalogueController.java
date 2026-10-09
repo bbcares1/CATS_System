@@ -2,6 +2,8 @@ package group6.project.controller;
 
 import java.time.LocalDate;
 import org.springframework.stereotype.Controller;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -67,7 +69,7 @@ public class CourseCatalogueController {
     public String submit(@PathVariable Integer id, @ModelAttribute("form") CatalogueApplicationForm form,
             BindingResult binding, @RequestParam(defaultValue = "submit") String action,
             HttpSession session, Model model, RedirectAttributes redirect) {
-        Staff staff = (Staff) users.currentUser(session);
+        Staff staff = currentStaff(session);
         if (binding.hasErrors()) {
             model.addAttribute("error", "Please check the selected dates and session.");
             return applicationModel(id, form, model);
@@ -90,7 +92,7 @@ public class CourseCatalogueController {
     // Editing keeps the original offer snapshot, even if Admin has archived or changed it.
     @GetMapping("/staff/applications/{id}/edit-catalogue")
     public String edit(@PathVariable Integer id, HttpSession session, Model model) {
-        var course = applications.getOwned(id, (Staff) users.currentUser(session));
+        var course = applications.getOwned(id, currentStaff(session));
         applications.requirePending(course);
         if (course.getCatalogueCourse() == null) return "redirect:/staff/applications/" + id + "/edit";
         var form = new CatalogueApplicationForm(); form.setApplicationVersion(course.getVersion());
@@ -107,16 +109,23 @@ public class CourseCatalogueController {
             BindingResult binding, HttpSession session, Model model, RedirectAttributes redirect) {
         try {
             if (binding.hasErrors()) throw new IllegalArgumentException("Please check the selected dates.");
-            catalogue.edit(id, form, (Staff) users.currentUser(session));
+            catalogue.edit(id, form, currentStaff(session));
             redirect.addFlashAttribute("success", "Application updated.");
             return "redirect:/staff/applications/" + id;
         } catch (IllegalArgumentException | IllegalStateException e) {
             model.addAttribute("error", e.getMessage());
-            var course = applications.getOwned(id, (Staff) users.currentUser(session));
+            var course = applications.getOwned(id, currentStaff(session));
             form.setApplicationVersion(course.getVersion());
             model.addAttribute("course", course); model.addAttribute("form", form); model.addAttribute("today", LocalDate.now().plusDays(1));
             return "catalogue-application-edit";
         }
+    }
+
+    // Reject a concurrently expired session or changed role before passing employee identity to the service.
+    private Staff currentStaff(HttpSession session) {
+        var user = users.currentUser(session);
+        if (!(user instanceof Staff staff)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        return staff;
     }
 
     // Refresh offer/version information after an error while preserving the employee's entered text.

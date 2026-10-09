@@ -19,6 +19,7 @@ import group6.project.model.CourseApplication;
 import group6.project.model.CourseCategoryType;
 import group6.project.model.Manager;
 import group6.project.model.Staff;
+import group6.project.model.User;
 import group6.project.repo.CourseApplicationRepo;
 import group6.project.repo.ManagerRepo;
 import group6.project.repo.StaffRepo;
@@ -40,17 +41,17 @@ public class ManagerService {
     }
 
     public List<Manager> getAllManagers() {
-        return managerRepo.findAll();
+        return managerRepo.findAll().stream().filter(Manager::isActive).toList();
     }
 
     public Manager getManager(Integer id) {
-        return managerRepo.findById(id)
+        return managerRepo.findById(id).filter(Manager::isActive)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Manager not found with id: " + id));
     }
 
     public Manager getManagerByStaffId(String staffId) {
-        return managerRepo.findByStaffId(staffId)
+        return managerRepo.findByStaffId(staffId).filter(Manager::isActive)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Manager not found with staffId: " + staffId));
     }
@@ -81,7 +82,7 @@ public class ManagerService {
     }
 
     private static ApplicationView toView(CourseApplication application) {
-        Staff applicant = application.getApplicant();
+        User applicant = application.getApplicant();
         return new ApplicationView(application.getCourseId(), applicant.getUserId(),
                 applicant.getName(), applicant.getStaffId(), application.getCourseTitle(),
                 application.getCourseCategory(), application.getTrainingProvider(),

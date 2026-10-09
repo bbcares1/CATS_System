@@ -58,6 +58,17 @@ class ManagerServiceTest {
         assertEquals("M001", staff.getStaffId());
     }
 
+    // Disabled managers must not become the actor for a decision after session access was revoked.
+    @Test
+    void disabledManagerCannotDecide() {
+        Manager manager = new Manager(); manager.setUserId(1); manager.setActive(false);
+        when(managerRepo.findById(1)).thenReturn(Optional.of(manager));
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> managerService.decide(1, 7, "approve", "Useful course", 0L));
+        assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
+        verifyNoInteractions(courseApplicationRepo, policy);
+    }
+
     @Test
     void getManagerThatDoesNotExistGivesNotFound() {
         when(managerRepo.findById(99)).thenReturn(Optional.empty());
