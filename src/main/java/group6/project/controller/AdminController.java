@@ -2,6 +2,7 @@ package group6.project.controller;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Comparator;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -28,6 +29,7 @@ import group6.project.model.CourseBatch;
 import group6.project.model.CourseDetail;
 import group6.project.model.Roles;
 import group6.project.model.Staff;
+import group6.project.model.User;
 import group6.project.service.AdminService;
 import group6.project.service.CourseCategoryService;
 import group6.project.service.ExcludedDaysService;
@@ -76,6 +78,19 @@ public class AdminController {
 
         model.addAttribute("currentUser", admin);
         return "admin-home";
+    }
+
+    @GetMapping("/emails")
+    public String showEmailRecipients(HttpSession session, Model model) {
+        if (!(session.getAttribute("user") instanceof Admin)) {
+            return "redirect:/admin/login";
+        }
+        List<User> recipients = adminService.viewList().stream()
+                .filter(user -> user.getRole() == Roles.MANAGER || user.getRole() == Roles.STAFF)
+                .sorted(Comparator.comparing(User::getName, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+        model.addAttribute("recipients", recipients);
+        return "admin-email-list";
     }
 
     
@@ -340,7 +355,12 @@ public class AdminController {
                                 requestedStartDate,
                                 batch.getTrainingDays(),
                                 selectedWeekends);
+                batch = courseBatchService.updateScheduleDates(
+                        batchId,
+                        schedule.actualStartDate(),
+                        schedule.actualEndDate());
                 model.addAttribute("schedule", schedule);
+                model.addAttribute("selectedBatch", batch);
                 model.addAttribute(
                         "trainingDates",
                         courseScheduleService.getTrainingDates(schedule, selectedWeekends));

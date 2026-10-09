@@ -30,8 +30,8 @@ INSERT INTO course_detail (title, course_fee, course_description, category_id) V
 ('Agile Project Management Workshop', 850.00, 'Interactive external workshop covering Scrum practices and Agile methodologies.', 2);
 
 -- 4. Parent user (JOINED inheritance). Non-login test account only.
-INSERT INTO users (user_id, user_name, password, name, designation, role) VALUES
-(1001, 'staff_calendar_test', 'NOT_FOR_LOGIN', 'Calendar Test Staff', 'Software Engineer', 'STAFF');
+INSERT INTO users (user_id, user_name, password, name, designation, role, email) VALUES
+(1001, 'staff_calendar_test', 'NOT_FOR_LOGIN', 'Calendar Test Staff', 'Software Engineer', 'STAFF', 'calendar-test@example.invalid');
 
 -- 5. Child staff; user_id references users.user_id
 INSERT INTO staff (user_id, staff_id, training_budget, training_days) VALUES

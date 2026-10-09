@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('Email', 'Admin', 'emails', ~{::#content})}">
+<body>
+<section id="content">
+  <div class="cats-page-header">
+    <div>
+      <h1>Email</h1>
+      <p class="cats-sub">Choose a staff member or manager as the recipient of an Admin email.</p>
+    </div>
+  </div>
+
+  <section class="card" aria-labelledby="email-recipients-title">
+    <div class="card-header">
+      <div>
+        <h2 id="email-recipients-title" class="cats-card-title">Staff and managers</h2>
+        <p class="text-secondary small mb-0">Accounts created by Admin and existing accounts appear here.</p>
+      </div>
+      <span class="cats-tag" th:text="${#lists.size(recipients)} + ' recipients'">0 recipients</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Username</th>
+            <th scope="col">Role</th>
+            <th scope="col">Email address</th>
+            <th scope="col" class="cats-row-actions">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="recipient : ${recipients}">
+            <td class="fw-semibold" th:text="${recipient.name}">Name</td>
+            <td th:text="${recipient.userName}">username</td>
+            <td><span th:replace="~{fragments/ui :: tag(${recipient.role})}"></span></td>
+            <td>
+              <span th:if="${recipient.email != null and !#strings.isEmpty(recipient.email)}"
+                    th:text="${recipient.email}">person@example.com</span>
+              <span th:if="${recipient.email == null or #strings.isEmpty(recipient.email)}"
+                    class="text-secondary">No email on record</span>
+            </td>
+            <td class="cats-row-actions">
+              <button type="button" class="btn btn-sm btn-primary" disabled
+                      aria-disabled="true" title="Email composition will be available in the next step">
+                Send email
+              </button>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(recipients)}">
+            <td colspan="5">
+              <div th:replace="~{fragments/ui :: empty('users', 'No staff or manager accounts', 'Create a staff or manager account before preparing an email.', ~{})}"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <p class="text-secondary small mt-3 mb-0">
+    Selecting a recipient and opening the email editor will be connected in the next step.
+  </p>
+</section>
+</body>
+</html>

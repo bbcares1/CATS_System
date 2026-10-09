@@ -40,6 +40,11 @@
               <input id="userName" th:field="*{userName}" class="form-control" autocomplete="username" required>
               <div class="cats-field-msg" th:if="${#fields.hasErrors('userName')}" th:errors="*{userName}"></div>
             </div>
+            <div class="cats-field" th:classappend="${#fields.hasErrors('email')} ? 'has-error'">
+              <label class="form-label cats-req" for="email">Email address</label>
+              <input id="email" type="email" th:field="*{email}" class="form-control" autocomplete="email" required>
+              <div class="cats-field-msg" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+            </div>
             <div class="cats-field" th:classappend="${#fields.hasErrors('password')} ? 'has-error'">
               <label class="form-label cats-req" for="password">Password</label>
               <input id="password" type="password" th:field="*{password}" class="form-control" autocomplete="new-password" required>

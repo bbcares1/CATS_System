@@ -20,7 +20,12 @@
         <div th:if="${scheduleError}" class="alert alert-danger" role="alert" th:text="${scheduleError}">
           Excluded days cannot be selected for weekend training.
         </div>
-        <form id="scheduleForm" th:action="@{/admin/calendar}" method="post" class="cats-form">
+        <div th:if="${#lists.isEmpty(batches)}" class="alert alert-info mb-0" role="status">
+          <p class="mb-2">There are no course batches to schedule. Create a batch from an existing catalogue course first; its start date and training days are used by the calendar.</p>
+          <a class="btn btn-primary" th:href="@{/admin/batches/new}">Create a course batch</a>
+        </div>
+        <form th:unless="${#lists.isEmpty(batches)}" id="scheduleForm"
+              th:action="@{/admin/calendar}" method="post" class="cats-form">
           <input type="hidden" name="month" th:value="${currentMonth}">
           <div class="row g-3">
             <div class="col-lg-6">

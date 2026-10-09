@@ -397,7 +397,7 @@ Sidebar keys:
 | --- | --- |
 | Staff | `dashboard`, `apply`, `history`, `fees` |
 | Manager | `dashboard`, `staff` |
-| Admin | `dashboard`, `entitlement`, `hierarchy`, `categories`, `courses`, `calendar`, `holidays` |
+| Admin | `dashboard`, `entitlement`, `hierarchy`, `categories`, `courses`, `batches`, `calendar`, `holidays` |
 
 When you add a page, add its link in `fragments/layout.html` and its key to this table.
 

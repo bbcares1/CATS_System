@@ -152,6 +152,13 @@ public class AdminService {
           if (userRepo.findByUserName(username).isPresent()) {
                throw new IllegalArgumentException("Username already exists");
           }
+          if (form.getEmail() == null || form.getEmail().isBlank()) {
+               throw new IllegalArgumentException("Email is required");
+          }
+          String email = form.getEmail().trim();
+          if (userRepo.findByEmail(email).isPresent()) {
+               throw new IllegalArgumentException("Email address already belongs to an account");
+          }
 
           if (form.getRole() != Roles.ADMIN
                     && (form.getStaffId() == null
@@ -187,6 +194,7 @@ public class AdminService {
 
           account.setUserName(username);
           account.setName(name);
+          account.setEmail(email);
           account.setDesignation(form.getDesignation());
           account.setPassword(form.getPassword());
           account.setRole(form.getRole());

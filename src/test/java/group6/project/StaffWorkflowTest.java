@@ -43,6 +43,7 @@ class StaffWorkflowTest {
         staff.setUserName("ryan");
         staff.setPassword("test-password");
         staff.setName("Ryan");
+        staff.setEmail("ryan@example.test");
         staff.setStaffId("S001");
         staff.setDesignation("Professional");
         staff.setRole(Roles.STAFF);
@@ -111,7 +112,7 @@ class StaffWorkflowTest {
     void managerCanStillUseTeamDashboardAndStaffFunctions() throws Exception {
         Manager manager = new Manager();
         manager.setUserName("junie"); manager.setPassword("test-password");
-        manager.setName("Junie"); manager.setRole(Roles.MANAGER);
+        manager.setName("Junie"); manager.setEmail("junie@example.test"); manager.setRole(Roles.MANAGER);
         manager.setStaffId("S002"); manager.setTrainingDays(10); manager.setTrainingBudget(2000d);
         staffRepo.saveAndFlush(manager);
         MockHttpSession managerSession = new MockHttpSession();
@@ -324,6 +325,7 @@ class StaffWorkflowTest {
         manager.setUserName("michael");
         manager.setPassword("test-password");
         manager.setName("Michael");
+        manager.setEmail("michael@example.test");
         manager.setRole(Roles.MANAGER);
         manager.setStaffId("S003");
         manager.setTrainingDays(10);
@@ -336,6 +338,7 @@ class StaffWorkflowTest {
         second.setUserName("owen");
         second.setPassword("test-password");
         second.setName("Owen");
+        second.setEmail("owen@example.test");
         second.setStaffId("S004");
         second.setRole(Roles.STAFF);
         second.setManager(manager);
@@ -345,6 +348,7 @@ class StaffWorkflowTest {
         Staff hongfan = new Staff();
         hongfan.setUserName("hongfan");
         hongfan.setName("Hongfan");
+        hongfan.setEmail("hongfan@example.test");
         hongfan.setStaffId("S006");
         hongfan.setPassword("test-password");
         hongfan.setRole(Roles.STAFF);
@@ -353,6 +357,7 @@ class StaffWorkflowTest {
         Staff jialu = new Staff();
         jialu.setUserName("jialu");
         jialu.setName("Jialu");
+        jialu.setEmail("jialu@example.test");
         jialu.setStaffId("S007");
         jialu.setPassword("test-password");
         jialu.setRole(Roles.STAFF);
@@ -361,6 +366,7 @@ class StaffWorkflowTest {
         Staff imran = new Staff();
         imran.setUserName("imran");
         imran.setName("Imran");
+        imran.setEmail("imran@example.test");
         imran.setStaffId("S008");
         imran.setPassword("test-password");
         imran.setRole(Roles.STAFF);
@@ -394,7 +400,7 @@ class StaffWorkflowTest {
         }
         Staff second = new Staff();
         second.setUserName("martin"); second.setPassword("test-password");
-        second.setName("Martin"); second.setRole(Roles.STAFF);
+        second.setName("Martin"); second.setEmail("martin@example.test"); second.setRole(Roles.STAFF);
         second.setStaffId("S005");
         staffRepo.saveAndFlush(second);
         CourseApplication otherCourse = form(); otherCourse.setApplicant(second);

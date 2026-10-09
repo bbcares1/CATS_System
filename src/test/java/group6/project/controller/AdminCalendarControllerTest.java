@@ -132,6 +132,11 @@ public class AdminCalendarControllerTest {
 
         when(courseBatchService.getBatchById(batchId))
                 .thenReturn(java.util.Optional.of(batch));
+        when(courseBatchService.updateScheduleDates(
+                batchId,
+                LocalDate.of(2026, 10, 29),
+                LocalDate.of(2026, 11, 4)))
+                .thenReturn(batch);
 
         when(courseScheduleService.calculateSchedule(
                 requestedStartDate,
@@ -179,6 +184,10 @@ public class AdminCalendarControllerTest {
         verify(courseScheduleService).generateCalendars(
                 LocalDate.of(2026, 11, 1),
                 LocalDate.of(2026, 11, 30));
+        verify(courseBatchService).updateScheduleDates(
+                batchId,
+                LocalDate.of(2026, 10, 29),
+                LocalDate.of(2026, 11, 4));
     }
 
     // Test 3: Keep selected weekend training dates
@@ -227,6 +236,11 @@ public class AdminCalendarControllerTest {
 
         when(courseBatchService.getBatchById(batchId))
                 .thenReturn(java.util.Optional.of(batch));
+        when(courseBatchService.updateScheduleDates(
+                batchId,
+                LocalDate.of(2026, 10, 12),
+                LocalDate.of(2026, 10, 30)))
+                .thenReturn(batch);
 
         when(courseScheduleService.calculateSchedule(
                 requestedStartDate,
@@ -267,6 +281,10 @@ public class AdminCalendarControllerTest {
         verify(courseScheduleService).getTrainingDates(
                 schedule,
                 selectedWeekends);
+        verify(courseBatchService).updateScheduleDates(
+                batchId,
+                LocalDate.of(2026, 10, 12),
+                LocalDate.of(2026, 10, 30));
     }
 
     // Test 4: No weekend dates selected
@@ -363,6 +381,11 @@ public class AdminCalendarControllerTest {
         when(courseBatchService.getAllBatches()).thenReturn(List.of(batch));
         when(excludedDaysService.getAllExcludedDays()).thenReturn(Collections.emptyList());
         when(courseBatchService.getBatchById(batchId)).thenReturn(java.util.Optional.of(batch));
+        when(courseBatchService.updateScheduleDates(
+                batchId,
+                requestedStartDate,
+                LocalDate.of(2026, 11, 4)))
+                .thenReturn(batch);
         when(courseScheduleService.calculateSchedule(requestedStartDate, 3.0, Set.of()))
                 .thenReturn(schedule);
         when(courseScheduleService.getTrainingDates(schedule, Set.of()))
