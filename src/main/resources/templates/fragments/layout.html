@@ -1,0 +1,108 @@
+<!doctype html>
+<!-- Shared page shell: sidebar + header + flash messages. Every signed-in page uses it, see DESIGN.md.
+     Page template:
+       <html lang="en" xmlns:th="http://www.thymeleaf.org"
+             th:replace="~{fragments/layout :: layout('Page title', 'Staff', 'dashboard', ~{::#content})}">
+       <body><section id="content"> ... </section></body></html>
+     role:   'Staff' | 'Manager' | 'Admin'     active: key of the sidebar link to highlight -->
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, role, active, content)">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${title} + ' - CATS'">CATS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" th:href="@{/css/cats.css}">
+</head>
+<body th:with="u=${session.user}, uid=${session.user != null and session.user instanceof T(group6.project.model.Staff)} ? ${session.user.staffId} : ${session.user?.userName}">
+<a class="cats-skip" href="#main">Skip to content</a>
+
+<div class="cats-layout" id="layout">
+  <aside class="cats-sidebar" id="sidebar" aria-label="Sidebar">
+    <div class="cats-sidebar-top">
+      <a class="cats-brand" th:href="@{/}">
+        <span class="cats-brand-mark">C</span>
+        <span class="cats-brand-text"><b>CATS</b><small>Course Application Tracking</small></span>
+      </a>
+    </div>
+
+    <div class="cats-nav-section" th:text="${role} + ' workspace'">Staff workspace</div>
+    <nav class="cats-nav" aria-label="Main">
+      <th:block th:if="${role == 'Staff'}">
+        <a th:replace="~{fragments/ui :: navlink(@{/staff/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/staff/course-applications/new}, 'apply', 'Apply for course', 'file-plus', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/staff/course-applications}, 'history', 'Course history', 'clock', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/course-fee-applications}, 'fees', 'Fee claims', 'receipt', ${active})}"></a>
+      </th:block>
+      <th:block th:if="${role == 'Manager'}">
+        <a th:replace="~{fragments/ui :: navlink(@{/manager/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/manager/approvals}, 'approvals', 'Approvals', 'check-square', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navsoon('Team course history', 'users')}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/staff/home}, 'staff', 'My staff workspace', 'briefcase', ${active})}"></a>
+      </th:block>
+      <th:block th:if="${role == 'Admin'}">
+        <a th:replace="~{fragments/ui :: navlink(@{/admin/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/admin/showBudgetList}, 'entitlement', 'Training entitlement', 'card', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/admin/hierarchy}, 'hierarchy', 'Approval hierarchy', 'sitemap', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/admin/categories}, 'categories', 'Course categories', 'tag', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/admin/courses}, 'courses', 'Course catalogue', 'book', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/admin/excludedDays}, 'holidays', 'Public holidays', 'calendar', ${active})}"></a>
+      </th:block>
+    </nav>
+
+    <div class="cats-sidebar-bottom">
+      <button type="button" class="cats-collapse" id="sidebarToggle" data-label="Collapse sidebar" aria-label="Collapse sidebar">
+        <svg th:replace="~{fragments/icons :: icon('chevrons-left')}"></svg>
+        <svg th:replace="~{fragments/icons :: icon('chevrons-right')}"></svg>
+        <span>Collapse</span>
+      </button>
+      <a th:href="@{/logout}" data-label="Log out"><svg th:replace="~{fragments/icons :: icon('logout')}"></svg><span>Log out</span></a>
+    </div>
+  </aside>
+  <div class="cats-backdrop" id="backdrop"></div>
+
+  <div class="cats-content">
+    <header class="cats-header">
+      <button type="button" class="cats-menu-btn" id="menuToggle" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
+        <svg th:replace="~{fragments/icons :: icon('menu')}"></svg>
+      </button>
+      <span class="cats-crumb"><span th:text="${role} + ' workspace'">Staff workspace</span><span class="sep">/</span><b th:text="${title}">Dashboard</b></span>
+
+      <div class="cats-user dropdown">
+        <button type="button" class="cats-user-btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <span class="cats-avatar" th:text="${u != null and !#strings.isEmpty(u.name)} ? ${#strings.toUpperCase(#strings.substring(u.name, 0, 1))} : '?'">A</span>
+          <span class="cats-user-text">
+            <span th:text="${u?.name}">Name</span>
+            <small><span th:text="${role}">Staff</span> &middot; <span th:text="${uid}">S0001</span></small>
+          </span>
+          <svg th:replace="~{fragments/icons :: icon('chevron-down')}"></svg>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><div class="dropdown-header">Signed in as<b th:text="${u?.name}">Name</b><span th:text="${uid}">S0001</span></div></li>
+          <li th:if="${role == 'Manager'}"><a class="dropdown-item" th:href="@{/staff/home}"><svg th:replace="~{fragments/icons :: icon('briefcase')}"></svg>My staff workspace</a></li>
+          <li><a class="dropdown-item" th:href="@{/logout}"><svg th:replace="~{fragments/icons :: icon('logout')}"></svg>Log out</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <main class="cats-main" id="main">
+      <div th:if="${success}" class="alert alert-success alert-dismissible mb-3" role="status">
+        <svg th:replace="~{fragments/icons :: icon('check-circle')}"></svg>
+        <div th:text="${success}">Saved.</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      <div th:if="${error}" class="alert alert-danger mb-3" role="alert">
+        <svg th:replace="~{fragments/icons :: icon('alert-circle')}"></svg>
+        <div th:text="${error}">Something went wrong.</div>
+      </div>
+      <th:block th:replace="${content}"></th:block>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/cats.js}"></script>
+</body>
+</html>

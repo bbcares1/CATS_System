@@ -1,0 +1,39 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Delete Course Batch</title>
+  </head>
+
+  <body>
+    <h1>Delete Course Batch</h1>
+
+    <p>Select the batch you want to delete.</p>
+
+    <form th:action="@{/admin/batches/delete}" method="post">
+      <label for="batchId">Batch:</label>
+
+      <select id="batchId" name="batchId" required>
+        <option value="">-- Select Batch --</option>
+
+        <option
+          th:each="batch : ${batches}"
+          th:value="${batch.batchId}"
+          th:text="${batch.courseDetail.title
+                    + ' | '
+                    + batch.courseStartDate
+                    + ' - '
+                    + batch.courseEndDate}"
+        ></option>
+      </select>
+
+      <br /><br />
+
+      <button type="submit">Delete Batch</button>
+    </form>
+
+    <br />
+
+    <a th:href="@{/admin/batches}">Cancel</a>
+  </body>
+</html>

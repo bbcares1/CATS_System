@@ -1,6 +1,8 @@
 package group6.project.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -19,4 +21,10 @@ public class Staff extends User {
     private Double trainingBudget;
 
     private Integer trainingDays;
+
+    // Reporting manager: Each staff member reports to one manager.
+    @ManyToOne
+    @JoinColumn(name = "manager_id")
+    @EqualsAndHashCode.Exclude
+    private Manager manager;
 }

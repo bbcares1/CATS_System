@@ -4,14 +4,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -55,14 +61,31 @@ class CourseApplicationServiceTest {
         assertEquals(0.5, saved.getTrainingDays());
     }
 
-    @Test
-    void weekendAndHolidayAreNotWorkingStartDates() {
+    @ParameterizedTest
+    @EnumSource(value = DayOfWeek.class, names = {"SATURDAY", "SUNDAY"})
+    void weekendStartDatesAreRejected(DayOfWeek weekendDay) {
         CourseApplication application = valid(CourseCategoryType.EXTERNAL_COURSE);
-        application.setCourseStartDate(LocalDate.now().plusDays(1));
-        application.setCourseEndDate(application.getCourseStartDate());
+        LocalDate date = LocalDate.now().with(TemporalAdjusters.next(weekendDay));
+        application.setCourseStartDate(date);
+        application.setCourseEndDate(date);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> service.create(application, staff));
+
+        assertEquals("Start and end dates must be working days.", error.getMessage());
+        verify(applicationRepo, never()).save(any());
+    }
+
+    @Test
+    void holidayStartDatesAreRejected() {
+        CourseApplication application = valid(CourseCategoryType.EXTERNAL_COURSE);
         when(excludedDaysRepo.existsByDate(application.getCourseStartDate())).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(application, staff));
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> service.create(application, staff));
+
+        assertEquals("Start and end dates must be working days.", error.getMessage());
+        verify(applicationRepo, never()).save(any());
     }
 
     @Test

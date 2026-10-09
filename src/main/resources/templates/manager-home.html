@@ -1,55 +1,49 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Manager Dashboard - CATS</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
-<body class="bg-light">
-  <nav class="navbar navbar-dark bg-primary px-4" aria-label="Manager navigation">
-    <a class="navbar-brand fw-bold" th:href="@{/manager/home}">CATS Manager Workspace</a>
-    <div class="d-flex align-items-center gap-3 text-white">
-      <span>Hello, <strong th:text="${currentUser.name}">Manager</strong></span>
-      <a class="btn btn-sm btn-outline-light" th:href="@{/logout}">Log Out</a>
+<!-- Example of a page built on the shared layout. See DESIGN.md. -->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('Dashboard', 'Manager', 'dashboard', ~{::#content})}">
+<body>
+<section id="content">
+
+  <div class="cats-page-header">
+    <div>
+      <h1>Welcome back, <span th:text="${currentUser.name}">Manager</span></h1>
+      <p class="cats-sub"><span th:text="${currentUser.staffId}">M0001</span> &middot; Manager</p>
     </div>
-  </nav>
-
-  <main class="container py-5">
-    <h1 class="h3 text-primary">Manager Dashboard</h1>
-    <p class="text-muted">Staff ID: <span th:text="${currentUser.staffId}"></span></p>
-
-    <div class="row g-4">
-      <section class="col-md-6" aria-labelledby="approvals-heading">
-        <div class="card h-100 shadow-sm">
-          <div class="card-body p-4">
-            <h2 class="h5" id="approvals-heading">Applications for Approval</h2>
-            <p>Review course applications submitted by your employees.</p>
-            <button class="btn btn-secondary" type="button" disabled>Available soon</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="col-md-6" aria-labelledby="history-heading">
-        <div class="card h-100 shadow-sm">
-          <div class="card-body p-4">
-            <h2 class="h5" id="history-heading">Subordinate Course History</h2>
-            <p>View your employees' course applications for the current year.</p>
-            <button class="btn btn-secondary" type="button" disabled>Available soon</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="col-12" aria-labelledby="staff-heading">
-        <div class="card shadow-sm">
-          <div class="card-body p-4">
-            <h2 class="h5" id="staff-heading">Your Staff Workspace</h2>
-            <p>Use your employee workspace to apply for courses and view your own course history.</p>
-            <a class="btn btn-primary" th:href="@{/staff/home}">Open Staff Workspace</a>
-          </div>
-        </div>
-      </section>
+    <div class="cats-page-actions">
+      <a class="btn btn-outline-secondary" th:href="@{/staff/home}">
+        <svg th:replace="~{fragments/icons :: icon('briefcase')}"></svg>My staff workspace
+      </a>
+      <a class="btn btn-outline-secondary" th:href="@{/staff/apply}">
+        <svg th:replace="~{fragments/icons :: icon('file-plus')}"></svg>Apply for a course
+      </a>
+      <a class="btn btn-outline-secondary" th:href="@{/staff/personal}">
+        <svg th:replace="~{fragments/icons :: icon('clock')}"></svg>My course history
+      </a>
     </div>
-  </main>
+  </div>
+
+  <div class="cats-grid cats-grid-2">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="cats-card-title">Approvals</h2>
+      </div>
+      <div class="card-body">
+        <p class="text-secondary">Course applications from your team that are waiting for your decision.</p>
+        <a class="btn btn-primary" th:href="@{/manager/approvals}">View course applications</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h2 class="cats-card-title">Team course history</h2>
+        <span th:replace="~{fragments/ui :: tag('Coming soon')}"></span>
+      </div>
+      <div class="card-body">
+        <p class="mb-0 text-secondary">What your team members applied for this year.</p>
+      </div>
+    </div>
+  </div>
+
+</section>
 </body>
 </html>
