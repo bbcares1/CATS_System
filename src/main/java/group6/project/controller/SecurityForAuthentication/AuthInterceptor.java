@@ -21,12 +21,11 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     String path = request.getRequestURI().substring(request.getContextPath().length());
 
-      if (path.equals("/admin/login")) {
+      if (path.equals("/admin/login") || path.equals("/employee/login")) {
         return true;
       }
 
     HttpSession session = request.getSession(false);
-    
     Object user = session == null ? null : session.getAttribute("user");
 
       if (user == null) {
@@ -35,7 +34,8 @@ public class AuthInterceptor implements HandlerInterceptor {
         return false;
       }
 
-      boolean allowed = false;      
+      boolean allowed = false;
+
       if (path.equals("/admin") || path.startsWith("/admin/")) {
         allowed = user instanceof Admin;
       } else if (path.equals("/manager") || path.startsWith("/manager/")) {
@@ -44,12 +44,14 @@ public class AuthInterceptor implements HandlerInterceptor {
         allowed = user instanceof Staff && !(user instanceof Manager);
       }
 
-      if (!allowed) {
-        response.sendError(HttpStatus.FORBIDDEN.value(),
-        "You do not have permission to access this page.");
-        return false;
+     if (!allowed) {
+      String loginUrl = path.equals("/admin") || path.startsWith("/admin/")
+            ? "/admin/login" 
+            : "/employee/login";
+            
+      response.sendRedirect(request.getContextPath() + loginUrl);
+      return false;
       }
-
-        return true;
-    }
+    return true;
+  }
 }
