@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <!-- A peer choice is needed only for a Manager without a reporting manager. -->
+    <div th:fragment="choice(selected)" class="cats-stack">
+      <div th:if="${needsApprovalChoice}">
+        <label for="approvalManagerId" class="form-label cats-req">
+          Reviewing manager
+        </label>
+        <select id="approvalManagerId" name="approvalManagerId" class="form-select" required>
+          <option value="">
+            Choose another Manager
+          </option>
+          <option th:each="m : ${approvalChoices}" th:value="${m.id}" th:selected="${selected == m.id}" th:text="${m.name + ' · ' + m.staffId}">
+          </option>
+        </select>
+        <p class="form-text">
+          You have no reporting manager. Another Manager must review your request.
+        </p>
+      </div>
+      <p class="form-text" th:if="${reportingManagerName != null}">
+        Reviewer:
+        <span th:text="${reportingManagerName}">
+        </span>
+      </p>
+    </div>
+  </body>
+</html>

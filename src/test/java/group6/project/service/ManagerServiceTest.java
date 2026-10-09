@@ -41,6 +41,7 @@ class ManagerServiceTest {
     @Mock
     private CourseApplicationRepo courseApplicationRepo;
 
+    @Mock private ApprovalRoutingService routing;
     @Mock private CourseApplicationService policy;
     @Mock private group6.project.repo.StaffRepo staffRepo;
 
@@ -62,11 +63,13 @@ class ManagerServiceTest {
     @Test
     void disabledManagerCannotDecide() {
         Manager manager = new Manager(); manager.setUserId(1); manager.setActive(false);
-        when(managerRepo.findById(1)).thenReturn(Optional.of(manager));
+        when(courseApplicationRepo.findApplicantIdForManager(7,1)).thenReturn(Optional.of(2));
+        when(routing.lockParticipants(2,1)).thenReturn(java.util.Map.of(1,manager));
         ResponseStatusException error = assertThrows(ResponseStatusException.class,
                 () -> managerService.decide(1, 7, "approve", "Useful course", 0L));
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
-        verifyNoInteractions(courseApplicationRepo, policy);
+        verifyNoInteractions(policy);
+        verify(courseApplicationRepo,never()).save(any());
     }
 
     @Test
@@ -188,7 +191,6 @@ class ManagerServiceTest {
     @ParameterizedTest
     @ValueSource(strings = {"approve", "reject"})
     void eitherDecisionRequiresAReason(String decision) {
-        when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
         var error=assertThrows(ResponseStatusException.class,()->managerService.decide(1,10,decision," ",0L));
         assertEquals(HttpStatus.BAD_REQUEST,error.getStatusCode());
         verifyNoInteractions(courseApplicationRepo,policy);
@@ -201,8 +203,8 @@ class ManagerServiceTest {
         Manager reviewer=manager();
         CourseApplication course=application(10,2,"S002",ApplicationStatus.UPDATED);
         course.setVersion(0L);
-        when(managerRepo.findById(1)).thenReturn(Optional.of(reviewer));
         when(courseApplicationRepo.findApplicantIdForManager(10,1)).thenReturn(Optional.of(2));
+        when(routing.lockParticipants(2,1)).thenReturn(java.util.Map.of(1,reviewer));
         when(courseApplicationRepo.lockForManager(10,1)).thenReturn(Optional.of(course));
         managerService.decide(1,10,decision,"  Relevant to the role.  ",0L);
         assertEquals("approve".equals(decision)?ApplicationStatus.APPROVED:ApplicationStatus.REJECTED,course.getStatus());
@@ -219,8 +221,8 @@ class ManagerServiceTest {
     void staleVersionRejectsTheDecisionWithoutSaving() {
         CourseApplication course=application(10,2,"S002",ApplicationStatus.APPLIED);
         course.setVersion(1L);
-        when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
         when(courseApplicationRepo.findApplicantIdForManager(10,1)).thenReturn(Optional.of(2));
+        when(routing.lockParticipants(2,1)).thenReturn(java.util.Map.of(1,manager()));
         when(courseApplicationRepo.lockForManager(10,1)).thenReturn(Optional.of(course));
         var error=assertThrows(ResponseStatusException.class,()->managerService.decide(1,10,"approve","Useful",0L));
         assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
@@ -233,8 +235,8 @@ class ManagerServiceTest {
     void alreadyApprovedApplicationCannotBeDecidedAgain() {
         CourseApplication course=application(10,2,"S002",ApplicationStatus.APPROVED);
         course.setVersion(1L);
-        when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
         when(courseApplicationRepo.findApplicantIdForManager(10,1)).thenReturn(Optional.of(2));
+        when(routing.lockParticipants(2,1)).thenReturn(java.util.Map.of(1,manager()));
         when(courseApplicationRepo.lockForManager(10,1)).thenReturn(Optional.of(course));
         var error=assertThrows(ResponseStatusException.class,()->managerService.decide(1,10,"reject","Changed my mind",1L));
         assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
@@ -244,7 +246,6 @@ class ManagerServiceTest {
     // Selecting another team's application fails before any reservation or review write.
     @Test
     void anotherTeamCannotDecideThisApplication() {
-        when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
         when(courseApplicationRepo.findApplicantIdForManager(10,1)).thenReturn(Optional.empty());
         var error=assertThrows(ResponseStatusException.class,()->managerService.decide(1,10,"approve","Useful",0L));
         assertEquals(HttpStatus.NOT_FOUND,error.getStatusCode());

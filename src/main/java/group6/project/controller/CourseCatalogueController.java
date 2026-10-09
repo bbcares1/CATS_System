@@ -93,7 +93,8 @@ public class CourseCatalogueController {
     @GetMapping("/staff/applications/{id}/edit-catalogue")
     public String edit(@PathVariable Integer id, HttpSession session, Model model) {
         var course = applications.getOwned(id, currentStaff(session));
-        applications.requirePending(course);
+        try { applications.requirePending(course); }
+        catch (IllegalStateException e) { throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage()); }
         if (course.getCatalogueCourse() == null) return "redirect:/staff/applications/" + id + "/edit";
         var form = new CatalogueApplicationForm(); form.setApplicationVersion(course.getVersion());
         form.setStartDate(course.getCourseStartDate()); form.setEndDate(course.getCourseEndDate());

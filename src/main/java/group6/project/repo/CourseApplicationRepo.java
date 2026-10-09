@@ -21,7 +21,7 @@ public interface CourseApplicationRepo extends JpaRepository<CourseApplication,I
 
     @Query("""
             select a from CourseApplication a join fetch a.applicant s
-            where s.manager.userId = :managerId and s.userId <> :managerId
+            where a.approvalManager.userId = :managerId and s.userId <> :managerId
               and a.status in :statuses
             order by s.name, s.userId, a.courseStartDate, a.courseId
             """)
@@ -31,8 +31,9 @@ public interface CourseApplicationRepo extends JpaRepository<CourseApplication,I
 
     @Query("""
             select a from CourseApplication a join fetch a.applicant s
+            left join a.approvalManager r left join s.manager m
             where a.courseId = :applicationId
-              and s.manager.userId = :managerId and s.userId <> :managerId
+              and (r.userId = :managerId or m.userId = :managerId) and s.userId <> :managerId
             """)
     Optional<CourseApplication> findForManager(
             @Param("applicationId") Integer applicationId,
@@ -46,10 +47,13 @@ public interface CourseApplicationRepo extends JpaRepository<CourseApplication,I
     boolean existsByApplicant_UserIdOrReviewer_UserId(Integer applicantId, Integer reviewerId);
     boolean existsByApplicant_UserIdAndStatusIn(Integer id, List<ApplicationStatus> statuses);
 
+    boolean existsByApprovalManager_UserIdAndStatusIn(Integer id, List<ApplicationStatus> statuses);
+    boolean existsByApprovalManager_UserId(Integer id);
+
     // Read identity without caching an application before its employee lock is acquired.
     @Query("""
             select a.applicant.userId from CourseApplication a
-            where a.courseId = :id and a.applicant.manager.userId = :managerId
+            where a.courseId = :id and a.approvalManager.userId = :managerId
               and a.applicant.userId <> :managerId
             """)
     Optional<Integer> findApplicantIdForManager(@Param("id") Integer id, @Param("managerId") Integer managerId);
@@ -58,7 +62,7 @@ public interface CourseApplicationRepo extends JpaRepository<CourseApplication,I
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select a from CourseApplication a join fetch a.applicant s
-            where a.courseId = :id and s.manager.userId = :managerId and s.userId <> :managerId
+            where a.courseId = :id and a.approvalManager.userId = :managerId and s.userId <> :managerId
             """)
     Optional<CourseApplication> lockForManager(@Param("id") Integer id, @Param("managerId") Integer managerId);
 

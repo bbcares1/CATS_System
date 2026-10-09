@@ -101,7 +101,7 @@ public class AccountAdminService {
         if (id.equals(actorId)) throw new IllegalArgumentException("You cannot delete your own account.");
         if (!Objects.equals(version, target.getVersion())) throw new IllegalArgumentException("This account changed. Reload it before deleting.");
         requireAnotherAdmin(accounts, target); requireNoReports(accounts, id);
-        if (applications.existsByApplicant_UserIdOrReviewer_UserId(id, id) || claims.existsByApplicant_UserId(id)
+        if (applications.existsByApplicant_UserIdOrReviewer_UserId(id, id) || applications.existsByApprovalManager_UserId(id) || claims.existsByApplicant_UserIdOrReviewer_UserIdOrApprovalManager_UserIdOrReimbursedBy_UserId(id,id,id,id)
                 || !entitlements.findByStaff_UserId(id).isEmpty()) {
             throw new IllegalArgumentException("This account has history or annual allowances. Disable it instead.");
         }
@@ -138,6 +138,10 @@ public class AccountAdminService {
 
     // Reassign all direct reports before demoting, disabling or deleting their manager.
     private void requireNoReports(List<User> accounts, Integer id) {
+        if (applications.existsByApprovalManager_UserIdAndStatusIn(id, List.of(ApplicationStatus.APPLIED,ApplicationStatus.UPDATED))
+                || claims.existsByApprovalManager_UserIdAndApplicationStatus(id, ApplicationStatus.APPLIED)) {
+            throw new IllegalArgumentException("Resolve this manager's assigned pending reviews first.");
+        }
         if (accounts.stream().anyMatch(u -> u.getManager() != null && id.equals(u.getManager().getUserId()))) {
             throw new IllegalArgumentException("Reassign this manager's direct reports first.");
         }

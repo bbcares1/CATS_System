@@ -66,6 +66,7 @@ public class CourseCatalogueService {
     // Lock employee, course and batch in that order; committed reads see reservations after a lock wait.
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public CourseApplication submit(Integer id, CatalogueApplicationForm form, Staff staff) {
+        policy.prepareReviewer(staff, form.getApprovalManagerId());
         policy.lockEmployee(staff);
         CourseDetail course = courses.lockById(id)
                 .filter(this::available).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found."));
@@ -98,6 +99,7 @@ public class CourseCatalogueService {
         }
         CourseApplication request = new CourseApplication();
         request.setCatalogueCourse(course);
+        request.setApprovalManagerId(form.getApprovalManagerId());
         request.setCourseTitle(course.getTitle());
         request.setCourseCategory(course.getCourseCategory().getKind());
         request.setTrainingProvider(course.getTrainingProvider());

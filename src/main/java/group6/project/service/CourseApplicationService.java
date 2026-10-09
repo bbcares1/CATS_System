@@ -30,14 +30,16 @@ public class CourseApplicationService {
     private final TrainingEntitlementRepo entitlements;
     private final ExcludedDaysRepo holidays;
     private final StaffRepo employees;
+    private final ApprovalRoutingService routing;
 
     // Both workspaces share this policy and the same persisted employee identity.
     public CourseApplicationService(CourseApplicationRepo applications,
-            TrainingEntitlementRepo entitlements, ExcludedDaysRepo holidays, StaffRepo employees) {
+            TrainingEntitlementRepo entitlements, ExcludedDaysRepo holidays, StaffRepo employees, ApprovalRoutingService routing) {
         this.applications = applications;
         this.entitlements = entitlements;
         this.holidays = holidays;
         this.employees = employees;
+        this.routing = routing;
     }
 
     // Keep soft-deleted and cancelled records in the employee's annual history.
@@ -49,9 +51,9 @@ public class CourseApplicationService {
     // A caller cannot select another employee's application by changing a URL.
     public CourseApplication getOwned(Integer id, User staff) {
         CourseApplication course = applications.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Course application was not found."));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND));
         if (course.getApplicant() == null || !staff.getUserId().equals(course.getApplicant().getUserId())) {
-            throw new IllegalArgumentException("You can only access your own course applications.");
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND);
         }
         return course;
     }
@@ -59,16 +61,21 @@ public class CourseApplicationService {
     // Copy only applicant-editable fields; status, identity and review data come from the server.
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public CourseApplication create(CourseApplication form, User staff) {
+        User reviewer = prepareReviewer(staff, form.getApprovalManagerId());
         lockEmployee(staff);
         validateAndPrepare(form, staff, null, true);
         CourseApplication course = new CourseApplication();
         copyDetails(form, course);
         course.setApplicant(staff);
+        course.setApprovalManager(reviewer);
         course.setStatus(ApplicationStatus.APPLIED);
         course.setSubmittedAt(LocalDateTime.now());
         course.setUpdatedAt(course.getSubmittedAt());
         return applications.save(course);
     }
+
+    // Acquire account locks before catalogue locks as well as for the other-course form.
+    public User prepareReviewer(User staff, Integer selectedId) { return routing.forSubmission(staff, selectedId); }
 
     // Editing releases this application's old reservation before checking the replacement.
     @Transactional(isolation = Isolation.READ_COMMITTED)

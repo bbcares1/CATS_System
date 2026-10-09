@@ -50,7 +50,7 @@ public class StaffController {
     @InitBinder("course")
     public void bindApplication(WebDataBinder binder) {
         binder.setAllowedFields("courseTitle", "courseCategory", "trainingProvider", "courseStartDate",
-                "courseEndDate", "courseFee", "justification", "workDissemination", "halfDayPeriod");
+                "courseEndDate", "courseFee", "justification", "workDissemination", "halfDayPeriod", "approvalManagerId");
     }
 
     // Dashboard: Show  employee and remaining training allowance
@@ -242,13 +242,14 @@ public class StaffController {
     public String submitFeeClaim(@RequestParam Integer courseId,
             @RequestParam(defaultValue = "false") boolean paidPersonally,
             @RequestParam MultipartFile receipt, @RequestParam MultipartFile certificate,
+            @RequestParam(required=false) Integer approvalManagerId,
             HttpSession session, RedirectAttributes redirect) {
         Staff staff = getCurrentStaff(session);
         if (staff == null) {
             return "redirect:/employee/login";
         }
         try {
-            staffService.submitClaim(courseId, paidPersonally, receipt, certificate, staff);
+            staffService.submitClaim(courseId, paidPersonally, receipt, certificate, staff, approvalManagerId);
             redirect.addFlashAttribute("success", "Claim submitted.");
         } catch (IllegalArgumentException e) {
             redirect.addFlashAttribute("error", e.getMessage());

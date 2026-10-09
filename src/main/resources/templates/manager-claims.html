@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Claim approvals', 'Manager', 'claims', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>
+            Claim approvals
+          </h1>
+        </div>
+      </div>
+      <!-- The queue contains this manager's assigned claims only. -->
+      <div class="card">
+        <div class="cats-table-wrap">
+          <table class="table cats-table">
+            <thead>
+              <tr>
+                <th>
+                  Employee
+                </th>
+                <th>
+                  Course
+                </th>
+                <th>
+                  Amount
+                </th>
+                <th>
+                  Submitted
+                </th>
+                <th>
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="c : ${claims}">
+                <td>
+                  <strong th:text="${c.applicant.name}">
+                  </strong>
+                  <div class="cats-cell-sub" th:text="${c.applicant.staffId}">
+                  </div>
+                </td>
+                <td th:text="${c.courseApplication != null ? c.courseApplication.courseTitle : 'Legacy claim'}">
+                </td>
+                <td th:text="'$' + ${c.amount}">
+                </td>
+                <td th:text="${#temporals.format(c.submittedAt,'d MMM yyyy')}">
+                </td>
+                <td>
+                  <a th:href="@{/manager/claims/{id}(id=${c.applicationId})}">
+                    Review claim
+                  </a>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(claims)}">
+                <td colspan="5" class="cats-empty">
+                  No claims waiting for review.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

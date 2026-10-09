@@ -30,6 +30,7 @@ import group6.project.repo.TrainingEntitlementRepo;
 
 @ExtendWith(MockitoExtension.class)
 class CourseApplicationServiceTest {
+    @Mock ApprovalRoutingService routing;
     @Mock CourseApplicationRepo applicationRepo;
     @Mock TrainingEntitlementRepo entitlementRepo;
     @Mock ExcludedDaysRepo excludedDaysRepo;
@@ -40,7 +41,7 @@ class CourseApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new CourseApplicationService(applicationRepo, entitlementRepo, excludedDaysRepo, employees);
+        service = new CourseApplicationService(applicationRepo, entitlementRepo, excludedDaysRepo, employees, routing);
         staff = new Staff();
         staff.setUserId(7);
         var allowance = new group6.project.model.TrainingEntitlement(LocalDate.now().getYear());

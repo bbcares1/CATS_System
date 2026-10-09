@@ -31,18 +31,21 @@
     <div class="cats-nav-section" th:text="${role} + ' workspace'">Staff workspace</div>
     <nav class="cats-nav" aria-label="Main">
       <th:block th:if="${role == 'Staff'}">
+        <a th:if="${u instanceof T(group6.project.model.Manager)}" th:href="@{/manager/home}"><svg th:replace="~{fragments/icons :: icon('briefcase')}"></svg><span>Manager workspace</span></a>
         <a th:replace="~{fragments/ui :: navlink(@{/staff/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/staff/apply}, 'apply', 'Apply for course', 'file-plus', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/staff/personal}, 'history', 'Course history', 'clock', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/staff/fee}, 'fees', 'Fee claims', 'receipt', ${active})}"></a>
       </th:block>
       <th:block th:if="${role == 'Manager'}">
+        <a th:replace="~{fragments/ui :: navlink(@{/manager/claims}, 'claims', 'Claim approvals', 'receipt', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/manager/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/manager/approvals}, 'approvals', 'Approvals', 'check-square', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/manager/history}, 'history', 'Team course history', 'users', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/staff/home}, 'staff', 'My staff workspace', 'briefcase', ${active})}"></a>
       </th:block>
       <th:block th:if="${role == 'Admin'}">
+        <a th:replace="~{fragments/ui :: navlink(@{/admin/payments}, 'payments', 'Reimbursements', 'receipt', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/showBudgetList}, 'entitlement', 'Training entitlement', 'card', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/accounts}, 'accounts', 'Accounts and reporting', 'users', ${active})}"></a>
@@ -76,7 +79,7 @@
           <span class="cats-avatar" th:text="${u != null and !#strings.isEmpty(u.name)} ? ${#strings.toUpperCase(#strings.substring(u.name, 0, 1))} : '?'">A</span>
           <span class="cats-user-text">
             <span th:text="${u?.name}">Name</span>
-            <small><span th:text="${role}">Staff</span> &middot; <span th:text="${uid}">S0001</span></small>
+            <small><span th:text="${u instanceof T(group6.project.model.Manager) ? 'Manager' : role}">Staff</span> &middot; <span th:text="${uid}">S0001</span></small>
           </span>
           <svg th:replace="~{fragments/icons :: icon('chevron-down')}"></svg>
         </button>
@@ -103,6 +106,11 @@
   </div>
 </div>
 
+<!-- One confirmation dialog is shared by forms that request it. -->
+<div class="modal fade" id="cats-confirm" tabindex="-1" aria-labelledby="cats-confirm-title" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+<div class="modal-header"><h2 id="cats-confirm-title" class="modal-title fs-6">Confirm action</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+<div id="cats-confirm-message" class="modal-body"></div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button id="cats-confirm-submit" type="button" class="btn btn-primary">Confirm</button></div>
+</div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/cats.js}"></script>
 </body>

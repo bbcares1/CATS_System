@@ -74,7 +74,7 @@
   </div>
 
   <!-- Only pending applications show a decision form; the service checks the state again. -->
-  <div class="card mb-4" th:if="${a.status.name() == 'APPLIED' or a.status.name() == 'UPDATED'}">
+  <div class="card mb-4" th:if="${(a.status.name() == 'APPLIED' or a.status.name() == 'UPDATED') and a.approvalManagerId == session.user.userId}">
     <div class="card-header"><h2 class="cats-card-title">Decision</h2></div>
     <form class="card-body" method="post" th:action="@{/manager/applications/{id}/decision(id=${a.applicationId})}">
       <input type="hidden" name="version" th:value="${a.version}">

@@ -43,6 +43,11 @@ class CourseCatalogueIntegrationTest {
         mvc = MockMvcBuilders.webAppContextSetup(context).build();
         employee = new Staff(); employee.setUserName("catalogue_fixture"); employee.setName("Catalogue fixture");
         employee.setPassword("test"); employee.setStaffId("CAT"); employee.setRole(Roles.STAFF);
+        Manager reportingManager = new Manager();
+        reportingManager.setUserName("review_" + java.util.UUID.randomUUID()); reportingManager.setStaffId("REVIEW_" + java.util.UUID.randomUUID());
+        reportingManager.setName("Review fixture"); reportingManager.setPassword("test"); reportingManager.setRole(Roles.MANAGER);
+        reportingManager = employees.saveAndFlush(reportingManager);
+        employee.setManager(reportingManager);
         employee = employees.saveAndFlush(employee);
         day = LocalDate.now().plusDays(7); while (day.getDayOfWeek().getValue() > 5) day = day.plusDays(1);
         allowances.saveLimits(employee.getUserId(), day.getYear(), 10, new BigDecimal("2000.00"));

@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 
-import org.hibernate.annotations.JoinColumnOrFormula;
+import jakarta.persistence.Version;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,6 +34,21 @@ public class CourseFeeApplication {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer applicationId;
+
+    @Version
+    private Long version;
+    @ManyToOne
+    @JoinColumn(name="approval_manager_id")
+    private User approvalManager;
+    @ManyToOne
+    @JoinColumn(name="reviewer_id")
+    private User reviewer;
+    @ManyToOne
+    @JoinColumn(name="reimbursed_by_id")
+    private User reimbursedBy;
+    @Column(nullable=false, precision=12, scale=2)
+    private BigDecimal amount = BigDecimal.ZERO;
+    private String paymentReference;
 
     @ManyToOne 
     @JoinColumn (name = "staff_id")
@@ -72,6 +87,7 @@ public class CourseFeeApplication {
 
     private LocalDateTime reviewedAt;
 
+    @Column(length=2000)
     private String decisionReason;  
 
 }

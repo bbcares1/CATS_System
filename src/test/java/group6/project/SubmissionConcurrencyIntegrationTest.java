@@ -31,6 +31,11 @@ class SubmissionConcurrencyIntegrationTest {
         String key=UUID.randomUUID().toString();
         staff.setUserName(key); staff.setStaffId(key); staff.setName("Concurrent fixture");
         staff.setPassword("test"); staff.setRole(Roles.STAFF);
+        Manager reportingManager = new Manager();
+        reportingManager.setUserName("review_" + java.util.UUID.randomUUID()); reportingManager.setStaffId("REVIEW_" + java.util.UUID.randomUUID());
+        reportingManager.setName("Review fixture"); reportingManager.setPassword("test"); reportingManager.setRole(Roles.MANAGER);
+        reportingManager = employees.saveAndFlush(reportingManager);
+        staff.setManager(reportingManager);
         staff=employees.saveAndFlush(staff);
         date=LocalDate.now().plusDays(7);
         while(date.getDayOfWeek().getValue()>5) date=date.plusDays(1);
@@ -63,6 +68,7 @@ class SubmissionConcurrencyIntegrationTest {
         applications.deleteAll(policy.findForStaffAndYear(staff,date.getYear()));
         entitlements.deleteAll(entitlements.findByStaff_UserId(staff.getUserId()));
         employees.deleteById(staff.getUserId());
+        employees.deleteById(staff.getManager().getUserId());
     }
 
     // Every worker receives its own form so the requests share only employee identity.

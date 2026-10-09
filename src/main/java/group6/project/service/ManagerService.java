@@ -28,14 +28,16 @@ import group6.project.repo.StaffRepo;
 public class ManagerService {
 
     private final CourseApplicationService policy;
+    private final ApprovalRoutingService routing;
     private final StaffRepo staffRepo;
     private final ManagerRepo managerRepo;
     private final CourseApplicationRepo courseApplicationRepo;
 
     public ManagerService(ManagerRepo managerRepo, CourseApplicationRepo courseApplicationRepo,
-            CourseApplicationService policy, StaffRepo staffRepo) {
+            CourseApplicationService policy, StaffRepo staffRepo, ApprovalRoutingService routing) {
         this.managerRepo = managerRepo;
         this.policy = policy;
+        this.routing = routing;
         this.staffRepo = staffRepo;
         this.courseApplicationRepo = courseApplicationRepo;
     }
@@ -93,7 +95,7 @@ public class ManagerService {
                 application.getSubmittedAt(), application.getUpdatedAt(),
                 application.getReviewedAt(), application.getDecisionReason(),
                 application.getExperienceComments(), application.getReviewer() == null ? null : application.getReviewer().getName(),
-                application.getVersion());
+                application.getVersion(), application.getApprovalManager()==null?null:application.getApprovalManager().getUserId());
     }
 
     public record ApplicationGroup(Integer employeeId, String employeeName, String staffId,
@@ -108,13 +110,13 @@ public class ManagerService {
             LocalDate startDate, LocalDate endDate, Double trainingDays, String halfDayPeriod,
             BigDecimal fee, String justification, String workDissemination, ApplicationStatus status,
             LocalDateTime submittedAt, LocalDateTime updatedAt, LocalDateTime reviewedAt,
-            String decisionReason, String experienceComments, String reviewerName, Long version) {
+            String decisionReason, String experienceComments, String reviewerName, Long version, Integer approvalManagerId) {
     }
 
     // Require a reason for either decision and check the version the manager actually reviewed.
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void decide(Integer managerId, Integer applicationId, String decision, String reason, Long version) {
-        Manager reviewer = getManager(managerId);
+
         if (!"approve".equals(decision) && !"reject".equals(decision)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose approve or reject.");
         }
@@ -123,6 +125,8 @@ public class ManagerService {
         }
         Integer employeeId = courseApplicationRepo.findApplicantIdForManager(applicationId, managerId)
                 .orElseThrow(ManagerService::notFound);
+        var participants = routing.lockParticipants(employeeId, managerId);
+        if (!(participants.get(managerId) instanceof Manager reviewer) || !reviewer.isActive()) throw notFound();
         Staff employee = new Staff(); employee.setUserId(employeeId);
         policy.lockEmployee(employee);
         CourseApplication course = courseApplicationRepo.lockForManager(applicationId, managerId)

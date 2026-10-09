@@ -39,6 +39,13 @@ public class CourseApplication {
     @JoinColumn(name = "reviewer_id")
     private User reviewer;
 
+    @ManyToOne
+    @JoinColumn(name = "approval_manager_id")
+    private User approvalManager;
+
+    @jakarta.persistence.Transient
+    private Integer approvalManagerId;
+
     // Catalogue references explain the source; the stored course fields remain the application snapshot.
     @ManyToOne
     @JoinColumn(name = "catalogue_course_id")

@@ -20,6 +20,7 @@
             <p class="error" th:if="${error}" th:text="${error}"></p>
             <!-- Course application: Enter or edit the course details. -->
             <form th:action="${formAction}" th:object="${course}" method="post">
+<div th:if="${editId == null}" th:replace="~{fragments/reviewer :: choice(${course.approvalManagerId})}"></div>
                 <input th:if="${editId != null}" type="hidden" name="applicationId" th:value="${editId}">
                 <div class="form-group">
                     <label for="courseTitle">Course title *</label>

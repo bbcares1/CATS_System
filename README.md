@@ -70,6 +70,8 @@ Run with `SPRING_PROFILES_ACTIVE=prod` and set `CATS_DB_URL`, `CATS_DB_USER`, `C
 - Split cross-year courses into separate requests. AM/PM is allowed only for a single-date Internal Training session; multi-day courses use full working days. Opposite AM/PM sessions can share a date.
 - Internal Training has no course fee. Money uses decimal SGD values, with up to two decimal places.
 - Complete an approved course only after its end date, with experience comments. Admin cannot lower limits below already reserved days/fees.
+- Requests keep their assigned reviewer when the reporting manager changes. Staff use their assigned manager; a Manager without one chooses another active Manager. Self-review is blocked. Admin must resolve assigned pending reviews before removing Manager access.
+- Fee claims require a completed, personally paid External Course or Certification and a receipt/certificate (PDF, JPEG or PNG, up to 5 MB each). One claim per course. Both Manager decisions need a reason; Admin records actual payment separately with a reference. Claims never spend the training budget twice.
 
 ## MVC entry points
 
@@ -77,9 +79,9 @@ Run with `SPRING_PROFILES_ACTIVE=prod` and set `CATS_DB_URL`, `CATS_DB_USER`, `C
 | --- | --- |
 | Public | `/login`, `/employee/login`, `/admin/login` |
 | Staff (including Manager) | `/staff/home`, `/staff/apply`, `/staff/personal`, `/staff/applications/{id}`, `/staff/fee` |
-| Manager | `/manager/home`, `/manager/approvals`, `/manager/applications/{id}`, `/manager/history` |
-| Admin | `/admin/home`, `/admin/entitlements`, `/admin/courses`, `/admin/categories`, `/admin/batches`, `/admin/excludedDays` |
+| Manager | `/manager/home`, `/manager/approvals`, `/manager/applications/{id}`, `/manager/history`, `/manager/claims` |
+| Admin | `/admin/home`, `/admin/accounts`, `/admin/entitlements`, `/admin/courses`, `/admin/categories`, `/admin/batches`, `/admin/excludedDays`, `/admin/payments` |
 
 Admin also manages all account types at `/admin/accounts`. Blank edit passwords keep the current password; stored passwords never appear in forms. Changes expire old sessions. Reassign reports before removing Manager access and resolve pending employee requests before disabling them or changing to Admin. Delete is only for unused accounts; disable accounts with history instead. At least one active Admin must remain. Employee annual limits are maintained separately.
 
-Old application, claim and holiday GET routes redirect to these pages. Old POST handlers are retired; use the current forms. All protected prefixes reload the account behind session `user`. Claims and attachments are restricted to their owner. Manager decisions are restricted to direct reports. Password fields are excluded from JSON. Upload validation and CSRF protection are completed in the following safety/deployment slice.
+Old application, claim and holiday GET routes redirect to these pages. Old POST handlers are retired; use the current forms. All protected prefixes reload the account behind session `user`. Claims and attachments are restricted to the owner or assigned Manager. Reviewers can only decide requests assigned to them; team history still uses direct reports. Password fields are excluded from JSON. CSRF protection is part of the following safety/deployment slice.

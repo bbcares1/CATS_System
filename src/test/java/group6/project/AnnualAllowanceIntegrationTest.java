@@ -30,6 +30,11 @@ class AnnualAllowanceIntegrationTest {
         staff = new Staff();
         staff.setUserName("annual_fixture"); staff.setPassword("test"); staff.setName("Annual fixture");
         staff.setStaffId("ANNUAL"); staff.setRole(Roles.STAFF);
+        Manager reportingManager = new Manager();
+        reportingManager.setUserName("review_" + java.util.UUID.randomUUID()); reportingManager.setStaffId("REVIEW_" + java.util.UUID.randomUUID());
+        reportingManager.setName("Review fixture"); reportingManager.setPassword("test"); reportingManager.setRole(Roles.MANAGER);
+        reportingManager = employees.saveAndFlush(reportingManager);
+        staff.setManager(reportingManager);
         staff = employees.saveAndFlush(staff);
         start = LocalDate.now().plusDays(7);
         while (start.getDayOfWeek().getValue()>5) start=start.plusDays(1);

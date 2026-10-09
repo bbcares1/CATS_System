@@ -47,6 +47,11 @@ class StaffWorkflowTest {
         staff.setStaffId("S001");
         staff.setDesignation("Professional");
         staff.setRole(Roles.STAFF);
+        Manager reportingManager = new Manager();
+        reportingManager.setUserName("review_" + java.util.UUID.randomUUID()); reportingManager.setStaffId("REVIEW_" + java.util.UUID.randomUUID());
+        reportingManager.setName("Review fixture"); reportingManager.setPassword("test"); reportingManager.setRole(Roles.MANAGER);
+        reportingManager = staffRepo.saveAndFlush(reportingManager);
+        staff.setManager(reportingManager);
         staff = staffRepo.saveAndFlush(staff);
         setAllowance(10, "2000");
         session = new MockHttpSession();
@@ -202,7 +207,7 @@ class StaffWorkflowTest {
             assertEquals(LocalDate.now().getYear(), row.getCourseStartDate().getYear());
         }
         Staff another = new Staff(); another.setUserId(staff.getUserId() + 1);
-        assertThrows(IllegalArgumentException.class, () -> staffService.getCourseApplication(ended.getCourseId(), another));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> staffService.getCourseApplication(ended.getCourseId(), another));
     }
 
     // Application rules: Check dates, holidays, budget and overlapping courses.
@@ -277,26 +282,26 @@ class StaffWorkflowTest {
         course.setTrainingProvider("AWS");
         byte[] pdf = new byte[100000];
         System.arraycopy("%PDF-1.4".getBytes(), 0, pdf, 0, 8);
-        MockMultipartFile receipt = new MockMultipartFile("receipt", "receipt.jpg", "image/jpeg", pdf);
+        MockMultipartFile receipt = new MockMultipartFile("receipt", "receipt.pdf", "application/pdf", pdf);
         MockMultipartFile certificate = new MockMultipartFile("certificate", "certificate.pdf", "application/pdf", pdf);
-        assertThrows(IllegalArgumentException.class, () -> staffService.submitClaim(course.getCourseId(), false, receipt, certificate, staff));
+        assertThrows(IllegalArgumentException.class, () -> staffService.submitClaim(course.getCourseId(), false, receipt, certificate, staff, null));
         mvc.perform(multipart("/staff/fee").file(receipt).file(certificate).session(session)
                 .param("courseId", course.getCourseId().toString()).param("paidPersonally", "true"))
                 .andExpect(redirectedUrl("/staff/fee"));
         claimRepo.flush();
         CourseFeeApplication claim = staffService.getClaims(staff).getFirst();
         assertEquals(ApplicationStatus.APPLIED, claim.getApplicationStatus());
-        assertEquals("receipt.jpg", claim.getReceiptFileName());
-        assertEquals("image/jpeg", claim.getReceiptContentType());
+        assertEquals("receipt.pdf", claim.getReceiptFileName());
+        assertEquals("application/pdf", claim.getReceiptContentType());
         assertEquals("certificate.pdf", claim.getCertificateFileName());
-        assertThrows(IllegalArgumentException.class, () -> staffService.submitClaim(course.getCourseId(), true, receipt, certificate, staff));
-        claimService.approveFeeApplication(claim.getApplicationId(), "Receipt verified");
+        assertThrows(IllegalArgumentException.class, () -> staffService.submitClaim(course.getCourseId(), true, receipt, certificate, staff, null));
+        claimService.decide(claim.getApplicationId(), staff.getManager().getUserId(), "approve", "Receipt verified", claim.getVersion());
         mvc.perform(get("/staff/claims/" + claim.getApplicationId()).session(session))
                 .andExpect(status().isOk()).andExpect(content().string(org.hamcrest.Matchers.containsString("Receipt verified")));
         mvc.perform(get("/staff/claims/" + claim.getApplicationId() + "/receipt").session(session))
                 .andExpect(status().isOk()).andExpect(content().bytes(pdf))
                 .andExpect(content().contentType("application/octet-stream"))
-                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("receipt.jpg")));
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("receipt.pdf")));
         mvc.perform(get("/staff/fee").session(session)).andExpect(status().isOk());
     }
 
@@ -320,9 +325,9 @@ class StaffWorkflowTest {
         assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, form(), staff));
         CourseApplication pending = saved(ApplicationStatus.APPLIED, futureDay());
         MockMultipartFile bad = new MockMultipartFile("receipt", "empty.pdf", "application/pdf", new byte[0]);
-        assertThrows(IllegalArgumentException.class, () -> staffService.submitClaim(pending.getCourseId(), true, bad, bad, staff));
+        assertThrows(IllegalArgumentException.class, () -> staffService.submitClaim(pending.getCourseId(), true, bad, bad, staff, null));
         CourseApplication completed = staffService.getCourseHistory(staff, LocalDate.now().getYear()).getFirst();
-        assertThrows(IllegalArgumentException.class, () -> staffService.submitClaim(completed.getCourseId(), true, bad, bad, staff));
+        assertThrows(IllegalArgumentException.class, () -> staffService.submitClaim(completed.getCourseId(), true, bad, bad, staff, null));
         assertTrue(staffService.getClaims(staff).isEmpty());
     }
 
@@ -418,9 +423,9 @@ class StaffWorkflowTest {
             assertEquals(staff.getUserId(), row.getApplicant().getUserId());
         }
         mvc.perform(get("/staff/applications/" + otherCourse.getCourseId()).session(session))
-                .andExpect(redirectedUrl("/staff/home")).andExpect(flash().attributeExists("error"));
+                .andExpect(status().isNotFound());
         mvc.perform(get("/staff/applications/" + otherCourse.getCourseId() + "/edit").session(session))
-                .andExpect(redirectedUrl("/staff/home")).andExpect(flash().attributeExists("error"));
+                .andExpect(status().isNotFound());
         CourseFeeApplication otherClaim = new CourseFeeApplication();
         otherClaim.setApplicant(second);
         otherClaim.setApplicationStatus(ApplicationStatus.APPLIED);

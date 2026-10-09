@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Reimbursements', 'Admin', 'payments', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>
+            Reimbursements
+          </h1>
+        </div>
+      </div>
+      <!-- Record a payment only after it has actually been made. -->
+      <p class="cats-sub">
+        Manager approval and reimbursement are separate. Record the payment reference after paying an approved claim.
+      </p>
+      <div class="card">
+        <div class="cats-table-wrap">
+          <table class="table cats-table">
+            <thead>
+              <tr>
+                <th>
+                  Employee / course
+                </th>
+                <th>
+                  Amount
+                </th>
+                <th>
+                  Approved by
+                </th>
+                <th>
+                  Payment
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="c : ${claims}">
+                <td>
+                  <strong th:text="${c.applicant.name}">
+                  </strong>
+                  <div th:text="${c.courseApplication != null ? c.courseApplication.courseTitle : 'Legacy claim'}">
+                  </div>
+                </td>
+                <td th:text="'$' + ${c.amount}">
+                </td>
+                <td th:text="${c.reviewer != null ? c.reviewer.name : 'Legacy approval'}">
+                </td>
+                <td>
+                  <form th:if="${c.reimbursedAt == null}" th:action="@{/admin/payments/{id}(id=${c.applicationId})}" method="post" class="cats-stack" data-confirm-title="Record reimbursement?" data-confirm-message="Confirm that this payment has been made. This records the payment once.">
+                    <input type="hidden" name="version" th:value="${c.version}">
+                    <label class="visually-hidden" th:for="'reference-'+${c.applicationId}">
+                      Payment reference
+                    </label>
+                    <input class="form-control" th:id="'reference-'+${c.applicationId}" name="reference" placeholder="Payment reference" maxlength="255" required>
+                    <button class="btn btn-primary">
+                      Record payment
+                    </button>
+                  </form>
+                  <div th:if="${c.reimbursedAt != null}">
+                    <strong th:text="${c.paymentReference}">
+                    </strong>
+                    <div class="cats-cell-sub" th:text="${#temporals.format(c.reimbursedAt,'d MMM yyyy HH:mm')}">
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(claims)}">
+                <td colspan="4" class="cats-empty">
+                  No approved claims.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

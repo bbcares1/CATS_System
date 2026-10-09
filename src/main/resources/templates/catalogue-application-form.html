@@ -35,6 +35,7 @@
               </dd>
             </dl>
             <form id="apply-form" th:action="@{/staff/courses/{id}/apply(id=${course.courseId})}" th:object="${form}" method="post" class="cats-stack" novalidate th:with="internal=${course.courseCategory.kind == T(group6.project.model.CourseCategoryType).INTERNAL_TRAINING}">
+              <div th:replace="~{fragments/reviewer :: choice(${form.approvalManagerId})}"></div>
               <input type="hidden" th:field="*{courseVersion}">
               <div>
                 <label class="form-label cats-req" for="scheduledBatch">

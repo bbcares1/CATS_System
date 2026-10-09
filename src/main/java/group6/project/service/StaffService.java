@@ -101,69 +101,12 @@ public class StaffService {
         return courseFeeApplicationRepo.findByApplicant_UserId(staff.getUserId());
     }
 
-    private boolean alreadyClaimed(Integer courseId, List<CourseFeeApplication> claims) {
-        for (CourseFeeApplication claim : claims) {
-            if (claim.getCourseApplication() != null
-                    && courseId.equals(claim.getCourseApplication().getCourseId())) {
-                return true;
-            }
-        }
-        return false;
-    }
+    // Eligibility and upload checks live in the claim service for both employee roles.
+    public List<CourseApplication> getClaimableCourses(Staff staff) { return courseFeeApplicationService.eligible(staff); }
 
-    public List<CourseApplication> getClaimableCourses(Staff staff) {
-        // Claim eligibility: Load existing claims before checking the courses.
-        List<CourseFeeApplication> claims = getClaims(staff);
-        List<CourseApplication> result = new ArrayList<>();
-        for (CourseApplication application : courseApplicationRepo.findByApplicant_UserIdAndStatusIn(
-                staff.getUserId(), List.of(ApplicationStatus.COMPLETED))) {
-            if (application.getCourseCategory() != CourseCategoryType.INTERNAL_TRAINING
-                    && application.getCourseFee().signum() > 0 && !alreadyClaimed(application.getCourseId(), claims)) {
-                result.add(application);
-            }
-        }
-        return result;
-    }
-
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    // Discussion: Move eligibility checks to CourseFeeApplicationService.submitApplication()
     public void submitClaim(Integer courseId, boolean paidPersonally, MultipartFile receipt,
-            MultipartFile certificate, Staff staff) {
-        CourseApplication course = getCourseApplication(courseId, staff);
-        // Fee claim eligibility - Check personal payment and course completion.
-        if (!paidPersonally) {
-            throw new IllegalArgumentException("Only personally paid course fees can be claimed.");
-        }
-        if (course.getStatus() != ApplicationStatus.COMPLETED
-                || course.getCourseCategory() == CourseCategoryType.INTERNAL_TRAINING
-                || course.getCourseFee().signum() <= 0) {
-            throw new IllegalArgumentException("Only completed fee-paying courses can be claimed.");
-        }
-        if (alreadyClaimed(courseId, getClaims(staff))) {
-            throw new IllegalArgumentException("A claim already exists for this course.");
-        }
-        CourseFeeApplication claim = new CourseFeeApplication();
-        claim.setApplicant(staff);
-        claim.setCourseApplication(course);
-        claim.setReceipt(readFile(receipt));
-        claim.setCertificate(readFile(certificate));
-        claim.setReceiptFileName(receipt.getOriginalFilename());
-        claim.setCertificateFileName(certificate.getOriginalFilename());
-        claim.setReceiptContentType(receipt.getContentType());
-        claim.setCertificateContentType(certificate.getContentType());
-        courseFeeApplicationService.submitApplication(claim);
-    }
-
-    // Claim documents - Require the receipt and completion certificate.
-    private byte[] readFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Upload both the receipt and certificate.");
-        }
-        try {
-            return file.getBytes();
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Could not read the document. Please upload it again.");
-        }
+            MultipartFile certificate, Staff staff, Integer approvalManagerId) {
+        courseFeeApplicationService.submit(courseId, paidPersonally, receipt, certificate, staff, approvalManagerId);
     }
 
     // Claim details and downloads belong to the submitting employee, including a Manager's own claims.
@@ -178,14 +121,6 @@ public class StaffService {
 
     // Reimbursement total - Add fees already reimbursed for the selected year
     public BigDecimal getReimbursedFees(Staff staff, int year) {
-        BigDecimal total = BigDecimal.ZERO;
-        for (CourseFeeApplication claim : getClaims(staff)) {
-            if (claim.getReimbursedAt() != null && claim.getCourseApplication() != null
-                    && claim.getCourseApplication().getCourseStartDate().getYear() == year) {
-                total = total.add(claim.getCourseApplication().getCourseFee());
-            }
-        }
-        return total;
+        return courseFeeApplicationService.reimbursed(staff, year);
     }
-
 }

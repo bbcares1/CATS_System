@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 public class CatalogueApplicationForm {
     private Long courseVersion;
+    private Integer approvalManagerId;
     private Long applicationVersion;
     private String scheduledBatch;
     private LocalDate startDate;

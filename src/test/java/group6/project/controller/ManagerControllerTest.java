@@ -46,6 +46,8 @@ class ManagerControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @MockitoBean private group6.project.service.ApprovalRoutingService routing;
+
     @MockitoBean
     private ManagerService managerService;
 
@@ -237,6 +239,6 @@ class ManagerControllerTest {
                 "Improve our system design.", "Share the learning with the team.", status,
                 LocalDateTime.of(2026, 10, 9, 10, 0), null,
                 status == ApplicationStatus.REJECTED ? LocalDateTime.of(2026, 10, 9, 11, 0) : null,
-                status == ApplicationStatus.REJECTED ? "Conflicts with a project deadline." : null, null, null, 0L);
+                status == ApplicationStatus.REJECTED ? "Conflicts with a project deadline." : null, null, null, 0L, 1);
     }
 }

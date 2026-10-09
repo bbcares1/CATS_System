@@ -35,3 +35,30 @@
   if (backdrop) backdrop.addEventListener('click', function () { layout.classList.remove('open'); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') layout.classList.remove('open'); });
 })();
+
+// Confirm the original form and button, preserving decision values and normal validation.
+(function () {
+  var dialog = document.getElementById('cats-confirm');
+  if (!dialog || !window.bootstrap) return;
+  var modal = new bootstrap.Modal(dialog);
+  var pending = null;
+  document.addEventListener('submit', function (event) {
+    var form = event.target;
+    if (!form.hasAttribute('data-confirm-title') || form.dataset.confirmed === 'yes') return;
+    event.preventDefault();
+    pending = { form: form, button: event.submitter };
+    document.getElementById('cats-confirm-title').textContent = form.dataset.confirmTitle;
+    document.getElementById('cats-confirm-message').textContent = form.dataset.confirmMessage || 'Continue with this action?';
+    modal.show();
+  });
+  document.getElementById('cats-confirm-submit').addEventListener('click', function () {
+    if (!pending) return;
+    var action = pending;
+    action.form.dataset.confirmed = 'yes';
+    modal.hide();
+    action.form.requestSubmit(action.button || undefined);
+    delete action.form.dataset.confirmed;
+    pending = null;
+  });
+  dialog.addEventListener('hidden.bs.modal', function () { pending = null; });
+})();

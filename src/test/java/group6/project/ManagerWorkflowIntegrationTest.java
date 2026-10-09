@@ -90,7 +90,8 @@ class ManagerWorkflowIntegrationTest {
     void supportIncludesAnnualUsageAndOnlyTheManagersOtherApprovedCourses() {
         CourseApplication request=policy.create(form(),alex);
         for(Staff employee:java.util.List.of(sam,pat,bob)) {
-            CourseApplication approved=policy.create(form(),employee);
+            CourseApplication input=form(); if(employee==bob) input.setApprovalManagerId(chris.getUserId());
+            CourseApplication approved=policy.create(input,employee);
             approved.setStatus(ApplicationStatus.APPROVED); applications.saveAndFlush(approved);
         }
         var support=managers.getDecisionSupport(bob.getUserId(),request.getCourseId());

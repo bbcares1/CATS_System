@@ -18,6 +18,13 @@ public interface UserRepo extends JpaRepository<User, Integer> {
     @Query("select u from User u order by u.userId")
     List<User> lockAccounts();
 
+    @Query("select u.manager.userId from User u where u.userId=:id")
+    Optional<Integer> reportingManagerId(@Param("id") Integer id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from User u where u.userId in :ids order by u.userId")
+    List<User> lockParticipants(@Param("ids") List<Integer> ids);
+
     // Changing the discriminator requires clearing managed objects before loading the new subtype.
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = "update users set role=:role, version=version+1 where user_id=:id", nativeQuery = true)
