@@ -4,7 +4,7 @@ Java 21 and Docker Compose are enough. Development, automated tests and producti
 
 ## First production installation
 
-1. Copy `.env.prod.example` to `.env.prod` and choose your database and initial Admin credentials. Keep this file out of Git.
+1. Copy `.env.prod.example` to `.env.prod` and choose your database and initial Admin credentials. Keep this file out of Git. Keep the single quotes around passwords so characters such as `$` stay literal.
 2. Start the production stack:
 
 ```sh
