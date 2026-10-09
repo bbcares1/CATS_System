@@ -35,9 +35,9 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="trainingProvider">Training provider</label>
+                    <label for="trainingProvider">Training provider *</label>
                     <p class="error" th:if="${#fields.hasErrors('trainingProvider')}" th:errors="*{trainingProvider}"></p>
-                    <input type="text" th:field="*{trainingProvider}" maxlength="255">
+                    <input type="text" th:field="*{trainingProvider}" maxlength="255" required>
                 </div>
                 <div class="form-group">
                     <!-- Course period: The existing shared service requires both dates in one calendar year. -->

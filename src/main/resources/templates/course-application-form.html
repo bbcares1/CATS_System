@@ -80,7 +80,7 @@
                     <option th:each="category : ${categories}" th:value="${category}" th:text="${category.displayName}">
                     </option>
                 </select></label>
-            <label>Training Provider<input th:field="*{trainingProvider}" maxlength="200"></label>
+            <label>Training provider *<input th:field="*{trainingProvider}" maxlength="255" required></label>
             <label>Start Date *<input type="date" th:field="*{courseStartDate}" id="startDate" th:min="${today}"
                     required></label>
             <label>End Date *<input type="date" th:field="*{courseEndDate}" id="endDate" required></label>
