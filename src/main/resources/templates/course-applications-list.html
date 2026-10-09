@@ -119,24 +119,24 @@
           </tr>
         </thead>
         <tbody>
-          <tr th:each="application : ${applications}">
-            <td><a th:href="@{/staff/course-applications/{id}(id=${application.courseId})}"
-                th:text="${application.courseTitle}"></a></td>
-            <td th:text="${application.courseCategory}"></td>
-            <td th:text="${application.trainingProvider}"></td>
-            <td><span th:text="${application.courseStartDate}"></span> - <span
-                th:text="${application.courseEndDate}"></span></td>
-            <td th:text="${application.trainingDays}"></td>
-            <td th:text="${application.courseFee}"></td>
-            <td th:text="${application.status}"></td>
+          <tr th:each="course : ${applications}">
+            <td><a th:href="@{/staff/course-applications/{id}(id=${course.courseId})}"
+                th:text="${course.courseTitle}"></a></td>
+            <td th:text="${course.courseCategory}"></td>
+            <td th:text="${course.trainingProvider}"></td>
+            <td><span th:text="${course.courseStartDate}"></span> - <span
+                th:text="${course.courseEndDate}"></span></td>
+            <td th:text="${course.trainingDays}"></td>
+            <td th:text="${course.courseFee}"></td>
+            <td th:text="${course.status}"></td>
             <td class="actions">
-              <a th:if="${application.status.name() == 'APPLIED' or application.status.name() == 'UPDATED'}"
-                th:href="@{/staff/course-applications/{id}/edit(id=${application.courseId})}">Edit</a>
-              <form th:if="${application.status.name() == 'APPLIED' or application.status.name() == 'UPDATED'}"
-                th:action="@{/staff/course-applications/{id}/delete(id=${application.courseId})}" method="post"
+              <a th:if="${course.status.name() == 'APPLIED' or course.status.name() == 'UPDATED'}"
+                th:href="@{/staff/course-applications/{id}/edit(id=${course.courseId})}">Edit</a>
+              <form th:if="${course.status.name() == 'APPLIED' or course.status.name() == 'UPDATED'}"
+                th:action="@{/staff/course-applications/{id}/delete(id=${course.courseId})}" method="post"
                 onsubmit="return confirm('Delete this application?');"><button class="btn danger">Delete</button></form>
-              <form th:if="${application.status.name() == 'APPROVED'}"
-                th:action="@{/staff/course-applications/{id}/cancel(id=${application.courseId})}" method="post"
+              <form th:if="${course.status.name() == 'APPROVED'}"
+                th:action="@{/staff/course-applications/{id}/cancel(id=${course.courseId})}" method="post"
                 onsubmit="return confirm('Cancel this approved application?');"><button class="btn">Cancel</button>
               </form>
             </td>
