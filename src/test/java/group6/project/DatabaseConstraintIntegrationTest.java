@@ -21,6 +21,7 @@ class DatabaseConstraintIntegrationTest {
     @Autowired TrainingEntitlementRepo allowances;
     @Autowired CourseDetailRepo courses;
     @Autowired CourseApplicationRepo applications;
+    @Autowired CourseBatchRepo batches;
 
     // Direct database writes cannot bypass the annual half-day, year and money limits.
     @Test
@@ -92,23 +93,50 @@ class DatabaseConstraintIntegrationTest {
                 () ->
                         database.update(
                                 "update course_application set training_days=0.25 where"
-                                    + " course_id=?",
+                                        + " course_id=?",
                                 id),
                 "ck_application_days");
         rejected(
                 () ->
                         database.update(
                                 "update course_application set course_end_date='2026-11-01' where"
-                                    + " course_id=?",
+                                        + " course_id=?",
                                 id),
                 "ck_application_period");
         rejected(
                 () ->
                         database.update(
                                 "update course_application set course_end_date='2027-01-01' where"
-                                    + " course_id=?",
+                                        + " course_id=?",
                                 id),
                 "ck_application_period");
+    }
+
+    // Imports obey the same capacity range as the session form and service.
+    @Test
+    void batchCapacityKeepsBothServiceBounds() {
+        var batch = new CourseBatch();
+        batch.setCapacity(10);
+        batch = batches.saveAndFlush(batch);
+        Long id = batch.getBatchId();
+        for (int capacity : java.util.List.of(0, 100001)) {
+            rejected(
+                    () ->
+                            database.update(
+                                    "update course_batch set capacity=? where batch_id=?",
+                                    capacity,
+                                    id),
+                    "ck_batch_capacity_range");
+        }
+        for (int capacity : java.util.List.of(1, 100000)) {
+            database.update("update course_batch set capacity=? where batch_id=?", capacity, id);
+            assertEquals(
+                    capacity,
+                    database.queryForObject(
+                            "select capacity from course_batch where batch_id=?",
+                            Integer.class,
+                            id));
+        }
     }
 
     // H2 and MySQL translate CHECK errors differently; both must name the expected constraint.
