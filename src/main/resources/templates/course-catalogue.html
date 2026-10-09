@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Course catalogue', 'Staff', 'apply', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>
+            Course catalogue
+          </h1>
+          <p class="cats-sub">
+            Find a course, choose a session and tell us why you want to attend.
+          </p>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/staff/apply/other}">
+          Apply for another course
+        </a>
+      </div>
+      <form class="card card-body" method="get" th:action="@{/staff/courses}">
+        <div class="cats-grid cats-grid-2">
+          <div>
+            <label for="q" class="form-label">
+              Search title or provider
+            </label>
+            <input id="q" type="search" name="q" class="form-control" th:value="${q}">
+          </div>
+          <div>
+            <label for="category" class="form-label">
+              Category
+            </label>
+            <select id="category" name="category" class="form-select">
+              <option value="">
+                All categories
+              </option>
+              <option th:each="c : ${categories}" th:value="${c}" th:text="${c.displayName}" th:selected="${c == category}">
+              </option>
+            </select>
+          </div>
+          <div>
+            <label for="provider" class="form-label">
+              Provider
+            </label>
+            <select id="provider" name="provider" class="form-select">
+              <option value="">
+                All providers
+              </option>
+              <option th:each="p : ${providers}" th:value="${p}" th:text="${p}" th:selected="${p == provider}">
+              </option>
+            </select>
+          </div>
+          <div>
+            <label for="size" class="form-label">
+              Courses per page
+            </label>
+            <select id="size" name="size" class="form-select">
+              <option th:each="s : ${ {10,20,25} }" th:value="${s}" th:text="${s}" th:selected="${s == size}">
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="cats-page-actions mt-3">
+          <a class="btn btn-outline-secondary" th:href="@{/staff/courses}">
+            Clear filters
+          </a>
+          <button class="btn btn-primary">
+            Search courses
+          </button>
+        </div>
+      </form>
+      <p class="text-secondary mb-0" th:text="${total} + ' courses found'">
+      </p>
+      <div th:if="${#lists.isEmpty(courses)}" class="card">
+        <div th:replace="~{fragments/ui :: empty('book', 'No matching courses', 'Try a different filter or apply for a course outside the catalogue.', ~{})}">
+        </div>
+      </div>
+      <div class="cats-grid cats-grid-2">
+        <article class="card" th:each="c : ${courses}">
+          <div class="card-body cats-stack">
+            <span th:replace="~{fragments/ui :: tag(${c.courseCategory.categoryName})}">
+            </span>
+            <div>
+              <h2 class="cats-card-title" th:text="${c.title}">
+              </h2>
+              <p class="cats-sub" th:text="${c.trainingProvider}">
+              </p>
+            </div>
+            <div class="d-flex justify-content-between">
+              <strong th:text="'$' + ${#numbers.formatDecimal(c.courseFee,1,'COMMA',2,'POINT')}">
+              </strong>
+              <span class="text-secondary" th:text="${c.customDatesAllowed} ? 'Custom dates available' : 'Scheduled sessions'">
+              </span>
+            </div>
+            <a class="btn btn-outline-secondary align-self-start" th:href="@{/staff/courses/{id}(id=${c.courseId})}">
+              View course
+            </a>
+          </div>
+        </article>
+      </div>
+      <nav class="cats-page-actions" aria-label="Course pages" th:if="${lastPage > 0}">
+        <a class="btn btn-outline-secondary" th:if="${page > 0}" th:href="@{/staff/courses(q=${q},category=${category},provider=${provider},page=${page-1},size=${size})}">
+          Previous
+        </a>
+        <span th:text="'Page ' + ${page+1} + ' of ' + ${lastPage+1}">
+        </span>
+        <a class="btn btn-outline-secondary" th:if="${page < lastPage}" th:href="@{/staff/courses(q=${q},category=${category},provider=${provider},page=${page+1},size=${size})}">
+          Next
+        </a>
+      </nav>
+    </section>
+  </body>
+</html>

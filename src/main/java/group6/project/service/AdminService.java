@@ -8,13 +8,11 @@ import org.springframework.stereotype.Service;
 
 import group6.project.model.ApprovalHierarchy;
 import group6.project.model.CourseCategory;
-import group6.project.model.CourseDetail;
 import group6.project.model.ExcludedDays;
 import group6.project.model.Staff;
 import group6.project.model.TrainingEntitlement;
 import group6.project.repo.AdminRepo;
 import group6.project.repo.ApprovalHierarchyRepo;
-import group6.project.repo.CourseDetailRepo;
 import group6.project.repo.ExcludedDaysRepo;
 import group6.project.repo.StaffRepo;
 import group6.project.repo.TrainingEntitlementRepo;
@@ -34,8 +32,6 @@ public class AdminService {
      @Autowired
      public ExcludedDaysRepo excludedDaysRepo;
 
-     @Autowired
-     public CourseDetailRepo courseDetailRepo;
 
      @Autowired
      public ApprovalHierarchyRepo approvalHierarchyRepo;
@@ -69,24 +65,6 @@ public class AdminService {
 
      public void deleteExcludedDays(Integer id) {
           excludedDaysRepo.deleteById(id);
-     }
-
-     public List<CourseDetail> getAllCourseDetails() {
-
-          return courseDetailRepo.findAll();
-     }
-
-     public Optional<CourseDetail> getByIdCourseDetails(Integer id) {
-          return courseDetailRepo.findById(id);
-     }
-
-     public void saveCourse(CourseDetail course) {
-          
-          courseDetailRepo.save(course);
-     }
-
-     public void deleteCourseById(Integer id) {
-          courseDetailRepo.deleteById(id);
      }
 
      // here below is about approvalhierarchy

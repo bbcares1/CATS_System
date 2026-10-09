@@ -1,97 +1,32 @@
 package group6.project.controller;
 
-import group6.project.service.CourseApplicationService;
-import java.util.Optional;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import group6.project.model.CourseCategory;
-import group6.project.repo.CourseCategoryRepository;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import group6.project.service.CourseCategoryService;
-import org.springframework.web.bind.annotation.RequestBody;
 
-
-
-@Controller 
+@Controller
+@RequestMapping("/admin/categories")
 public class CourseCategoryController {
-  private final CourseApplicationService courseApplicationService;
-  private final CourseCategoryRepository courseCategoryRepository;
-  private final CourseCategoryService courseCategoryService;
+    private final CourseCategoryService categories;
 
-  //Constructor points out the object
-  public CourseCategoryController(CourseCategoryService courseCategoryService, CourseCategoryRepository courseCategoryRepository, CourseApplicationService courseApplicationService){
-    this.courseCategoryService = courseCategoryService;
-    this.courseCategoryRepository = courseCategoryRepository;
-    this.courseApplicationService = courseApplicationService;
-  }
+    // Category maintenance does not need application data or direct repository access.
+    public CourseCategoryController(CourseCategoryService categories) { this.categories = categories; }
 
-  //Show the category list
-  @GetMapping("/admin/categories")
-  public String getAllCategories(Model model) {
+    // Show the three supported business types and any retained legacy labels.
+    @GetMapping
+    public String list(Model model) { model.addAttribute("categories", categories.getAllCategories()); return "course-category-list"; }
 
-    model.addAttribute("categories", courseCategoryService.getAllCategories());
+    // Old category edit links lead to the inline label form.
+    @GetMapping("/edit/{id}")
+    public String edit(@PathVariable Integer id) { return "redirect:/admin/categories"; }
 
-    return "course-category-list";
-  }
-  
-  //Open an empty create-category-form
-  @GetMapping("/admin/categories/new")
-  public String showCreateCategoryForm(Model model) {
-    CourseCategory courseCategory = new CourseCategory();
-    model.addAttribute("courseCategory", courseCategory);
-
-    return "course-category-form";
-  }
-
-  //Save the created category
-  @PostMapping("/admin/categories")
-    public String saveCategory(
-    @ModelAttribute CourseCategory courseCategory
-    ) {
-    courseCategoryService.createCategory(courseCategory);
-
-    return "redirect:/admin/categories";
-  }
-
-  //Delete category
-  @GetMapping("/admin/categories/delete")
-  public String showDeleteCategoryForm(Model model) {
-    model.addAttribute("categories", courseCategoryService.getAllCategories());
-
-    return "course-category-delete";
-  }
-
-  //Submit delete
-  @PostMapping("/admin/categories/delete")
-    public String deleteCategory(
-    @RequestParam Integer categoryId){
-    courseCategoryService.deleteCategory(categoryId);
-
-    return "redirect:/admin/categories";
-  }
-
-  //Get edit category
-  @GetMapping("/admin/categories/edit/{id}")
-  public String showEditCategoryForm(@PathVariable("id") Integer categoryId, Model model) {
-    Optional<CourseCategory> existingCategory = courseCategoryService.getCategoryById(categoryId);
-    if (existingCategory.isPresent()){
-      CourseCategory category = existingCategory.get();
-      model.addAttribute("courseCategory", category);
-      return "course-category-edit";
+    // Labels are editable; adding/deleting business types would require new application rules.
+    @PostMapping("/{id}/rename")
+    public String rename(@PathVariable Integer id, @RequestParam String label, RedirectAttributes redirect) {
+        try { categories.rename(id, label); redirect.addFlashAttribute("success", "Category name saved."); }
+        catch (IllegalArgumentException e) { redirect.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/categories";
     }
-    return "redirect:/admin/categories";
-  }
-
-  @PostMapping("/admin/categories/edit/{id}")
-  public String updateCategory(@PathVariable ("id") Integer categoryId, @ModelAttribute CourseCategory courseCategory) {
-      courseCategoryService.updateCategory(courseCategory, categoryId);
-      return "redirect:/admin/categories";
-  }
-
 }

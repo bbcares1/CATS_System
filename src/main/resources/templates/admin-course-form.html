@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Course details', 'Admin', 'courses', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <a class="cats-back" th:href="@{/admin/courses}">
+            Course catalogue
+          </a>
+          <h1 th:text="${courseId == null} ? 'Add course' : 'Edit course'">
+          </h1>
+          <p class="cats-sub">
+            Course information is defined here so employees do not enter it again.
+          </p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <form id="course-form" th:action="@{/admin/courses/save(id=${courseId})}" method="post" th:object="${form}" class="cats-stack" novalidate>
+            <input type="hidden" th:field="*{version}">
+            <div th:if="${#fields.hasErrors('*')}" class="cats-error-summary" role="alert">
+              <h2>
+                Check the fields below
+              </h2>
+              <ul>
+                <li th:each="e : ${#fields.allErrors()}" th:text="${e}">
+                </li>
+              </ul>
+            </div>
+            <div>
+              <label class="form-label cats-req" for="title">
+                Course title
+              </label>
+              <input class="form-control" th:field="*{title}" maxlength="255" required>
+            </div>
+            <div class="cats-grid cats-grid-2">
+              <div>
+                <label class="form-label cats-req" for="trainingProvider">
+                  Training provider
+                </label>
+                <input class="form-control" th:field="*{trainingProvider}" maxlength="255" required>
+              </div>
+              <div>
+                <label class="form-label cats-req" for="categoryId">
+                  Category
+                </label>
+                <select class="form-select" th:field="*{categoryId}">
+                  <option value="">
+                    Choose a category
+                  </option>
+                  <option th:each="c : ${categories}" th:value="${c.categoryId}" th:text="${c.categoryName}">
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="form-label cats-req" for="fee">
+                Course fee ($)
+              </label>
+              <input class="form-control" type="number" th:field="*{fee}" min="0" step="0.01" required>
+              <p class="form-text">
+                Internal Training always uses $0.00.
+              </p>
+            </div>
+            <div>
+              <label class="form-label" for="description">
+                Description
+              </label>
+              <textarea class="form-control" th:field="*{description}" rows="5" maxlength="2000">
+              </textarea>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" th:field="*{customDatesAllowed}">
+              <label for="customDatesAllowed" class="form-check-label">
+                Allow employees to request custom dates
+              </label>
+              <p class="form-text">
+                When unchecked, add scheduled sessions before employees can apply.
+              </p>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" th:field="*{active}">
+              <label for="active" class="form-check-label">
+                Publish in the employee catalogue
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="card-footer cats-form-footer">
+          <a class="btn btn-outline-secondary" th:href="@{/admin/courses}">
+            Cancel
+          </a>
+          <button class="btn btn-primary" form="course-form">
+            Save course
+          </button>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

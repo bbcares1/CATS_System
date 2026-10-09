@@ -1,55 +1,81 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Course Batch Management</title>
-</head>
-
-<body>
-
-<h1>Course Batch Management</h1>
-
-<a th:href="@{/admin/batches/new}">Add New Batch</a>
-<a th:href="@{/admin/batches/delete}">Delete Batch</a>
-
-<hr>
-
-<table border="1">
-    <thead>
-        <tr>
-            <th>Batch ID</th>
-            <th>Course</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Capacity</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        <tr th:each="batch : ${batches}">
-            <td th:text="${batch.batchId}"></td>
-
-            <td th:text="${batch.courseDetail.title}"></td>
-
-            <td th:text="${batch.courseStartDate}"></td>
-
-            <td th:text="${batch.courseEndDate}"></td>
-
-            <td th:text="${batch.capacity}"></td>
-
-            <td>
-                <a th:href="@{/admin/batches/{id}(id=${batch.batchId})}">
-                    View
-                </a>
-
-                <a th:href="@{/admin/batches/edit/{id}(id=${batch.batchId})}">
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Scheduled sessions', 'Admin', 'batches', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <a class="cats-back" th:href="@{/admin/courses}">
+            Course catalogue
+          </a>
+          <h1>
+            Scheduled sessions
+          </h1>
+          <p class="cats-sub">
+            Archive a session to stop new bookings. Existing applications keep their original dates.
+          </p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/admin/batches/new}">
+          Add session
+        </a>
+      </div>
+      <div class="card">
+        <div th:if="${#lists.isEmpty(batches)}" th:replace="~{fragments/ui :: empty('calendar', 'No sessions yet', 'Add working dates and capacity for a catalogue course.', ~{})}">
+        </div>
+        <div class="table-responsive" th:if="${!#lists.isEmpty(batches)}">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>
+                  Course
+                </th>
+                <th>
+                  Dates
+                </th>
+                <th class="cats-num">
+                  Capacity
+                </th>
+                <th>
+                  Availability
+                </th>
+                <th>
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="b : ${batches}">
+                <td class="cats-col-main" th:text="${b.courseDetail.title}">
+                </td>
+                <td>
+                  <span th:text="${#temporals.format(b.courseStartDate,'d MMM yyyy')}">
+                  </span>
+                  –
+                  <span th:text="${#temporals.format(b.courseEndDate,'d MMM yyyy')}">
+                  </span>
+                  <span th:text="${b.halfDayPeriod}">
+                  </span>
+                </td>
+                <td class="cats-num" th:text="${b.capacity}">
+                </td>
+                <td th:text="${b.active} ? 'Available' : 'Archived'">
+                </td>
+                <td class="cats-row-actions">
+                  <a class="btn btn-sm btn-quiet" th:href="@{/admin/batches/edit/{id}(id=${b.batchId})}">
                     Edit
-                </a>
-            </td>
-        </tr>
-    </tbody>
-</table>
-
-</body>
+                  </a>
+                  <button type="button" th:if="${b.active}" class="btn btn-sm btn-quiet-danger" data-bs-toggle="modal" th:attr="data-bs-target='#archive-batch-' + ${b.batchId}">
+                    Archive
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <th:block th:each="b : ${batches}">
+        <div th:if="${b.active}" th:replace="~{fragments/ui :: confirm('archive-batch-' + ${b.batchId}, 'Archive this session?', 'New bookings will stop. Existing applications are unchanged.', @{/admin/batches/{id}/archive(id=${b.batchId})}, 'Archive', true)}">
+        </div>
+      </th:block>
+    </section>
+  </body>
 </html>

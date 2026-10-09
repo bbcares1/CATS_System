@@ -39,6 +39,15 @@ public class CourseApplication {
     @JoinColumn(name = "reviewer_id")
     private Manager reviewer;
 
+    // Catalogue references explain the source; the stored course fields remain the application snapshot.
+    @ManyToOne
+    @JoinColumn(name = "catalogue_course_id")
+    private CourseDetail catalogueCourse;
+
+    @ManyToOne
+    @JoinColumn(name = "catalogue_batch_id")
+    private CourseBatch catalogueBatch;
+
     @Column(precision = 12, scale = 2, nullable = false)
     private BigDecimal courseFee = BigDecimal.ZERO;
 

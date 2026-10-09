@@ -11,6 +11,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.web.server.ResponseStatusException;
 
 import group6.project.model.ApplicationStatus;
@@ -110,7 +111,7 @@ public class ManagerService {
     }
 
     // Require a reason for either decision and check the version the manager actually reviewed.
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void decide(Integer managerId, Integer applicationId, String decision, String reason, Long version) {
         Manager reviewer = getManager(managerId);
         if (!"approve".equals(decision) && !"reject".equals(decision)) {

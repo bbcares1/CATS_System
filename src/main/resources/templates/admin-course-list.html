@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Course catalogue', 'Admin', 'courses', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>
+            Course catalogue
+          </h1>
+          <p class="cats-sub">
+            Maintain course details and how employees can choose their dates.
+          </p>
+        </div>
+        <div class="cats-page-actions">
+          <a class="btn btn-outline-secondary" th:href="@{/admin/batches}">
+            Scheduled sessions
+          </a>
+          <a class="btn btn-primary" th:href="@{/admin/courses/new}">
+            Add course
+          </a>
+        </div>
+      </div>
+      <div class="card">
+        <div th:if="${#lists.isEmpty(courses)}" th:replace="~{fragments/ui :: empty('book', 'No courses yet', 'Add a course so employees can apply from the catalogue.', ~{})}">
+        </div>
+        <div class="table-responsive" th:if="${!#lists.isEmpty(courses)}">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>
+                  Course
+                </th>
+                <th>
+                  Category
+                </th>
+                <th>
+                  Dates
+                </th>
+                <th class="cats-num">
+                  Fee
+                </th>
+                <th>
+                  Availability
+                </th>
+                <th>
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="c : ${courses}">
+                <td class="cats-col-main">
+                  <span th:text="${c.title}">
+                  </span>
+                  <div class="cats-cell-sub" th:text="${c.trainingProvider ?: 'Provider needed'}">
+                  </div>
+                </td>
+                <td th:text="${c.courseCategory?.categoryName ?: 'Category needed'}">
+                </td>
+                <td th:text="${c.customDatesAllowed} ? 'Custom or scheduled' : 'Scheduled'">
+                </td>
+                <td class="cats-num" th:text="'$' + ${#numbers.formatDecimal(c.courseFee,1,'COMMA',2,'POINT')}">
+                </td>
+                <td th:text="${c.active} ? 'Published' : 'Archived'">
+                </td>
+                <td class="cats-row-actions">
+                  <a class="btn btn-sm btn-quiet" th:href="@{/admin/courses/edit/{id}(id=${c.courseId})}">
+                    Edit
+                  </a>
+                  <button th:if="${c.active}" type="button" class="btn btn-sm btn-quiet-danger" data-bs-toggle="modal" th:attr="data-bs-target='#archive-' + ${c.courseId}">
+                    Archive
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <th:block th:each="c : ${courses}">
+        <div th:if="${c.active}" th:replace="~{fragments/ui :: confirm('archive-' + ${c.courseId}, 'Archive this course?', 'Employees will no longer be able to apply for ' + ${c.title} + '. Existing applications are unchanged.', @{/admin/courses/{id}/archive(id=${c.courseId})}, 'Archive', true)}">
+        </div>
+      </th:block>
+    </section>
+  </body>
+</html>

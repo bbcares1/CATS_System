@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,4 +39,9 @@ public class CourseBatch {
     private LocalDate courseEndDate;
 
     private Integer capacity;
+    private String halfDayPeriod;
+    private boolean active = true;
+
+    @Version
+    private Long version;
 }

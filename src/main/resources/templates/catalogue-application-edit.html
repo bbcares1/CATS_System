@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Edit application', 'Staff', 'history', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <a class="cats-back" th:href="@{/staff/applications/{id}(id=${course.courseId})}">
+            Application details
+          </a>
+          <h1>
+            Edit application
+          </h1>
+          <p class="cats-sub" th:text="${course.courseTitle}">
+          </p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body cats-stack">
+          <dl class="cats-dl">
+            <dt>
+              Category
+            </dt>
+            <dd th:text="${course.courseCategory.displayName}">
+            </dd>
+            <dt>
+              Provider
+            </dt>
+            <dd th:text="${course.trainingProvider}">
+            </dd>
+            <dt>
+              Course fee
+            </dt>
+            <dd th:text="'$' + ${#numbers.formatDecimal(course.courseFee,1,'COMMA',2,'POINT')}">
+            </dd>
+          </dl>
+          <p class="form-text">
+            Your original course details and fee are retained.
+          </p>
+          <form id="edit-form" th:action="@{/staff/applications/{id}/edit-catalogue(id=${course.courseId})}" th:object="${form}" method="post" class="cats-stack" novalidate th:with="internal=${course.courseCategory == T(group6.project.model.CourseCategoryType).INTERNAL_TRAINING}">
+            <input type="hidden" th:field="*{applicationVersion}">
+            <th:block th:if="${course.catalogueBatch == null}">
+              <div id="custom-dates" class="cats-stack">
+                <div class="cats-grid cats-grid-2">
+                  <div>
+                    <label for="startDate" class="form-label cats-req">
+                      Start date
+                    </label>
+                    <input type="date" id="startDate" class="form-control" th:field="*{startDate}" th:min="${today}">
+                  </div>
+                  <div>
+                    <label for="endDate" class="form-label cats-req">
+                      End date
+                    </label>
+                    <input type="date" id="endDate" class="form-control" th:field="*{endDate}" th:min="${today}">
+                  </div>
+                </div>
+                <div th:if="${internal}">
+                  <label for="halfDayPeriod" class="form-label">
+                    Session
+                  </label>
+                  <select id="halfDayPeriod" class="form-select" th:field="*{halfDayPeriod}">
+                    <option value="">
+                      Full working days
+                    </option>
+                    <option value="AM">
+                      Morning (half day)
+                    </option>
+                    <option value="PM">
+                      Afternoon (half day)
+                    </option>
+                  </select>
+                </div>
+                <p class="form-text">
+                  Use one calendar year. AM/PM is for single-day Internal Training; weekends and public holidays do not count.
+                </p>
+              </div>
+            </th:block>
+            <div th:if="${course.catalogueBatch != null}">
+              <h2 class="cats-card-title">
+                Booked session
+              </h2>
+              <p>
+                <span th:text="${#temporals.format(course.courseStartDate,'d MMM yyyy')}">
+                </span>
+                –
+                <span th:text="${#temporals.format(course.courseEndDate,'d MMM yyyy')}">
+                </span>
+                <span th:text="${course.halfDayPeriod}">
+                </span>
+              </p>
+              <p class="form-text">
+                To change a scheduled session, withdraw this pending request and apply for another session.
+              </p>
+            </div>
+            <div>
+              <label class="form-label cats-req" for="justification">
+                Why do you want to attend?
+              </label>
+              <textarea class="form-control" id="justification" th:field="*{justification}" rows="4" maxlength="2000" required>
+              </textarea>
+            </div>
+            <div>
+              <label class="form-label" for="workDissemination">
+                Work cover or sharing arrangements
+              </label>
+              <textarea class="form-control" id="workDissemination" th:field="*{workDissemination}" rows="3" maxlength="2000">
+              </textarea>
+              <p class="form-text">
+                Optional: how your work is covered or how you will share what you learn.
+              </p>
+            </div>
+          </form>
+        </div>
+        <div class="card-footer cats-form-footer">
+          <a class="btn btn-outline-secondary" th:href="@{/staff/applications/{id}(id=${course.courseId})}">
+            Cancel
+          </a>
+          <button class="btn btn-primary" form="edit-form">
+            Save changes
+          </button>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

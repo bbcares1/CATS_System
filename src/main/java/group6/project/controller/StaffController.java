@@ -114,13 +114,17 @@ public class StaffController {
         return "staff-application-form";
     }
 
-    @GetMapping({"/applications/new", "/apply"})
+    @GetMapping("/apply/other")
     public String showNewApplicationForm(HttpSession session, Model model) {
         if (getCurrentStaff(session) == null) {
             return "redirect:/employee/login";
         }
         return showApplicationForm(model, new CourseApplication(), null);
     }
+
+    // Older new-application links open the catalogue's default entry.
+    @GetMapping("/applications/new")
+    public String defaultApplicationEntry() { return "redirect:/staff/courses"; }
 
     // Only applied or updated applications can be edited.
     @GetMapping("/applications/{id}/edit")
@@ -134,6 +138,9 @@ public class StaffController {
             if (!staffService.isPending(application)) {
                 redirect.addFlashAttribute("error", "Only pending applications can be edited.");
                 return "redirect:/staff/home";
+            }
+            if (application.getCatalogueCourse() != null) {
+                return "redirect:/staff/applications/" + id + "/edit-catalogue";
             }
             return showApplicationForm(model, application, id);
         } catch (IllegalArgumentException e) {

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 import group6.project.model.Staff;
 import group6.project.model.TrainingEntitlement;
 import group6.project.repo.StaffRepo;
@@ -42,7 +43,7 @@ public class TrainingEntitlementService {
     }
 
     // Save one year's allowance; reducing it must not invalidate saved applications.
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void saveLimits(Integer employeeId, int year, double days, BigDecimal budget) {
         validateYear(year);
         if (!Double.isFinite(days) || days < 0 || days > 366 || days * 2 != Math.floor(days * 2)

@@ -48,6 +48,7 @@
         <a th:replace="~{fragments/ui :: navlink(@{/admin/hierarchy}, 'hierarchy', 'Approval hierarchy', 'sitemap', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/categories}, 'categories', 'Course categories', 'tag', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/courses}, 'courses', 'Course catalogue', 'book', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/admin/batches}, 'batches', 'Scheduled sessions', 'calendar', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/excludedDays}, 'holidays', 'Public holidays', 'calendar', ${active})}"></a>
       </th:block>
     </nav>

@@ -52,7 +52,7 @@ Sidebar keys:
 | --- | --- |
 | Staff | `dashboard`, `apply`, `history`, `fees` |
 | Manager | `dashboard`, `staff` |
-| Admin | `dashboard`, `entitlement`, `hierarchy`, `categories`, `courses`, `holidays` |
+| Admin | `dashboard`, `entitlement`, `hierarchy`, `categories`, `courses`, `batches`, `holidays` |
 
 When you add a page, add its link in `fragments/layout.html` and its key to this table.
 
@@ -297,7 +297,7 @@ The dialog names the thing and the consequence. Buttons: Cancel (outline) and th
 
 ## 17. Login pages
 
-No sidebar. A centered card with the brand above it and one line of links below. The role is a segmented choice (Staff | Manager), not a dropdown. The password field has a show/hide button. Errors are an `alert-danger` above the form: "Wrong username or password. Check that you picked the right role, then try again." No other text on the page.
+No sidebar. A centered card with the brand above it and one line of links below. Employee login detects the saved Staff or Manager account; no role selector is needed. The password field has a show/hide button. Errors are an `alert-danger` above the form: "Wrong username or password. Try again."
 
 ## 18. Responsive rules
 

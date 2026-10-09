@@ -1,56 +1,50 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<link rel="stylesheet" th:href="@{/css/category.css}">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Manage Course Categories</title>
-</head>
-
-<body>
-
-    <h1>Manage Course Categories</h1>
-
-    <!-- Add button -->
-    <a th:href="@{/admin/categories/new}">
-        <button type="button">Add Category</button>
-    </a>
-
-    <br><br>
-
-    <table border="1">
-        <thead>
-            <tr>
-                <th>No.</th>
-                <th>Category Name</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            <tr th:each="category, status : ${categories}">
-
-                <!-- Display ID -->
-                <td th:text="${status.count}"></td>
-
-                <td th:text="${category.categoryName}"></td>
-
-                <td>
-                    <!-- Edit -->
-                    <a th:href="@{/admin/categories/edit/{id}(id=${category.categoryId})}">
-                        <button type="button">Edit</button>
-                    </a>
-
-                    <!-- Delete -->
-                    <a th:href="@{/admin/categories/delete}">
-                        <button type="button">Delete</button>
-                    </a>
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Course categories', 'Admin', 'categories', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>
+            Course categories
+          </h1>
+          <p class="cats-sub">
+            Maintain the display names. The three assignment types keep their date and fee rules.
+          </p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>
+                  Business type
+                </th>
+                <th>
+                  Display name
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="c : ${categories}">
+                <td th:text="${c.kind?.displayName ?: 'Legacy category (not available for new offers)'}">
                 </td>
-
-            </tr>
-        </tbody>
-    </table>
-
-</body>
-
+                <td>
+                  <form class="d-flex gap-2" method="post" th:action="@{/admin/categories/{id}/rename(id=${c.categoryId})}">
+                    <label class="visually-hidden" th:for="'label-' + ${c.categoryId}">
+                      Display name
+                    </label>
+                    <input class="form-control" name="label" th:id="'label-' + ${c.categoryId}" th:value="${c.categoryName}" maxlength="255" required>
+                    <button class="btn btn-outline-secondary">
+                      Save
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </body>
 </html>

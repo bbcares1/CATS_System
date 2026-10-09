@@ -56,6 +56,8 @@ Run with `SPRING_PROFILES_ACTIVE=prod` and set `CATS_DB_URL`, `CATS_DB_USER`, `C
 
 ## Application rules
 
+- `/staff/apply` opens the searchable course catalogue; `/staff/apply/other` keeps the form for courses not listed. Catalogue category, provider and fee come from Admin. Employees choose an available session or custom dates when allowed, then enter their reason and optional work arrangements.
+- Applications keep the original catalogue details and fee. Admin can archive offers/sessions without removing history; booked session dates cannot be changed. Pending requests reserve a scheduled place until rejected or withdrawn.
 - Allowances are allocated per employee and calendar year. No allocation means zero available days/budget.
 - Applied, Updated, Approved and Completed courses reserve days and fees. Rejected, Deleted and Cancelled records remain in history but release the reservation.
 - Start/end dates must be future working days when applying or editing. Weekends and public holidays are excluded from duration.

@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 import group6.project.model.ApplicationStatus;
 import group6.project.model.CourseApplication;
@@ -55,7 +56,7 @@ public class CourseApplicationService {
     }
 
     // Copy only applicant-editable fields; status, identity and review data come from the server.
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public CourseApplication create(CourseApplication form, Staff staff) {
         lockEmployee(staff);
         validateAndPrepare(form, staff, null, true);
@@ -69,11 +70,25 @@ public class CourseApplicationService {
     }
 
     // Editing releases this application's old reservation before checking the replacement.
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public CourseApplication update(Integer id, CourseApplication form, Staff staff) {
         lockEmployee(staff);
         CourseApplication course = getOwned(id, staff);
         requirePending(course);
+        if (course.getCatalogueCourse() != null) {
+            // Catalogue edits never replace the price/provider/category originally requested.
+            form.setCourseTitle(course.getCourseTitle());
+            form.setCourseCategory(course.getCourseCategory());
+            form.setTrainingProvider(course.getTrainingProvider());
+            form.setCourseFee(course.getCourseFee());
+            form.setCatalogueCourse(course.getCatalogueCourse());
+            form.setCatalogueBatch(course.getCatalogueBatch());
+            if (course.getCatalogueBatch() != null) {
+                form.setCourseStartDate(course.getCourseStartDate());
+                form.setCourseEndDate(course.getCourseEndDate());
+                form.setHalfDayPeriod(course.getHalfDayPeriod());
+            }
+        }
         validateAndPrepare(form, staff, id, true);
         copyDetails(form, course);
         course.setStatus(ApplicationStatus.UPDATED);
@@ -82,7 +97,7 @@ public class CourseApplicationService {
     }
 
     // Delete means withdraw a pending request, while keeping its history.
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void delete(Integer id, Staff staff) {
         lockEmployee(staff);
         CourseApplication course = getOwned(id, staff);
@@ -91,7 +106,7 @@ public class CourseApplicationService {
     }
 
     // Only an approved booking can be cancelled and release its allowance.
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void cancel(Integer id, Staff staff) {
         lockEmployee(staff);
         CourseApplication course = getOwned(id, staff);
@@ -100,7 +115,7 @@ public class CourseApplicationService {
     }
 
     // Completion is available from the day after the course ends and retains its allowance use.
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void complete(Integer id, String comments, Staff staff) {
         lockEmployee(staff);
         CourseApplication course = getOwned(id, staff);
@@ -197,6 +212,14 @@ public class CourseApplicationService {
         }
     }
 
+    // Admin schedules and employee applications use identical working-day and half-day rules.
+    public void validateSchedule(CourseCategoryType category, LocalDate start, LocalDate end, String halfDay, boolean future) {
+        if (start == null || end == null || category == null) throw new IllegalArgumentException("Category and both dates are required.");
+        CourseApplication schedule = new CourseApplication();
+        schedule.setCourseCategory(category); schedule.setCourseStartDate(start); schedule.setCourseEndDate(end); schedule.setHalfDayPeriod(halfDay);
+        validateDates(schedule, future);
+    }
+
     // Split cross-year courses into separate requests; AM/PM is a single-day Internal session.
     private void validateDates(CourseApplication course, boolean future) {
         LocalDate start = course.getCourseStartDate();
@@ -266,6 +289,8 @@ public class CourseApplicationService {
 
     // Preserve the record identity and review fields while replacing only course details.
     private void copyDetails(CourseApplication from, CourseApplication to) {
+        to.setCatalogueCourse(from.getCatalogueCourse());
+        to.setCatalogueBatch(from.getCatalogueBatch());
         to.setCourseTitle(from.getCourseTitle());
         to.setCourseCategory(from.getCourseCategory());
         to.setTrainingProvider(from.getTrainingProvider());

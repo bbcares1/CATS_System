@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Apply for a course', 'Staff', 'apply', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <a class="cats-back" th:href="@{/staff/courses/{id}(id=${course.courseId})}">
+            Course details
+          </a>
+          <h1>
+            Apply for a course
+          </h1>
+          <p class="cats-sub" th:text="${course.title}">
+          </p>
+        </div>
+      </div>
+      <div class="cats-grid cats-grid-main">
+        <div class="card">
+          <div class="card-body cats-stack">
+            <dl class="cats-dl">
+              <dt>
+                Category
+              </dt>
+              <dd th:text="${course.courseCategory.categoryName}">
+              </dd>
+              <dt>
+                Provider
+              </dt>
+              <dd th:text="${course.trainingProvider}">
+              </dd>
+              <dt>
+                Course fee
+              </dt>
+              <dd th:text="'$' + ${#numbers.formatDecimal(course.courseFee,1,'COMMA',2,'POINT')}">
+              </dd>
+            </dl>
+            <form id="apply-form" th:action="@{/staff/courses/{id}/apply(id=${course.courseId})}" th:object="${form}" method="post" class="cats-stack" novalidate th:with="internal=${course.courseCategory.kind == T(group6.project.model.CourseCategoryType).INTERNAL_TRAINING}">
+              <input type="hidden" th:field="*{courseVersion}">
+              <div>
+                <label class="form-label cats-req" for="scheduledBatch">
+                  Course dates
+                </label>
+                <select class="form-select" id="scheduledBatch" th:field="*{scheduledBatch}" th:attr="data-custom=${course.customDatesAllowed}">
+                  <option value="" th:text="${course.customDatesAllowed} ? 'Request custom dates' : 'Choose a scheduled session'">
+                  </option>
+                  <option th:each="b : ${batches}" th:value="${b.id} + ':' + ${b.version}" th:text="${b.label()}" th:disabled="${b.places == 0}">
+                  </option>
+                </select>
+              </div>
+              <th:block th:if="${course.customDatesAllowed}">
+                <div id="custom-dates" class="cats-stack">
+                  <div class="cats-grid cats-grid-2">
+                    <div>
+                      <label for="startDate" class="form-label cats-req">
+                        Start date
+                      </label>
+                      <input type="date" id="startDate" class="form-control" th:field="*{startDate}" th:min="${today}">
+                    </div>
+                    <div>
+                      <label for="endDate" class="form-label cats-req">
+                        End date
+                      </label>
+                      <input type="date" id="endDate" class="form-control" th:field="*{endDate}" th:min="${today}">
+                    </div>
+                  </div>
+                  <div th:if="${internal}">
+                    <label for="halfDayPeriod" class="form-label">
+                      Session
+                    </label>
+                    <select id="halfDayPeriod" class="form-select" th:field="*{halfDayPeriod}">
+                      <option value="">
+                        Full working days
+                      </option>
+                      <option value="AM">
+                        Morning (half day)
+                      </option>
+                      <option value="PM">
+                        Afternoon (half day)
+                      </option>
+                    </select>
+                  </div>
+                  <p class="form-text">
+                    Use one calendar year. AM/PM is for single-day Internal Training; weekends and public holidays do not count.
+                  </p>
+                </div>
+              </th:block>
+              <div>
+                <label class="form-label cats-req" for="justification">
+                  Why do you want to attend?
+                </label>
+                <textarea class="form-control" id="justification" th:field="*{justification}" rows="4" maxlength="2000" required>
+                </textarea>
+              </div>
+              <div>
+                <label class="form-label" for="workDissemination">
+                  Work cover or sharing arrangements
+                </label>
+                <textarea class="form-control" id="workDissemination" th:field="*{workDissemination}" rows="3" maxlength="2000">
+                </textarea>
+                <p class="form-text">
+                  Optional: how your work is covered or how you will share what you learn.
+                </p>
+              </div>
+            </form>
+          </div>
+          <div class="card-footer cats-form-footer">
+            <a class="btn btn-outline-secondary" th:href="@{/staff/courses/{id}(id=${course.courseId})}">
+              Cancel
+            </a>
+            <button form="apply-form" name="action" value="preview" class="btn btn-outline-secondary" formnovalidate>
+              Check allowance
+            </button>
+            <button form="apply-form" name="action" value="submit" class="btn btn-primary">
+              Submit application
+            </button>
+          </div>
+        </div>
+        <aside class="card">
+          <div class="card-body cats-stack">
+            <h2 class="cats-card-title">
+              Annual allowance
+            </h2>
+            <p class="text-secondary">
+              Check your requested days and remaining allowance before submitting.
+            </p>
+            <dl class="cats-dl" th:if="${summary != null}">
+              <dt>
+                Requested days
+              </dt>
+              <dd th:text="${summary.requestedDays}">
+              </dd>
+              <dt>
+                Days available
+              </dt>
+              <dd th:text="${summary.remainingDays}">
+              </dd>
+              <dt>
+                Budget available
+              </dt>
+              <dd th:text="'$' + ${#numbers.formatDecimal(summary.remainingBudget,1,'COMMA',2,'POINT')}">
+              </dd>
+            </dl>
+            <p class="form-text">
+              Checking allowance does not save an application or reserve a place.
+            </p>
+          </div>
+        </aside>
+      </div>
+      <script th:src="@{/js/catalogue.js}">
+      </script>
+    </section>
+  </body>
+</html>

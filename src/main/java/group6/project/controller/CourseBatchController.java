@@ -1,124 +1,59 @@
 package group6.project.controller;
 
-import java.util.Optional;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import group6.project.model.CourseBatch;
-import group6.project.service.AdminService;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import group6.project.model.form.CatalogueBatchForm;
 import group6.project.service.CourseBatchService;
-import group6.project.model.CourseDetail;
-
-
-
+import group6.project.service.CourseDetailService;
+import jakarta.validation.Valid;
 
 @Controller
-@RequestMapping ("/admin/batches")
+@RequestMapping("/admin/batches")
 public class CourseBatchController {
+    private final CourseBatchService batches;
+    private final CourseDetailService courses;
 
-    private final CourseBatchService courseBatchService;
-    private final AdminService adminService;
+    // Session maintenance stays separate from the employee application workflow.
+    public CourseBatchController(CourseBatchService batches, CourseDetailService courses) { this.batches = batches; this.courses = courses; }
 
-    public CourseBatchController(CourseBatchService courseBatchService, AdminService adminService) {
-        this.courseBatchService = courseBatchService;
-        this.adminService = adminService;
-    }
-
+    // Include old and archived sessions so Admin can inspect booking history.
     @GetMapping
-    public String getAllBatches(Model model) {
-        model.addAttribute("batches", courseBatchService.getAllBatches());
-        return "course-batch-list";
-    }
+    public String list(Model model) { model.addAttribute("batches", batches.getAllBatches()); return "course-batch-list"; }
 
-    @GetMapping("/{id}")
-    public String getBatch(@PathVariable ("id") Long batchId, Model model) {
-        Optional <CourseBatch> existingBatch = courseBatchService.getBatchById(batchId);
-        if (existingBatch.isPresent()){
-            CourseBatch batch = existingBatch.get();
-            model.addAttribute("singleBatch", batch);
-            return "course-single-batch";
-        }
-        throw new RuntimeException("Course batch not found");
-    }
+    // Existing detail bookmarks now open the same useful maintenance form.
+    @GetMapping({"/{id}", "/edit/{id}"})
+    public String edit(@PathVariable Long id, Model model) { return form(id, batches.form(batches.get(id)), model); }
 
+    // A course may have several scheduled sessions and may also permit custom dates.
     @GetMapping("/new")
-    public String showBatchForm(Model model) {
+    public String create(@RequestParam(required = false) Integer courseId, Model model) {
+        CatalogueBatchForm form = new CatalogueBatchForm(); form.setCourseId(courseId);
+        return form(null, form, model);
+    }
 
-        model.addAttribute(
-            "newBatch",
-            new CourseBatch()
-        );
+    // DTO binding and the service protect capacity, dates and original booking references.
+    @PostMapping("/save")
+    public String save(@RequestParam(required = false) Long id, @Valid @ModelAttribute("form") CatalogueBatchForm form,
+            BindingResult binding, Model model, RedirectAttributes redirect) {
+        if (binding.hasErrors()) return form(id, form, model);
+        try {
+            batches.save(id, form); redirect.addFlashAttribute("success", "Scheduled session saved."); return "redirect:/admin/batches";
+        } catch (IllegalArgumentException e) { model.addAttribute("error", e.getMessage()); return form(id, form, model); }
+    }
 
-        model.addAttribute(
-            "courses",
-            adminService.getAllCourseDetails()
-        );
+    // Archive instead of deleting a session which may already have applicants.
+    @PostMapping("/{id}/archive")
+    public String archive(@PathVariable Long id, RedirectAttributes redirect) {
+        batches.archive(id); redirect.addFlashAttribute("success", "Scheduled session archived. Existing applications are unchanged.");
+        return "redirect:/admin/batches";
+    }
 
+    // Keep the same course selected after validation errors.
+    private String form(Long id, CatalogueBatchForm form, Model model) {
+        model.addAttribute("batchId", id); model.addAttribute("form", form); model.addAttribute("courses", courses.all());
         return "course-batch-form";
-    }
-    
-
-    @PostMapping("/new")
-    public String sendBatch(
-            @ModelAttribute CourseBatch courseBatch,
-            @RequestParam Integer courseId) {
-
-        Optional<CourseDetail> selectedCourse =
-                adminService.getByIdCourseDetails(courseId);
-
-        if (selectedCourse.isPresent()) {
-
-            CourseDetail course =
-                    selectedCourse.get();
-
-            courseBatch.setCourseDetail(course);
-
-            courseBatchService.createBatch(courseBatch);
-
-            return "redirect:/admin/batches";
-        }
-
-        throw new RuntimeException("Course not found");
-    }
-
-    @GetMapping("/delete")
-    public String showDeleteForm(Model model){
-        model.addAttribute("batches", courseBatchService.getAllBatches());
-
-        return "course-batch-delete";
-    }
-
-    @PostMapping("/delete")
-    public String deleteBatch(@RequestParam Long batchId){
-        courseBatchService.deleteBatch(batchId);
-        return "redirect:/admin/batches";
-    }
-
-    @GetMapping("/edit/{id}")
-    public String showEditBatchForm(@PathVariable("id") Long batchId, Model model) {
-        Optional<CourseBatch> existingBatch = courseBatchService.getBatchById(batchId);
-        if (existingBatch.isPresent()){
-        CourseBatch batch = existingBatch.get();
-        model.addAttribute(
-            "courseBatch", batch
-        );
-
-        return "course-batch-edit";
-        }
-
-        return "redirect:/admin/batches";
-    }
-
-    @PostMapping("/edit/{id}")
-    public String updateBatch(@PathVariable ("id") Long batchId, @ModelAttribute CourseBatch courseBatch) {
-        courseBatchService.updateBatch(courseBatch, batchId);
-        return "redirect:/admin/batches";
     }
 }

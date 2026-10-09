@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.web.multipart.MultipartFile;
 import group6.project.model.ApplicationStatus;
 import group6.project.model.CourseApplication;
@@ -71,7 +72,7 @@ public class StaffService {
         return courseApplicationService.summary(form, staff, id);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public CourseApplication saveApplication(Integer id, CourseApplication form, Staff staff) {
         if (id == null) {
             form.setCourseId(null);
@@ -124,7 +125,7 @@ public class StaffService {
         return result;
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     // Discussion: Move eligibility checks to CourseFeeApplicationService.submitApplication()
     public void submitClaim(Integer courseId, boolean paidPersonally, MultipartFile receipt,
             MultipartFile certificate, Staff staff) {

@@ -17,11 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import group6.project.model.Admin;
 import group6.project.model.ApprovalHierarchy;
-import group6.project.model.CourseDetail;
 import group6.project.model.ExcludedDays;
 import group6.project.model.Roles;
-import group6.project.model.Staff;
-import group6.project.model.User;
 import group6.project.service.AdminService;
 import group6.project.service.TrainingEntitlementService;
 import group6.project.service.CourseCategoryService;
@@ -149,40 +146,6 @@ public class AdminController {
     }
 
    
-
-    @GetMapping("/courses") 
-    public String getCourseList(Model model) {
-        List<CourseDetail> courseList = adminService.getAllCourseDetails();
-        model.addAttribute("courseList", courseList);
-        model.addAttribute("course", new CourseDetail());
-        model.addAttribute("categories", courseCategoryService.getAllCategories());
-        return "CourseList";
-    }
-
-    @GetMapping("/courses/edit/{id}") 
-    public String editCourse(@PathVariable("id") Integer id, Model model) {
-        Optional<CourseDetail> course = adminService.getByIdCourseDetails(id);
-        if (course.isPresent()) {
-            model.addAttribute("course", course.get());
-            model.addAttribute("courseList", adminService.getAllCourseDetails());
-            model.addAttribute("categories", courseCategoryService.getAllCategories());
-            return "CourseList";
-        } else {
-            return "redirect:/admin/courses";
-        }
-    }
-
-    @PostMapping("/courses/save")
-    public String saveCourse(@ModelAttribute("course") CourseDetail course) {
-        adminService.saveCourse(course);
-        return "redirect:/admin/courses"; 
-    }
-
-    @GetMapping("/courses/delete/{id}")
-    public String deleteCourse(@PathVariable("id") Integer id) {
-        adminService.deleteCourseById(id);
-        return "redirect:/admin/courses"; 
-    }
 
     //this part below is about Approval Hierarchy
     // ----------------------------------------

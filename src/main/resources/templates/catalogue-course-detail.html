@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Course details', 'Staff', 'apply', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <a class="cats-back" th:href="@{/staff/courses}">
+            Course catalogue
+          </a>
+          <h1 th:text="${course.title}">
+          </h1>
+          <p class="cats-sub" th:text="${course.trainingProvider}">
+          </p>
+        </div>
+      </div>
+      <div class="cats-grid cats-grid-main">
+        <div class="card">
+          <div class="card-body cats-stack">
+            <dl class="cats-dl">
+              <dt>
+                Category
+              </dt>
+              <dd th:text="${course.courseCategory.categoryName}">
+              </dd>
+              <dt>
+                Provider
+              </dt>
+              <dd th:text="${course.trainingProvider}">
+              </dd>
+              <dt>
+                Course fee
+              </dt>
+              <dd th:text="'$' + ${#numbers.formatDecimal(course.courseFee,1,'COMMA',2,'POINT')}">
+              </dd>
+            </dl>
+            <div>
+              <h2 class="cats-card-title">
+                About this course
+              </h2>
+              <p class="cats-prewrap" th:text="${course.courseDescription ?: 'Contact the training provider for course details.'}">
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body cats-stack">
+            <h2 class="cats-card-title">
+              Available dates
+            </h2>
+            <p th:if="${course.customDatesAllowed}">
+              You can choose a scheduled session or request your own working dates.
+            </p>
+            <ul class="mb-0">
+              <li th:each="b : ${batches}" th:text="${b.label()}">
+              </li>
+            </ul>
+            <p th:if="${#lists.isEmpty(batches) and !course.customDatesAllowed}" class="text-secondary">
+              No future sessions are available. Please check back later.
+            </p>
+            <a class="btn btn-primary" th:if="${course.customDatesAllowed or !#lists.isEmpty(batches)}" th:href="@{/staff/courses/{id}/apply(id=${course.courseId})}">
+              Apply for this course
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

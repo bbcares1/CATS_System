@@ -37,6 +37,11 @@ public interface CourseApplicationRepo extends JpaRepository<CourseApplication,I
     Optional<CourseApplication> findForManager(
             @Param("applicationId") Integer applicationId,
             @Param("managerId") Integer managerId);
+    // Pending and approved/completed bookings reserve seats in a scheduled batch.
+    long countByCatalogueBatch_BatchIdAndStatusIn(Long batchId, List<ApplicationStatus> statuses);
+
+    boolean existsByCatalogueBatch_BatchId(Long batchId);
+
     // Read identity without caching an application before its employee lock is acquired.
     @Query("""
             select a.applicant.userId from CourseApplication a

@@ -1,45 +1,30 @@
 package group6.project.service;
 
 import java.util.List;
-import java.util.Optional;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import group6.project.model.CourseCategory;
 import group6.project.repo.CourseCategoryRepository;
 
-@Service 
+@Service
 public class CourseCategoryService {
-  private final CourseCategoryRepository courseCatergoryRepository;
-  public CourseCategoryService(CourseCategoryRepository courseCatergoryRepository){
-    this.courseCatergoryRepository = courseCatergoryRepository;
-  }
+    private final CourseCategoryRepository categories;
 
-  public List<CourseCategory> getAllCategories(){
-    return courseCatergoryRepository.findAll();
-  }
+    // The assignment's three category kinds stay stable while Admin maintains their labels.
+    public CourseCategoryService(CourseCategoryRepository categories) { this.categories = categories; }
 
-  public Optional<CourseCategory> getCategoryById(Integer categoryId){
-    return courseCatergoryRepository.findById(categoryId);
-  }
+    // Keep unrecognised legacy categories visible rather than deleting referenced records.
+    public List<CourseCategory> getAllCategories() { return categories.findAll(); }
 
-  public CourseCategory createCategory(CourseCategory courseCategory) {
-    return courseCatergoryRepository.save(courseCategory);
-  }
-  
-  public void deleteCategory(Integer categoryId){
-    courseCatergoryRepository.deleteById(categoryId);
-  }
-
-  public Optional<CourseCategory> updateCategory(CourseCategory courseCategory, Integer categoryId){
-    Optional<CourseCategory> existingCategory = courseCatergoryRepository.findById(categoryId);
-    if (existingCategory.isPresent()){
-      CourseCategory existing = existingCategory.get();
-      existing.setCategoryName(courseCategory.getCategoryName());
-      CourseCategory saved = courseCatergoryRepository.save(existing);
-      return Optional.of(saved);
+    // Renaming changes the display label only, never the associated fee/date rules.
+    @Transactional
+    public void rename(Integer id, String label) {
+        CourseCategory category = categories.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (label == null || label.isBlank() || label.trim().length() > 255) {
+            throw new IllegalArgumentException("Category name is required and cannot exceed 255 characters.");
+        }
+        category.setCategoryName(label.trim());
     }
-    return Optional.empty();
-  }
-  
 }

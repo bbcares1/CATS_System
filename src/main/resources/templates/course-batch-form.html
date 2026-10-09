@@ -1,79 +1,103 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Add Course Batch</title>
-  </head>
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Scheduled session', 'Admin', 'batches', ~{::#content})}">
   <body>
-    <h1>Add Course Batch</h1>
-
-    <form
-      th:action="@{/admin/batches/new}"
-      th:object="${newBatch}"
-      method="post"
-    >
-      <div>
-        <label for="course">Course:</label>
-
-        <select id="courseId"
-                name="courseId"
-                required>
-
-            <option value="">
-                -- Select Course --
-            </option>
-
-            <option th:each="course : ${courses}"
-                    th:value="${course.courseId}"
-                    th:text="${course.title}">
-            </option>
-
-        </select>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <a class="cats-back" th:href="@{/admin/batches}">
+            Scheduled sessions
+          </a>
+          <h1 th:text="${batchId == null} ? 'Add session' : 'Edit session'">
+          </h1>
+          <p class="cats-sub">
+            Used sessions keep their original course and dates. Create another session for a new schedule.
+          </p>
+        </div>
       </div>
-
-      <br />
-
-      <div>
-        <label for="startDate">Start Date:</label>
-
-        <input
-          type="date"
-          id="startDate"
-          th:field="*{courseStartDate}"
-          required
-        />
+      <div class="card">
+        <div class="card-body">
+          <form id="batch-form" th:action="@{/admin/batches/save(id=${batchId})}" method="post" th:object="${form}" class="cats-stack" novalidate>
+            <input type="hidden" th:field="*{version}">
+            <div th:if="${#fields.hasErrors('*')}" class="cats-error-summary" role="alert">
+              <h2>
+                Check the fields below
+              </h2>
+              <ul>
+                <li th:each="e : ${#fields.allErrors()}" th:text="${e}">
+                </li>
+              </ul>
+            </div>
+            <div>
+              <label class="form-label cats-req" for="courseId">
+                Course
+              </label>
+              <select class="form-select" th:field="*{courseId}">
+                <option value="">
+                  Choose a course
+                </option>
+                <option th:each="c : ${courses}" th:value="${c.courseId}" th:text="${c.title}">
+                </option>
+              </select>
+            </div>
+            <div class="cats-grid cats-grid-2">
+              <div>
+                <label class="form-label cats-req" for="startDate">
+                  Start date
+                </label>
+                <input type="date" class="form-control" th:field="*{startDate}" required>
+              </div>
+              <div>
+                <label class="form-label cats-req" for="endDate">
+                  End date
+                </label>
+                <input type="date" class="form-control" th:field="*{endDate}" required>
+              </div>
+            </div>
+            <div>
+              <label class="form-label" for="halfDayPeriod">
+                Session
+              </label>
+              <select class="form-select" th:field="*{halfDayPeriod}">
+                <option value="">
+                  Full working days
+                </option>
+                <option value="AM">
+                  Morning (Internal Training only)
+                </option>
+                <option value="PM">
+                  Afternoon (Internal Training only)
+                </option>
+              </select>
+              <p class="form-text">
+                AM/PM requires one date. All dates must be within the same calendar year.
+              </p>
+            </div>
+            <div>
+              <label class="form-label cats-req" for="capacity">
+                Capacity
+              </label>
+              <input class="form-control" type="number" th:field="*{capacity}" min="1" max="100000" required>
+              <p class="form-text">
+                Cannot be reduced below existing reservations.
+              </p>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" th:field="*{active}">
+              <label class="form-check-label" for="active">
+                Available for new bookings
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="card-footer cats-form-footer">
+          <a class="btn btn-outline-secondary" th:href="@{/admin/batches}">
+            Cancel
+          </a>
+          <button class="btn btn-primary" form="batch-form">
+            Save session
+          </button>
+        </div>
       </div>
-
-      <br />
-
-      <div>
-        <label for="endDate">End Date:</label>
-
-        <input type="date" id="endDate" th:field="*{courseEndDate}" required />
-      </div>
-
-      <br />
-
-      <div>
-        <label for="capacity">Capacity:</label>
-
-        <input
-          type="number"
-          id="capacity"
-          th:field="*{capacity}"
-          min="1"
-          required
-        />
-      </div>
-
-      <br />
-
-      <button type="submit">Create Batch</button>
-    </form>
-
-    <br />
-
-    <a th:href="@{/admin/batches}">Cancel</a>
+    </section>
   </body>
 </html>
