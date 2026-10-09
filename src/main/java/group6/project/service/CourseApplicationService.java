@@ -86,6 +86,9 @@ public class CourseApplicationService {
         lockEmployee(staff);
         CourseApplication course = getOwned(id, staff);
         requirePending(course);
+        if (form.getVersion() == null || !java.util.Objects.equals(form.getVersion(), course.getVersion())) {
+            throw new IllegalStateException("This application changed. Reload it before editing.");
+        }
         if (course.getCatalogueCourse() != null) {
             // Catalogue edits never replace the price/provider/category originally requested.
             form.setCourseTitle(course.getCourseTitle());

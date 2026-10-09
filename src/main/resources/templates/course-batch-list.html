@@ -21,7 +21,7 @@
       <div class="card">
         <div th:if="${#lists.isEmpty(batches)}" th:replace="~{fragments/ui :: empty('calendar', 'No sessions yet', 'Add working dates and capacity for a catalogue course.', ~{})}">
         </div>
-        <div class="table-responsive" th:if="${!#lists.isEmpty(batches)}">
+        <div class="table-responsive" tabindex="0" th:if="${!#lists.isEmpty(batches)}">
           <table class="table">
             <thead>
               <tr>
@@ -76,6 +76,7 @@
         <div th:if="${b.active}" th:replace="~{fragments/ui :: confirm('archive-batch-' + ${b.batchId}, 'Archive this session?', 'New bookings will stop. Existing applications are unchanged.', @{/admin/batches/{id}/archive(id=${b.batchId})}, 'Archive', true)}">
         </div>
       </th:block>
-    </section>
+    <div th:replace="~{fragments/list-pagination :: pager(${pageData}, '/admin/batches', null, null)}"></div>
+</section>
   </body>
 </html>

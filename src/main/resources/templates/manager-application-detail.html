@@ -64,7 +64,7 @@
          th:text="${'Request-year allowance (' + support.requestYear + '): ' + support.requestAllowance.remainingDays + ' remaining days / SGD ' + support.requestAllowance.remainingBudget}"></p>
       <h3 class="fs-6">Other team members with Approved courses during this period</h3>
       <p class="cats-sub" th:if="${#lists.isEmpty(support.overlapping)}">No other approved courses overlap this period.</p>
-      <div class="table-responsive" th:unless="${#lists.isEmpty(support.overlapping)}"><table class="table">
+      <div class="table-responsive" tabindex="0" th:unless="${#lists.isEmpty(support.overlapping)}"><table class="table">
         <thead><tr><th>Employee</th><th>Course</th><th>Period</th></tr></thead><tbody>
         <tr th:each="other : ${support.overlapping}"><td th:text="${other.applicantName}"></td>
           <td><a th:href="@{/manager/applications/{id}(id=${other.applicationId})}" th:text="${other.title}"></a></td>
@@ -76,7 +76,7 @@
   <!-- Only pending applications show a decision form; the service checks the state again. -->
   <div class="card mb-4" th:if="${(a.status.name() == 'APPLIED' or a.status.name() == 'UPDATED') and a.approvalManagerId == session.user.userId}">
     <div class="card-header"><h2 class="cats-card-title">Decision</h2></div>
-    <form class="card-body" method="post" th:action="@{/manager/applications/{id}/decision(id=${a.applicationId})}">
+    <form class="card-body" method="post" data-confirm-title="Confirm your decision" data-confirm-message="Check the request and your reason before recording this decision." th:action="@{/manager/applications/{id}/decision(id=${a.applicationId})}">
       <input type="hidden" name="version" th:value="${a.version}">
       <label for="reason" class="form-label">Reason for approving or rejecting</label>
       <textarea class="form-control mb-3" name="reason" id="reason" maxlength="2000" required th:text="${decisionReason}"></textarea>

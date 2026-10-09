@@ -43,14 +43,18 @@ public class ManagerController {
     }
 
     @GetMapping("/approvals")
-    public String pendingApplications(HttpSession session, Model model) {
+    public String pendingApplications(@RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="10") int size, HttpSession session, Model model) {
         Manager manager = signedInManager(session);
         if (manager == null) {
             return "redirect:/employee/login";
         }
         var groups = managerService.getPendingApplicationGroups(manager.getUserId());
         model.addAttribute("currentUser", manager);
-        model.addAttribute("groups", groups);
+        var result=PageSupport.page(groups.stream().flatMap(g->g.applications().stream()).toList(),page,size);
+        java.util.Map<Integer,java.util.List<ManagerService.ApplicationView>> grouped=new java.util.LinkedHashMap<>();
+        result.forEach(a->grouped.computeIfAbsent(a.applicantId(),key->new java.util.ArrayList<>()).add(a));
+        model.addAttribute("groups",grouped.values().stream().map(rows->{var first=rows.getFirst();return new ManagerService.ApplicationGroup(first.applicantId(),first.applicantName(),first.staffId(),rows);}).toList());
+        model.addAttribute("pageData",result);
         model.addAttribute("applicationCount", groups.stream()
                 .mapToInt(group -> group.applications().size()).sum());
         return "manager-approvals";
@@ -91,7 +95,7 @@ public class ManagerController {
 
     // The history selector contains only direct reports and defaults to the current calendar year.
     @GetMapping("/history")
-    public String teamHistory(@RequestParam(required = false) Integer employeeId,
+    public String teamHistory(@RequestParam(required = false) Integer employeeId, @RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="10") int size,
             HttpSession session, Model model) {
         Manager manager = signedInManager(session);
         if (manager == null) return "redirect:/employee/login";
@@ -99,8 +103,8 @@ public class ManagerController {
         model.addAttribute("employees", managerService.getSubordinates(manager.getUserId()));
         model.addAttribute("employeeId", employeeId);
         model.addAttribute("year", LocalDate.now().getYear());
-        model.addAttribute("courses", employeeId == null ? java.util.List.of()
-                : managerService.getEmployeeHistory(manager.getUserId(), employeeId));
+        var result=PageSupport.page(employeeId==null?java.util.List.of():managerService.getEmployeeHistory(manager.getUserId(),employeeId),page,size);
+        model.addAttribute("courses",result.getContent());model.addAttribute("pageData",result);
         return "manager-history";
     }
 

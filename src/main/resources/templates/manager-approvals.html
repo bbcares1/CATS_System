@@ -29,7 +29,7 @@
       </div>
       <span class="cats-tag" th:text="${#lists.size(group.applications) + (#lists.size(group.applications) == 1 ? ' application' : ' applications')}">1 application</span>
     </div>
-    <div class="table-responsive">
+    <div class="table-responsive" tabindex="0">
       <table class="table align-middle mb-0">
         <thead>
         <tr>
@@ -60,6 +60,7 @@
       </table>
     </div>
   </div>
+<div th:replace="~{fragments/list-pagination :: pager(${pageData}, '/manager/approvals', null, null)}"></div>
 </section>
 </body>
 </html>

@@ -33,6 +33,8 @@ Every signed-in page uses the shared layout:
 | `'courses'` | Key of the sidebar link to highlight (section 3). |
 | `~{::#content}` | The page content. |
 
+POST forms must use `th:action`; the shared processor inserts the session CSRF token. Keep tokens out of URLs. Logout is a POST form. Set `data-confirm-title` and `data-confirm-message` on destructive/decision forms for the shared confirmation dialog.
+
 The layout adds the sidebar, the header with the user menu, flash messages (`success`, `error`), Bootstrap, `cats.css` and `cats.js`.
 Login pages do not use the layout (section 17).
 
@@ -50,9 +52,9 @@ Sidebar keys:
 
 | Role | Keys |
 | --- | --- |
-| Staff | `dashboard`, `apply`, `history`, `fees` |
-| Manager | `dashboard`, `staff` |
-| Admin | `dashboard`, `accounts`, `entitlement`, `categories`, `courses`, `batches`, `holidays` |
+| Staff | `dashboard`, `apply`, `history`, `fees`, `calendar` |
+| Manager | `dashboard`, `approvals`, `claims`, `history`, `staff`, `calendar`, `reports` |
+| Admin | `dashboard`, `accounts`, `entitlement`, `categories`, `courses`, `batches`, `holidays`, `payments`, `review-routing`, `calendar`, `reports` |
 
 When you add a page, add its link in `fragments/layout.html` and its key to this table.
 

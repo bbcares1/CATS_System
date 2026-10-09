@@ -1,5 +1,7 @@
 package group6.project;
 
+import static group6.project.support.MvcRequests.post;
+import static group6.project.support.MvcRequests.multipart;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -118,7 +120,7 @@ class StaffWorkflowTest {
                 .andExpect(status().isOk()).andExpect(content().string(org.hamcrest.Matchers.containsString("Java EE")));
         mvc.perform(get("/staff/applications/" + course.getCourseId() + "/edit").session(session))
                 .andExpect(status().isOk());
-        mvc.perform(get("/logout").session(session)).andExpect(redirectedUrl("/login"));
+        mvc.perform(post("/logout").session(session)).andExpect(redirectedUrl("/login"));
         assertTrue(session.isInvalid());
     }
 
@@ -182,7 +184,7 @@ class StaffWorkflowTest {
     void lifecycleAndOwnCurrentYearHistory() throws Exception {
         CourseApplication course = staffService.saveApplication(null, form(), staff);
         assertEquals(ApplicationStatus.APPLIED, course.getStatus());
-        CourseApplication edit = form(); edit.setCourseTitle("Java EE 2");
+        CourseApplication edit = form(); edit.setCourseTitle("Java EE 2"); edit.setVersion(course.getVersion());
         staffService.saveApplication(course.getCourseId(), edit, staff);
         assertEquals(ApplicationStatus.UPDATED, course.getStatus());
         mvc.perform(post("/staff/applications/" + course.getCourseId() + "/delete").session(session))

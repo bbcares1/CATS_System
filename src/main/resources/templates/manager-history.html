@@ -11,7 +11,8 @@
 <p th:if="${#lists.isEmpty(employees)}" class="cats-sub">No team members are assigned to you.</p>
 <p th:if="${employeeId == null and !#lists.isEmpty(employees)}" class="cats-sub">Choose a team member to view their current-year courses.</p>
 <p th:if="${employeeId != null and #lists.isEmpty(courses)}" class="cats-sub">No course applications for this year.</p>
-<div class="table-responsive" th:unless="${#lists.isEmpty(courses)}"><table class="table"><thead><tr><th>Course</th><th>Category</th><th>Period</th><th>Days</th><th>Fee (SGD)</th><th>Status</th></tr></thead><tbody>
+<div class="table-responsive" tabindex="0" th:unless="${#lists.isEmpty(courses)}"><table class="table"><thead><tr><th>Course</th><th>Category</th><th>Period</th><th>Days</th><th>Fee (SGD)</th><th>Status</th></tr></thead><tbody>
 <tr th:each="course : ${courses}"><td><a th:href="@{/manager/applications/{id}(id=${course.applicationId})}" th:text="${course.title}"></a></td><td th:text="${course.category.displayName}"></td><td th:text="${course.startDate + ' – ' + course.endDate}"></td><td th:text="${course.trainingDays}"></td><td th:text="${#numbers.formatDecimal(course.fee,1,2)}"></td><td><span th:replace="~{fragments/ui :: status(${course.status})}"></span></td></tr>
 </tbody></table></div></div>
+<div th:replace="~{fragments/list-pagination :: pager(${pageData}, '/manager/history', 'employeeId', ${employeeId})}"></div>
 </section></body></html>

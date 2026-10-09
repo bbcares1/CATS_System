@@ -19,7 +19,7 @@ public class CourseCatalogueAdminController {
 
     // Show published and archived offers with their provider and date options.
     @GetMapping
-    public String list(Model model) { model.addAttribute("courses", courses.all()); return "admin-course-list"; }
+    public String list(@RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="10") int size, Model model) { var result=PageSupport.page(courses.all(),page,size); model.addAttribute("courses",result.getContent()); model.addAttribute("pageData",result); return "admin-course-list"; }
 
     // New offers start as an empty DTO rather than a bindable JPA entity.
     @GetMapping("/new")

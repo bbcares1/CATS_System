@@ -30,34 +30,34 @@
 
     <div class="cats-nav-section" th:text="${role} + ' workspace'">Staff workspace</div>
     <nav class="cats-nav" aria-label="Main">
-      <a th:replace="~{fragments/ui :: navlink(@{/training/calendar}, 'calendar', 'Training calendar', 'calendar', ${active})}"></a>
-      <th:block th:if="${role == 'Admin' or role == 'Manager'}">
-        <a th:replace="~{fragments/ui :: navlink(${role == 'Admin' ? '/admin/reports' : '/manager/reports'}, 'reports', 'Training reports', 'chart', ${active})}"></a>
-      </th:block>
       <th:block th:if="${role == 'Staff'}">
-        <a th:if="${u instanceof T(group6.project.model.Manager)}" th:href="@{/manager/home}"><svg th:replace="~{fragments/icons :: icon('briefcase')}"></svg><span>Manager workspace</span></a>
+        <a aria-label="Manager workspace" data-label="Manager workspace" th:if="${u instanceof T(group6.project.model.Manager)}" th:href="@{/manager/home}"><svg th:replace="~{fragments/icons :: icon('briefcase')}"></svg><span>Manager workspace</span></a>
         <a th:replace="~{fragments/ui :: navlink(@{/staff/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/staff/apply}, 'apply', 'Apply for course', 'file-plus', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/staff/personal}, 'history', 'Course history', 'clock', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/staff/fee}, 'fees', 'Fee claims', 'receipt', ${active})}"></a>
       </th:block>
       <th:block th:if="${role == 'Manager'}">
-        <a th:replace="~{fragments/ui :: navlink(@{/manager/claims}, 'claims', 'Claim approvals', 'receipt', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/manager/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/manager/claims}, 'claims', 'Claim approvals', 'receipt', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/manager/approvals}, 'approvals', 'Approvals', 'check-square', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/manager/history}, 'history', 'Team course history', 'users', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/staff/home}, 'staff', 'My staff workspace', 'briefcase', ${active})}"></a>
       </th:block>
       <th:block th:if="${role == 'Admin'}">
-        <a th:replace="~{fragments/ui :: navlink(@{/admin/reviews}, 'review-routing', 'Assign reviewers', 'users', ${active})}"></a>
-        <a th:replace="~{fragments/ui :: navlink(@{/admin/payments}, 'payments', 'Reimbursements', 'receipt', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
-        <a th:replace="~{fragments/ui :: navlink(@{/admin/showBudgetList}, 'entitlement', 'Training entitlement', 'card', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/admin/payments}, 'payments', 'Reimbursements', 'receipt', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/admin/reviews}, 'review-routing', 'Assign reviewers', 'users', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/admin/entitlements}, 'entitlement', 'Training entitlement', 'card', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/accounts}, 'accounts', 'Accounts and reporting', 'users', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/categories}, 'categories', 'Course categories', 'tag', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/courses}, 'courses', 'Course catalogue', 'book', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/batches}, 'batches', 'Scheduled sessions', 'calendar', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/excludedDays}, 'holidays', 'Public holidays', 'calendar', ${active})}"></a>
+      </th:block>
+      <a th:replace="~{fragments/ui :: navlink(@{/training/calendar}, 'calendar', 'Training calendar', 'calendar', ${active})}"></a>
+      <th:block th:if="${role == 'Admin' or role == 'Manager'}">
+        <a th:replace="~{fragments/ui :: navlink(${role == 'Admin' ? '/admin/reports' : '/manager/reports'}, 'reports', 'Training reports', 'chart', ${active})}"></a>
       </th:block>
     </nav>
 
@@ -67,7 +67,7 @@
         <svg th:replace="~{fragments/icons :: icon('chevrons-right')}"></svg>
         <span>Collapse</span>
       </button>
-      <a th:href="@{/logout}" data-label="Log out" aria-label="Log out"><svg th:replace="~{fragments/icons :: icon('logout')}"></svg><span>Log out</span></a>
+      <form th:action="@{/logout}" method="post"><button class="cats-logout" data-label="Log out" aria-label="Log out"><svg th:replace="~{fragments/icons :: icon('logout')}"></svg><span>Log out</span></button></form>
     </div>
   </aside>
   <div class="cats-backdrop" id="backdrop"></div>
@@ -80,7 +80,7 @@
       <span class="cats-crumb"><span th:text="${role} + ' workspace'">Staff workspace</span><span class="sep">/</span><b th:text="${title}">Dashboard</b></span>
 
       <div class="cats-user dropdown">
-        <button type="button" class="cats-user-btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <button type="button" class="cats-user-btn dropdown-toggle" th:attr="aria-label='Account menu for ' + ${u?.name}" data-bs-toggle="dropdown" aria-expanded="false">
           <span class="cats-avatar" th:text="${u != null and !#strings.isEmpty(u.name)} ? ${#strings.toUpperCase(#strings.substring(u.name, 0, 1))} : '?'">A</span>
           <span class="cats-user-text">
             <span th:text="${u?.name}">Name</span>
@@ -91,7 +91,7 @@
         <ul class="dropdown-menu dropdown-menu-end">
           <li><div class="dropdown-header">Signed in as<b th:text="${u?.name}">Name</b><span th:text="${uid}">S0001</span></div></li>
           <li th:if="${role == 'Manager'}"><a class="dropdown-item" th:href="@{/staff/home}"><svg th:replace="~{fragments/icons :: icon('briefcase')}"></svg>My staff workspace</a></li>
-          <li><a class="dropdown-item" th:href="@{/logout}"><svg th:replace="~{fragments/icons :: icon('logout')}"></svg>Log out</a></li>
+          <li><form th:action="@{/logout}" method="post"><button class="dropdown-item"><svg th:replace="~{fragments/icons :: icon('logout')}"></svg>Log out</button></form></li>
         </ul>
       </div>
     </header>

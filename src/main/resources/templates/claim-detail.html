@@ -72,7 +72,7 @@
               Download certificate
             </a>
           </div>
-          <form th:if="${managerView == true and claim.applicationStatus == T(group6.project.model.ApplicationStatus).APPLIED}" th:action="@{/manager/claims/{id}/decision(id=${claim.applicationId})}" method="post" class="cats-stack">
+          <form th:if="${managerView == true and claim.applicationStatus == T(group6.project.model.ApplicationStatus).APPLIED}" th:action="@{/manager/claims/{id}/decision(id=${claim.applicationId})}" method="post" data-confirm-title="Confirm your decision" data-confirm-message="Check the request and your reason before recording this decision." class="cats-stack">
             <input type="hidden" name="version" th:value="${claim.version}">
             <div>
               <label for="reason" class="form-label cats-req">

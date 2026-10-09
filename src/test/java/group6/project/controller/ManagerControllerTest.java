@@ -1,12 +1,12 @@
 package group6.project.controller;
 
+import static group6.project.support.MvcRequests.post;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -100,7 +100,7 @@ class ManagerControllerTest {
                 .andExpect(content().string(containsString("M001")))
                 .andExpect(content().string(containsString("href=\"/staff/home\"")))
                 .andExpect(content().string(containsString("href=\"/manager/approvals\"")))
-                .andExpect(content().string(containsString("href=\"/logout\"")));
+                .andExpect(content().string(containsString("action=\"/logout\"")));
     }
 
     @ParameterizedTest
@@ -175,7 +175,7 @@ class ManagerControllerTest {
                 .andExpect(content().string(containsString("Share the learning with the team.")))
                 .andExpect(content().string(containsString("Conflicts with a project deadline.")))
                 .andExpect(content().string(containsString("cats-status-rejected")))
-                .andExpect(content().string(not(containsString("<form"))));
+                .andExpect(content().string(not(containsString("action=\"/manager/applications/10/decision\""))));
     }
 
     @Test

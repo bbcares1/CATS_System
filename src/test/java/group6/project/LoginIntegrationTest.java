@@ -1,5 +1,6 @@
 package group6.project;
 
+import static group6.project.support.MvcRequests.post;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;

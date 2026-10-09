@@ -118,12 +118,14 @@ class CourseApplicationServiceTest {
     void sameApplicationIsExcludedWhenUpdating() {
         CourseApplication existing = valid(CourseCategoryType.EXTERNAL_COURSE);
         existing.setCourseId(10);
+        existing.setVersion(0L);
         existing.setApplicant(staff);
         existing.setStatus(group6.project.model.ApplicationStatus.UPDATED);
         when(applicationRepo.findById(10)).thenReturn(Optional.of(existing));
 
         CourseApplication edit = valid(CourseCategoryType.EXTERNAL_COURSE);
         edit.setCourseFee(new java.math.BigDecimal("100"));
+        edit.setVersion(existing.getVersion());
         assertEquals(group6.project.model.ApplicationStatus.UPDATED,
                 service.update(10, edit, staff).getStatus());
     }

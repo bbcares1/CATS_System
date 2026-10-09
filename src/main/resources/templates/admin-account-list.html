@@ -16,7 +16,7 @@
         </a>
       </div>
       <div class="card">
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0">
           <table class="table">
             <thead>
               <tr>
@@ -69,6 +69,7 @@
           </table>
         </div>
       </div>
-    </section>
+    <div th:replace="~{fragments/list-pagination :: pager(${pageData}, '/admin/accounts', null, null)}"></div>
+</section>
   </body>
 </html>

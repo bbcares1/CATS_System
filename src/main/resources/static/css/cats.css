@@ -291,3 +291,10 @@ h1, h2, h3 { text-wrap: balance; }
 .cats-calendar-outside { opacity: .55; background: #f7f9fc; }
 .cats-calendar-nonworking { background: #f7f9fc; }
 .cats-calendar-entry { margin-top: 10px; padding: 8px; border-left: 3px solid #0b63ce; background: #edf5ff; font-size: .82rem; overflow-wrap: anywhere; }
+
+/* Public sign-in pages use the same colours and controls as the workspaces. */
+.cats-login { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+.cats-login-panel { width: 100%; max-width: 420px; background: var(--cats-surface); border: 1px solid var(--cats-border); border-radius: 8px; padding: 28px; }
+.cats-login-panel h1 { margin: 16px 0 8px; }
+.cats-logout { width: 100%; border: 0; background: transparent; color: inherit; display: flex; align-items: center; gap: 12px; text-align: left; padding: 10px 12px; position: relative; }
+.cats-logout:hover { background: rgba(255,255,255,.08); }

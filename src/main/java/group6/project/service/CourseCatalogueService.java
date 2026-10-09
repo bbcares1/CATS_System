@@ -84,6 +84,7 @@ public class CourseCatalogueService {
             throw new IllegalArgumentException("This application changed. Reload it before editing.");
         }
         CourseApplication update = new CourseApplication();
+        update.setVersion(form.getApplicationVersion());
         update.setJustification(form.getJustification());
         update.setWorkDissemination(form.getWorkDissemination());
         update.setCourseStartDate(form.getStartDate());

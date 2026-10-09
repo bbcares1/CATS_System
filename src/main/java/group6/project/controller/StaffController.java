@@ -50,7 +50,7 @@ public class StaffController {
     @InitBinder("course")
     public void bindApplication(WebDataBinder binder) {
         binder.setAllowedFields("courseTitle", "courseCategory", "trainingProvider", "courseStartDate",
-                "courseEndDate", "courseFee", "justification", "workDissemination", "halfDayPeriod", "approvalManagerId");
+                "courseEndDate", "courseFee", "justification", "workDissemination", "halfDayPeriod", "approvalManagerId", "version");
     }
 
     // Dashboard: Show  employee and remaining training allowance

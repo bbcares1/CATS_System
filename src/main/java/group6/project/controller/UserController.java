@@ -62,15 +62,20 @@ public class UserController {
     }
 
     // Clear the authenticated identity when leaving the workspace.
-    @GetMapping("/logout")
+    @PostMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/login";
     }
 
+    // An old GET bookmark can open login, but cannot sign a browser out.
+    @GetMapping("/logout")
+    public String logoutBookmark() { return "redirect:/login"; }
+
     // Rotate the anonymous session ID before assigning authenticated identity.
     private void signIn(HttpSession session, HttpServletRequest request, User user) {
         request.changeSessionId();
+        group6.project.config.CsrfProtection.rotate(session);
         session.setAttribute("user", user);
     }
 

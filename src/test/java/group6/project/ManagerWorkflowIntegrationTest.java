@@ -66,7 +66,7 @@ class ManagerWorkflowIntegrationTest {
         CourseApplication course=policy.create(form(),alex);
         Long oldVersion=course.getVersion();
         CourseApplication edit=form(); edit.setCourseTitle("Updated course");
-        policy.update(course.getCourseId(),edit,alex); applications.flush();
+        edit.setVersion(course.getVersion()); policy.update(course.getCourseId(),edit,alex); applications.flush();
         var error=assertThrows(ResponseStatusException.class,
                 ()->managers.decide(bob.getUserId(),course.getCourseId(),"approve","Useful",oldVersion));
         assertEquals(HttpStatus.CONFLICT,error.getStatusCode());

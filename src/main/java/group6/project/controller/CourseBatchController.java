@@ -21,7 +21,7 @@ public class CourseBatchController {
 
     // Include old and archived sessions so Admin can inspect booking history.
     @GetMapping
-    public String list(Model model) { model.addAttribute("batches", batches.getAllBatches()); return "course-batch-list"; }
+    public String list(@RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="10") int size, Model model) { var result=PageSupport.page(batches.getAllBatches(),page,size); model.addAttribute("batches",result.getContent()); model.addAttribute("pageData",result); return "course-batch-list"; }
 
     // Existing detail bookmarks now open the same useful maintenance form.
     @GetMapping({"/{id}", "/edit/{id}"})

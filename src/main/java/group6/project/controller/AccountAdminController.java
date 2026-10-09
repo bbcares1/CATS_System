@@ -27,7 +27,7 @@ public class AccountAdminController {
 
     // Staff, Manager and Admin are managed from one account list.
     @GetMapping
-    public String list(Model model) { model.addAttribute("accounts", accounts.all()); return "admin-account-list"; }
+    public String list(@RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="10") int size, Model model) { var result=PageSupport.page(accounts.all(),page,size); model.addAttribute("accounts",result.getContent()); model.addAttribute("pageData",result); return "admin-account-list"; }
 
     // Account limits are allocated separately per year, after creating employee identity.
     @GetMapping("/new")

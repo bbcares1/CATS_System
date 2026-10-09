@@ -23,7 +23,7 @@
       <div class="card">
         <div th:if="${#lists.isEmpty(courses)}" th:replace="~{fragments/ui :: empty('book', 'No courses yet', 'Add a course so employees can apply from the catalogue.', ~{})}">
         </div>
-        <div class="table-responsive" th:if="${!#lists.isEmpty(courses)}">
+        <div class="table-responsive" tabindex="0" th:if="${!#lists.isEmpty(courses)}">
           <table class="table">
             <thead>
               <tr>
@@ -80,6 +80,7 @@
         <div th:if="${c.active}" th:replace="~{fragments/ui :: confirm('archive-' + ${c.courseId}, 'Archive this course?', 'Employees will no longer be able to apply for ' + ${c.title} + '. Existing applications are unchanged.', @{/admin/courses/{id}/archive(id=${c.courseId})}, 'Archive', true)}">
         </div>
       </th:block>
-    </section>
+    <div th:replace="~{fragments/list-pagination :: pager(${pageData}, '/admin/courses', null, null)}"></div>
+</section>
   </body>
 </html>

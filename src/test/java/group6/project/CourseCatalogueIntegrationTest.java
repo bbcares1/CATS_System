@@ -1,5 +1,6 @@
 package group6.project;
 
+import static group6.project.support.MvcRequests.post;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -114,6 +115,7 @@ class CourseCatalogueIntegrationTest {
         CourseApplication forged = new CourseApplication(); forged.setCourseFee(BigDecimal.ZERO);
         forged.setCourseCategory(CourseCategoryType.INTERNAL_TRAINING); forged.setCourseTitle("Forged");
         forged.setJustification("Another valid reason");
+        forged.setVersion(saved.getVersion());
         assertEquals(new BigDecimal("123.45"), policy.update(saved.getCourseId(), forged, employee).getCourseFee());
     }
 
