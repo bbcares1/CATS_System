@@ -65,9 +65,10 @@ class LoginIntegrationTest {
         mvc.perform(post("/employee/login").session(session).param("userName", "manager_fixture")
                 .param("password", "password").param("designation", "Manager"))
                 .andExpect(redirectedUrl("/manager/home"));
-        for (String route : new String[]{"/manager/home", "/staff/apply", "/staff/personal", "/staff/course-applications"}) {
+        for (String route : new String[]{"/manager/home", "/staff/apply", "/staff/personal"}) {
             mvc.perform(get(route).session(session)).andExpect(status().isOk());
         }
+        mvc.perform(get("/staff/course-applications").session(session)).andExpect(redirectedUrl("/staff/personal"));
         assertInstanceOf(Manager.class, session.getAttribute("user"));
     }
 

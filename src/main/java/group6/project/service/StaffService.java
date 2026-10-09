@@ -6,6 +6,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import group6.project.model.ApplicationStatus;
@@ -163,8 +165,14 @@ public class StaffService {
         }
     }
 
-    public CourseFeeApplication getClaim(Integer id) {
-        return courseFeeApplicationRepo.findById(id).orElse(null);
+    // Claim details and downloads belong to the submitting employee, including a Manager's own claims.
+    public CourseFeeApplication getClaim(Integer id, Staff staff) {
+        CourseFeeApplication claim = courseFeeApplicationRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Claim not found."));
+        if (claim.getApplicant() == null || !staff.getUserId().equals(claim.getApplicant().getUserId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Claim not found.");
+        }
+        return claim;
     }
 
     // Reimbursement total - Add fees already reimbursed for the selected year

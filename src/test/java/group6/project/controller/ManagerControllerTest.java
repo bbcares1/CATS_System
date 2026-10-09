@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -47,6 +48,19 @@ class ManagerControllerTest {
 
     @MockitoBean
     private ManagerService managerService;
+
+    @MockitoBean
+    private group6.project.service.UserService userService;
+
+    // This MVC slice mocks account storage; full integration tests exercise real account reloads.
+    @BeforeEach
+    void sessionLookup() {
+        when(userService.currentUser(org.mockito.ArgumentMatchers.any())).thenAnswer(call -> {
+            jakarta.servlet.http.HttpSession session=call.getArgument(0);
+            Object value=session == null ? null : session.getAttribute("user");
+            return value instanceof group6.project.model.User user && user.getUserId()!=null ? user : null;
+        });
+    }
 
     @Test
     void anonymousVisitorIsRedirectedToEmployeeLogin() throws Exception {

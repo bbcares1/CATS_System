@@ -1,6 +1,7 @@
 package group6.project.service;
 
 import org.springframework.stereotype.Service;
+import jakarta.servlet.http.HttpSession;
 import group6.project.model.Admin;
 import group6.project.model.Manager;
 import group6.project.model.Staff;
@@ -24,6 +25,16 @@ public class UserService {
         return userRepo.findByUserName(userName)
                 .filter(user -> password.equals(user.getPassword()))
                 .orElse(null);
+    }
+
+    // Reload the saved identity so deleted accounts and later role changes affect the next request.
+    public User currentUser(HttpSession session) {
+        Object value = session == null ? null : session.getAttribute("user");
+        if (!(value instanceof User user) || user.getUserId() == null) return null;
+        User current = userRepo.findById(user.getUserId()).orElse(null);
+        if (current == null) session.removeAttribute("user");
+        else session.setAttribute("user", current);
+        return current;
     }
 
     // Admin accounts use the separate administration login.

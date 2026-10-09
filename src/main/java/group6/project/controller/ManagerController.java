@@ -14,16 +14,19 @@ import java.time.LocalDate;
 
 import group6.project.model.Manager;
 import group6.project.service.ManagerService;
+import group6.project.service.UserService;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/manager")
 public class ManagerController {
 
+    private final UserService userService;
     private final ManagerService managerService;
 
-    public ManagerController(ManagerService managerService) {
+    public ManagerController(ManagerService managerService, UserService userService) {
         this.managerService = managerService;
+        this.userService = userService;
     }
 
     @GetMapping({"", "/home"})
@@ -103,7 +106,7 @@ public class ManagerController {
 
     // Each Manager route checks the shared session role before accessing team records.
     private Manager signedInManager(HttpSession session) {
-        return session.getAttribute("user") instanceof Manager manager
+        return userService.currentUser(session) instanceof Manager manager
                 && manager.getUserId() != null ? manager : null;
     }
 }

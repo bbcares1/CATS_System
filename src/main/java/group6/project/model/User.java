@@ -1,10 +1,10 @@
 package group6.project.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,18 +20,19 @@ import lombok.Setter;
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
 @Getter
-@Setter 
-@NoArgsConstructor 
+@Setter
+@NoArgsConstructor
 public abstract class User {
-	
+
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Integer userId;
-    
+
     @Column(name = "user_name",nullable = false, unique = true)
     private String userName;
 
+    @JsonIgnore
     @Column(name = "password",nullable = false)
     private String password;
 
@@ -39,19 +40,10 @@ public abstract class User {
     private String name;
 
     @Column(name = "designation")
-    private String designation; 
-    
+    private String designation;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role",nullable = false)
-    private Roles role; 
-
-	public User( String userName, String password, String name, String designation, Roles role,
-			User manager) {
-		this.userName = userName;
-		this.password = password;
-		this.name = name;
-		this.designation = designation;
-		this.role = role;
-	}
+    private Roles role;
 
 }

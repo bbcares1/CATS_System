@@ -20,7 +20,7 @@ The default `dev` profile uses the local credentials in `compose.yml` and runs s
 | Manager | mgr_bob / mgr_chris | demo123 | `/employee/login` |
 | Staff | staff_alex / staff_sam / staff_pat | demo123 | `/employee/login` |
 
-Choose Staff or Manager on the employee login form. This classroom build uses simple login passwords. Do not expose it as a public production service without upgrading authentication.
+Employee login detects Staff or Manager from the saved account; no role selection is needed. This classroom build uses simple login passwords. Do not expose it as a public production service without upgrading authentication.
 
 Samples use fictional accounts and 2026 course dates; they are not production accounts. Additional sample dates should be added in a new development migration, not by editing one that has already run.
 
@@ -62,3 +62,14 @@ Run with `SPRING_PROFILES_ACTIVE=prod` and set `CATS_DB_URL`, `CATS_DB_USER`, `C
 - Split cross-year courses into separate requests. AM/PM is allowed only for a single-date Internal Training session; multi-day courses use full working days. Opposite AM/PM sessions can share a date.
 - Internal Training has no course fee. Money uses decimal SGD values, with up to two decimal places.
 - Complete an approved course only after its end date, with experience comments. Admin cannot lower limits below already reserved days/fees.
+
+## MVC entry points
+
+| Workspace | Pages |
+| --- | --- |
+| Public | `/login`, `/employee/login`, `/admin/login` |
+| Staff (including Manager) | `/staff/home`, `/staff/apply`, `/staff/personal`, `/staff/applications/{id}`, `/staff/fee` |
+| Manager | `/manager/home`, `/manager/approvals`, `/manager/applications/{id}`, `/manager/history` |
+| Admin | `/admin/home`, `/admin/entitlements`, `/admin/courses`, `/admin/categories`, `/admin/batches`, `/admin/excludedDays` |
+
+Old application, claim and holiday GET routes redirect to these pages. Old POST handlers are retired; use the current forms. All protected prefixes reload the account behind session `user`. Claims and attachments are restricted to their owner. Manager decisions are restricted to direct reports. Password fields are excluded from JSON. Upload validation and CSRF protection are completed in the following safety/deployment slice.

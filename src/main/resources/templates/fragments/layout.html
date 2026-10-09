@@ -32,9 +32,9 @@
     <nav class="cats-nav" aria-label="Main">
       <th:block th:if="${role == 'Staff'}">
         <a th:replace="~{fragments/ui :: navlink(@{/staff/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
-        <a th:replace="~{fragments/ui :: navlink(@{/staff/course-applications/new}, 'apply', 'Apply for course', 'file-plus', ${active})}"></a>
-        <a th:replace="~{fragments/ui :: navlink(@{/staff/course-applications}, 'history', 'Course history', 'clock', ${active})}"></a>
-        <a th:replace="~{fragments/ui :: navlink(@{/course-fee-applications}, 'fees', 'Fee claims', 'receipt', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/staff/apply}, 'apply', 'Apply for course', 'file-plus', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/staff/personal}, 'history', 'Course history', 'clock', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/staff/fee}, 'fees', 'Fee claims', 'receipt', ${active})}"></a>
       </th:block>
       <th:block th:if="${role == 'Manager'}">
         <a th:replace="~{fragments/ui :: navlink(@{/manager/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>

@@ -26,26 +26,24 @@ import group6.project.model.CourseCategoryType;
 import group6.project.model.CourseFeeApplication;
 import group6.project.model.Staff;
 import group6.project.service.StaffService;
+import group6.project.service.UserService;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/staff")
 public class StaffController {
 
+    private final UserService userService;
     private final StaffService staffService;
 
-    public StaffController(StaffService staffService) {
+    public StaffController(StaffService staffService, UserService userService) {
         this.staffService = staffService;
+        this.userService = userService;
     }
 
-    // Login: login controller saves employee details
+    // Managers inherit personal Staff access; every page uses the same current account lookup.
     private Staff getCurrentStaff(HttpSession session) {
-        Object user = session.getAttribute("user");
-        if (!(user instanceof Staff)) {
-            return null;
-        }
-        Staff staff = (Staff) user;
-        return staffService.getStaff(staff.getUserId());
+        return userService.currentUser(session) instanceof Staff staff ? staff : null;
     }
 
     // Application form: Accept the employee edit fields
@@ -257,11 +255,7 @@ public class StaffController {
         if (staff == null) {
             return "redirect:/employee/login";
         }
-        CourseFeeApplication claim = staffService.getClaim(id);
-        if (claim == null) {
-            redirect.addFlashAttribute("error", "Claim not found.");
-            return "redirect:/staff/home";
-        }
+        CourseFeeApplication claim = staffService.getClaim(id, staff);
         model.addAttribute("claim", claim);
         return "staff-claim-detail";
     }
@@ -273,10 +267,7 @@ public class StaffController {
         if (staff == null) {
             return ResponseEntity.status(401).build();
         }
-        CourseFeeApplication claim = staffService.getClaim(id);
-        if (claim == null) {
-            return ResponseEntity.notFound().build();
-        }
+        CourseFeeApplication claim = staffService.getClaim(id, staff);
         byte[] file;
         String fileName;
         if (document.equals("receipt")) {
@@ -296,6 +287,7 @@ public class StaffController {
                 .filename(fileName, StandardCharsets.UTF_8).build().toString();
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header("Content-Disposition", attachment)
+                .header("X-Content-Type-Options", "nosniff")
                 .body(file);
     }
 }

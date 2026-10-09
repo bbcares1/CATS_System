@@ -429,10 +429,10 @@ class StaffWorkflowTest {
         otherClaim.setCourseApplication(otherCourse);
         otherClaim = claimRepo.saveAndFlush(otherClaim);
         mvc.perform(get("/staff/claims/" + otherClaim.getApplicationId()).session(session))
-                .andExpect(status().isOk());
+                .andExpect(status().isNotFound());
         for (String document : List.of("receipt", "certificate")) {
             mvc.perform(get("/staff/claims/" + otherClaim.getApplicationId() + "/" + document).session(session))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isNotFound());
             mvc.perform(get("/staff/claims/" + otherClaim.getApplicationId() + "/" + document))
                     .andExpect(status().isUnauthorized());
         }
