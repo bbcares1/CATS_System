@@ -42,13 +42,18 @@ public class CourseFeeApplication {
     @ManyToOne 
     @JoinColumn (name = "batch_id")
     private CourseBatch courseBatch;
+    @OneToOne
+    @JoinColumn(name = "course_application_id", unique = true)
+    private CourseApplication courseApplication;
+
+    private LocalDateTime reimbursedAt;
 
     @Enumerated (EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ApplicationStatus applicationStatus;
 
     @Lob 
-    @Column (name = "receipt")
+    @Column(name = "receipt", length = 5242880)
     private byte[] receipt;
 
     private String receiptFileName;
@@ -56,7 +61,7 @@ public class CourseFeeApplication {
     private String receiptContentType;
 
     @Lob
-    @Column(name = "certificate")
+    @Column(name = "certificate", length = 5242880)
     private byte[] certificate;
 
     private String certificateFileName;

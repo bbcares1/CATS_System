@@ -1,2 +1,55 @@
-
-
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staff Dashboard - CATS</title>
+    <link rel="stylesheet" th:href="@{/css/category.css}">
+<link rel="stylesheet" th:href="@{/css/staff.css}">
+</head>
+<body>
+<main class="container">
+    <nav>
+<a class="active" th:href="@{/staff/home}">Dashboard</a>
+<a th:href="@{/staff/personal}">Personal Course History</a>
+<a th:href="@{/staff/apply}">Apply for Course</a>
+<a th:href="@{/logout}">Logout</a>
+</nav>
+    <h1>Staff Dashboard</h1>
+    <p class="error" th:if="${error}" th:text="${error}">
+</p>
+    <p>Welcome, <strong th:text="${currentUser.name}">
+</strong>.</p>
+    <p>Staff ID: <span th:text="${currentUser.staffId}">
+</span>
+</p>
+    <p>Designation: <span th:text="${currentUser.designation}">
+</span>
+</p>
+    <p>Reporting manager: <span th:text="${currentUser.manager != null ? currentUser.manager.name : 'Not assigned'}">
+</span>
+</p>
+    <div class="summary">
+<p>Remaining training days this year: <strong th:text="${summary.remainingDays}">
+</strong>
+</p>
+        <p>Remaining training budget: $<strong th:text="${summary.remainingBudget}">
+</strong>
+</p>
+        <p>Pending, approved and completed courses count towards the annual allowance.</p>
+</div>
+    <p>
+<a class="btn btn-primary" th:href="@{/staff/apply}">Apply for Course</a>
+</p>
+    <p>
+<a class="btn btn-primary" th:href="@{/staff/personal}">View Personal Course History</a>
+</p>
+    <p>
+<a class="btn btn-secondary" th:href="@{/staff/fee}">Course Fee Claims</a>
+</p>
+    <p th:if="${currentUser.role.name() == 'MANAGER'}">
+<a th:href="@{/manager/home}">Open Manager Workspace</a>
+</p>
+</main>
+</body>
+</html>
