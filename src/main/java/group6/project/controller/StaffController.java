@@ -1,11 +1,16 @@
 package group6.project.controller;
 
-import java.time.LocalDate;
-import java.util.List;
+import group6.project.model.CourseApplication;
+import group6.project.model.CourseCategoryType;
+import group6.project.model.CourseFeeApplication;
+import group6.project.model.Staff;
+import group6.project.service.StaffService;
+import group6.project.service.UserService;
 
-import org.springframework.http.MediaType;
+import jakarta.servlet.http.HttpSession;
+
 import org.springframework.http.ContentDisposition;
-import java.nio.charset.StandardCharsets;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,15 +24,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import group6.project.model.CourseApplication;
-import group6.project.model.CourseCategoryType;
-import group6.project.model.CourseFeeApplication;
-import group6.project.model.Staff;
-import group6.project.service.StaffService;
-import group6.project.service.UserService;
-import jakarta.servlet.http.HttpSession;
+
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.List;
 
 @Controller
 @RequestMapping("/staff")
@@ -36,6 +37,7 @@ public class StaffController {
     private final UserService userService;
     private final StaffService staffService;
 
+    // Personal pages use the same workflows for Staff and inherited Manager access.
     public StaffController(StaffService staffService, UserService userService) {
         this.staffService = staffService;
         this.userService = userService;
@@ -49,8 +51,18 @@ public class StaffController {
     // Application form: Accept the employee edit fields
     @InitBinder("course")
     public void bindApplication(WebDataBinder binder) {
-        binder.setAllowedFields("courseTitle", "courseCategory", "trainingProvider", "courseStartDate",
-                "courseEndDate", "courseFee", "justification", "workDissemination", "halfDayPeriod", "approvalManagerId", "version");
+        binder.setAllowedFields(
+                "courseTitle",
+                "courseCategory",
+                "trainingProvider",
+                "courseStartDate",
+                "courseEndDate",
+                "courseFee",
+                "justification",
+                "workDissemination",
+                "halfDayPeriod",
+                "approvalManagerId",
+                "version");
     }
 
     // Dashboard: Show  employee and remaining training allowance
@@ -67,8 +79,11 @@ public class StaffController {
 
     // View personal course history - Show the employee's applications for the current year.
     @GetMapping({"/applications", "/personal"})
-    public String showCourseHistory(HttpSession session, Model model,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+    public String showCourseHistory(
+            HttpSession session,
+            Model model,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         Staff staff = getCurrentStaff(session);
         if (staff == null) {
             return "redirect:/employee/login";
@@ -115,6 +130,7 @@ public class StaffController {
     }
 
     @GetMapping("/apply/other")
+    // Keep an application form for courses outside the maintained catalogue.
     public String showNewApplicationForm(HttpSession session, Model model) {
         if (getCurrentStaff(session) == null) {
             return "redirect:/employee/login";
@@ -124,11 +140,17 @@ public class StaffController {
 
     // Older new-application links open the catalogue's default entry.
     @GetMapping("/applications/new")
-    public String defaultApplicationEntry() { return "redirect:/staff/courses"; }
+    public String defaultApplicationEntry() {
+        return "redirect:/staff/courses";
+    }
 
     // Only applied or updated applications can be edited.
     @GetMapping("/applications/{id}/edit")
-    public String showEditApplicationForm(@PathVariable Integer id, HttpSession session, Model model, RedirectAttributes redirect) {
+    public String showEditApplicationForm(
+            @PathVariable Integer id,
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirect) {
         Staff staff = getCurrentStaff(session);
         if (staff == null) {
             return "redirect:/employee/login";
@@ -151,10 +173,13 @@ public class StaffController {
 
     // Show required field, date, allowance, budget and overlap errors.
     @PostMapping("/applications/save")
-    public String saveApplication(@ModelAttribute("course") CourseApplication application,
+    public String saveApplication(
+            @ModelAttribute("course") CourseApplication application,
             BindingResult binding,
             @RequestParam(required = false) Integer applicationId,
-            HttpSession session, Model model, RedirectAttributes redirect) {
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirect) {
         Staff staff = getCurrentStaff(session);
         if (staff == null) {
             return "redirect:/employee/login";
@@ -165,7 +190,8 @@ public class StaffController {
         }
 
         try {
-            CourseApplication saved = staffService.saveApplication(applicationId, application, staff);
+            CourseApplication saved =
+                    staffService.saveApplication(applicationId, application, staff);
             redirect.addFlashAttribute("success", "Application saved.");
             return "redirect:/staff/applications/" + saved.getCourseId();
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -176,7 +202,11 @@ public class StaffController {
 
     // Application details: Handle lookup errors from the unchanged shared service.
     @GetMapping("/applications/{id}")
-    public String showApplicationDetails(@PathVariable Integer id, HttpSession session, Model model, RedirectAttributes redirect) {
+    public String showApplicationDetails(
+            @PathVariable Integer id,
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirect) {
         Staff staff = getCurrentStaff(session);
         if (staff == null) {
             return "redirect:/employee/login";
@@ -193,9 +223,12 @@ public class StaffController {
 
     // Show errors when deletion, cancellation or completion is not allowed.
     @PostMapping("/applications/{id}/{action}")
-    public String updateApplicationStatus(@PathVariable Integer id, @PathVariable String action,
+    public String updateApplicationStatus(
+            @PathVariable Integer id,
+            @PathVariable String action,
             @RequestParam(required = false) String experienceComments,
-            HttpSession session, RedirectAttributes redirect) {
+            HttpSession session,
+            RedirectAttributes redirect) {
         Staff staff = getCurrentStaff(session);
         if (staff == null) {
             return "redirect:/employee/login";
@@ -225,32 +258,43 @@ public class StaffController {
 
     // Fee claims: Retrieve claims and eligible courses.
     @GetMapping("/fee")
-    public String showFeeClaims(HttpSession session, Model model,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size) {
+    public String showFeeClaims(
+            HttpSession session,
+            Model model,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         Staff staff = getCurrentStaff(session);
         if (staff == null) {
             return "redirect:/employee/login";
         }
-        var history=staffService.getClaims(staff,page,size);
-        model.addAttribute("claims",history.getContent());model.addAttribute("claimPage",history);model.addAttribute("claimRoute","/staff/fee");
+        var history = staffService.getClaims(staff, page, size);
+        model.addAttribute("claims", history.getContent());
+        model.addAttribute("claimPage", history);
+        model.addAttribute("claimRoute", "/staff/fee");
         model.addAttribute("eligible", staffService.getClaimableCourses(staff));
         model.addAttribute("summary", staffService.summary(new CourseApplication(), staff, null));
-        model.addAttribute("reimbursed", staffService.getReimbursedFees(staff, LocalDate.now().getYear()));
+        model.addAttribute(
+                "reimbursed", staffService.getReimbursedFees(staff, LocalDate.now().getYear()));
         return "staff-claims";
     }
 
     // Fee claims: Require personal payment, completed course and both documents submitted
     @PostMapping("/fee")
-    public String submitFeeClaim(@RequestParam Integer courseId,
+    public String submitFeeClaim(
+            @RequestParam Integer courseId,
             @RequestParam(defaultValue = "false") boolean paidPersonally,
-            @RequestParam MultipartFile receipt, @RequestParam MultipartFile certificate,
-            @RequestParam(required=false) Integer approvalManagerId,
-            HttpSession session, RedirectAttributes redirect) {
+            @RequestParam MultipartFile receipt,
+            @RequestParam MultipartFile certificate,
+            @RequestParam(required = false) Integer approvalManagerId,
+            HttpSession session,
+            RedirectAttributes redirect) {
         Staff staff = getCurrentStaff(session);
         if (staff == null) {
             return "redirect:/employee/login";
         }
         try {
-            staffService.submitClaim(courseId, paidPersonally, receipt, certificate, staff, approvalManagerId);
+            staffService.submitClaim(
+                    courseId, paidPersonally, receipt, certificate, staff, approvalManagerId);
             redirect.addFlashAttribute("success", "Claim submitted.");
         } catch (IllegalArgumentException e) {
             redirect.addFlashAttribute("error", e.getMessage());
@@ -259,7 +303,12 @@ public class StaffController {
     }
 
     @GetMapping("/claims/{id}")
-    public String showFeeClaimDetails(@PathVariable Integer id, HttpSession session, Model model, RedirectAttributes redirect) {
+    // Only the submitting employee can open the personal claim detail.
+    public String showFeeClaimDetails(
+            @PathVariable Integer id,
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirect) {
         Staff staff = getCurrentStaff(session);
         if (staff == null) {
             return "redirect:/employee/login";
@@ -270,8 +319,9 @@ public class StaffController {
     }
 
     @GetMapping("/claims/{id}/{document}")
-    public ResponseEntity<byte[]> downloadClaimDocument(@PathVariable Integer id,
-            @PathVariable String document, HttpSession session) {
+    // Download one owned attachment without exposing another employee's evidence.
+    public ResponseEntity<byte[]> downloadClaimDocument(
+            @PathVariable Integer id, @PathVariable String document, HttpSession session) {
         Staff staff = getCurrentStaff(session);
         if (staff == null) {
             return ResponseEntity.status(401).build();
@@ -292,9 +342,13 @@ public class StaffController {
             fileName = document;
         }
         // Document download: Send the stored file as an attachment with its uploaded name.
-        String attachment = ContentDisposition.attachment()
-                .filename(fileName, StandardCharsets.UTF_8).build().toString();
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM)
+        String attachment =
+                ContentDisposition.attachment()
+                        .filename(fileName, StandardCharsets.UTF_8)
+                        .build()
+                        .toString();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header("Content-Disposition", attachment)
                 .header("X-Content-Type-Options", "nosniff")
                 .body(file);

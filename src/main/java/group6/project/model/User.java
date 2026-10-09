@@ -1,7 +1,9 @@
 package group6.project.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,7 +16,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public abstract class User {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Integer userId;
 
@@ -27,14 +30,17 @@ public abstract class User {
 
     @Column(nullable = false)
     private String name;
+
     private String designation;
+
     @Column(unique = true)
     private String email;
+
     @Column(unique = true)
     private String staffId;
+
     private boolean active = true;
-    @Version
-    private Long version;
+    @Version private Long version;
 
     // A stable identity keeps reporting links and old history valid after a role change.
     @ManyToOne
@@ -49,8 +55,12 @@ public abstract class User {
     // New accounts must agree with their Java subtype before being inserted.
     @PrePersist
     private void setAccountRole() {
-        Roles expected = this instanceof Admin ? Roles.ADMIN : this instanceof Manager ? Roles.MANAGER : Roles.STAFF;
-        if (role != null && role != expected) throw new IllegalArgumentException("Account role does not match its type.");
+        Roles expected =
+                this instanceof Admin
+                        ? Roles.ADMIN
+                        : this instanceof Manager ? Roles.MANAGER : Roles.STAFF;
+        if (role != null && role != expected)
+            throw new IllegalArgumentException("Account role does not match its type.");
         role = expected;
     }
 }

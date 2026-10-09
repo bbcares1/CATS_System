@@ -1,9 +1,11 @@
 package group6.project.model.form;
 
-import java.time.LocalDate;
 import lombok.*;
 
-@Getter @Setter
+import java.time.LocalDate;
+
+@Getter
+@Setter
 public class HolidayForm {
     private LocalDate date;
     private String description;

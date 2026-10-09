@@ -10,12 +10,18 @@ public class HealthController {
     private final JdbcTemplate database;
 
     // The container checks both HTTP readiness and its configured database.
-    public HealthController(JdbcTemplate database) { this.database=database; }
+    public HealthController(JdbcTemplate database) {
+        this.database = database;
+    }
 
     // A public probe reveals no schema, credentials, account data or exception details.
     @GetMapping("/health")
     public ResponseEntity<String> health() {
-        try { database.queryForObject("select 1",Integer.class);return ResponseEntity.ok("UP"); }
-        catch(org.springframework.dao.DataAccessException e) { return ResponseEntity.status(503).body("DOWN"); }
+        try {
+            database.queryForObject("select 1", Integer.class);
+            return ResponseEntity.ok("UP");
+        } catch (org.springframework.dao.DataAccessException e) {
+            return ResponseEntity.status(503).body("DOWN");
+        }
     }
 }

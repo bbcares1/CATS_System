@@ -1,26 +1,32 @@
 package group6.project.controller;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
 import group6.project.model.Admin;
 import group6.project.model.Manager;
 import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.service.UserService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class UserController {
     private final UserService users;
 
     // All login forms use the same account store and session contract.
-    public UserController(UserService users) { this.users = users; }
+    public UserController(UserService users) {
+        this.users = users;
+    }
 
     // Keep separate employee and administration entry points.
     @GetMapping({"/", "/login"})
-    public String indexLogin() { return "login-portal"; }
+    public String indexLogin() {
+        return "login-portal";
+    }
 
     // A signed-in employee can return directly to their own workspace.
     @GetMapping("/employee/login")
@@ -31,8 +37,12 @@ public class UserController {
 
     // Role comes from the saved account, so a browser cannot choose Manager privileges.
     @PostMapping("/employee/login")
-    public String employeeLogin(@RequestParam String userName, @RequestParam String password,
-            HttpSession session, HttpServletRequest request, Model model) {
+    public String employeeLogin(
+            @RequestParam String userName,
+            @RequestParam String password,
+            HttpSession session,
+            HttpServletRequest request,
+            Model model) {
         User user = users.authenticate(userName, password);
         if (user instanceof Staff) {
             signIn(session, request, user);
@@ -50,8 +60,12 @@ public class UserController {
 
     // Only an actual Admin account can enter the administration workspace.
     @PostMapping("/admin/login")
-    public String adminLogin(@RequestParam String userName, @RequestParam String password,
-            HttpSession session, HttpServletRequest request, Model model) {
+    public String adminLogin(
+            @RequestParam String userName,
+            @RequestParam String password,
+            HttpSession session,
+            HttpServletRequest request,
+            Model model) {
         User user = users.authenticate(userName, password);
         if (user instanceof Admin) {
             signIn(session, request, user);
@@ -70,7 +84,9 @@ public class UserController {
 
     // An old GET bookmark can open login, but cannot sign a browser out.
     @GetMapping("/logout")
-    public String logoutBookmark() { return "redirect:/login"; }
+    public String logoutBookmark() {
+        return "redirect:/login";
+    }
 
     // Rotate the anonymous session ID before assigning authenticated identity.
     private void signIn(HttpSession session, HttpServletRequest request, User user) {

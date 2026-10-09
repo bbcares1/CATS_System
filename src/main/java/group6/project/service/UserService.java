@@ -1,12 +1,14 @@
 package group6.project.service;
 
-import org.springframework.stereotype.Service;
-import jakarta.servlet.http.HttpSession;
 import group6.project.model.Admin;
 import group6.project.model.Manager;
 import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.repo.UserRepo;
+
+import jakarta.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
@@ -32,11 +34,12 @@ public class UserService {
         Object value = session == null ? null : session.getAttribute("user");
         if (!(value instanceof User user) || user.getUserId() == null) return null;
         User current = userRepo.findById(user.getUserId()).orElse(null);
-        if (current == null || !current.isActive() || !java.util.Objects.equals(user.getVersion(), current.getVersion())) {
+        if (current == null
+                || !current.isActive()
+                || !java.util.Objects.equals(user.getVersion(), current.getVersion())) {
             session.removeAttribute("user");
             return null;
-        }
-        else session.setAttribute("user", current);
+        } else session.setAttribute("user", current);
         return current;
     }
 

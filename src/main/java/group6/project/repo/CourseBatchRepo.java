@@ -1,11 +1,14 @@
 package group6.project.repo;
 
-import java.util.List;
-import java.util.Optional;
+import group6.project.model.CourseBatch;
+
 import jakarta.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
-import group6.project.model.CourseBatch;
+
+import java.util.List;
+import java.util.Optional;
 
 public interface CourseBatchRepo extends JpaRepository<CourseBatch, Long> {
     List<CourseBatch> findByCourseDetail_CourseIdOrderByCourseStartDateAsc(Integer courseId);

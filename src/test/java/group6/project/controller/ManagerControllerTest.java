@@ -1,6 +1,7 @@
 package group6.project.controller;
 
 import static group6.project.support.MvcRequests.post;
+
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.verify;
@@ -13,13 +14,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Stream;
+import group6.project.model.Admin;
+import group6.project.model.ApplicationStatus;
+import group6.project.model.CourseCategoryType;
+import group6.project.model.Manager;
+import group6.project.model.Staff;
+import group6.project.service.ManagerService;
+import group6.project.service.ManagerService.ApplicationGroup;
+import group6.project.service.ManagerService.ApplicationView;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -31,40 +36,39 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
 
-import group6.project.model.Admin;
-import group6.project.model.ApplicationStatus;
-import group6.project.model.CourseCategoryType;
-import group6.project.model.Manager;
-import group6.project.model.Staff;
-import group6.project.service.ManagerService;
-import group6.project.service.ManagerService.ApplicationGroup;
-import group6.project.service.ManagerService.ApplicationView;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Stream;
 
 @WebMvcTest(ManagerController.class)
 class ManagerControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
     @MockitoBean private group6.project.service.ApprovalRoutingService routing;
 
-    @MockitoBean
-    private ManagerService managerService;
+    @MockitoBean private ManagerService managerService;
 
-    @MockitoBean
-    private group6.project.service.UserService userService;
+    @MockitoBean private group6.project.service.UserService userService;
 
     // This MVC slice mocks account storage; full integration tests exercise real account reloads.
     @BeforeEach
     void sessionLookup() {
-        when(userService.currentUser(org.mockito.ArgumentMatchers.any())).thenAnswer(call -> {
-            jakarta.servlet.http.HttpSession session=call.getArgument(0);
-            Object value=session == null ? null : session.getAttribute("user");
-            return value instanceof group6.project.model.User user && user.getUserId()!=null ? user : null;
-        });
+        when(userService.currentUser(org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(
+                        call -> {
+                            jakarta.servlet.http.HttpSession session = call.getArgument(0);
+                            Object value = session == null ? null : session.getAttribute("user");
+                            return value instanceof group6.project.model.User user
+                                            && user.getUserId() != null
+                                    ? user
+                                    : null;
+                        });
     }
 
     @Test
+    // Anonymous visitors must sign in before opening a Manager page.
     void anonymousVisitorIsRedirectedToEmployeeLogin() throws Exception {
         mockMvc.perform(get("/manager/home"))
                 .andExpect(status().is3xxRedirection())
@@ -73,18 +77,21 @@ class ManagerControllerTest {
 
     @ParameterizedTest
     @MethodSource("nonManagerUsers")
+    // A saved non-Manager role cannot enter the team workspace.
     void nonManagerSessionCannotOpenManagerWorkspace(Object user) throws Exception {
         mockMvc.perform(get("/manager/home").sessionAttr("user", user))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/employee/login"));
     }
 
+    // Supply Staff and Admin identities for the Manager access checks.
     static Stream<Object> nonManagerUsers() {
         return Stream.of(new Staff(), new Admin(), "mgr_bob");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"/manager", "/manager/home"})
+    // The dashboard renders the signed-in name and working personal/team links.
     void signedInManagerReceivesRenderedDashboard(String path) throws Exception {
         Manager manager = new Manager();
         manager.setUserId(1);
@@ -105,13 +112,14 @@ class ManagerControllerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"/api/managers", "/api/managers/1", "/api/managers/staff-id/M001"})
+    // The agreed MVC build does not keep the old Manager REST routes.
     void retiredApiRoutesAreNotExposed(String path) throws Exception {
-        mockMvc.perform(get(path))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get(path)).andExpect(status().isNotFound());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"/manager/approvals", "/manager/applications/10"})
+    // New team pages enforce the same role gate as the dashboard.
     void newPagesRequireAManagerSession(String path) throws Exception {
         mockMvc.perform(get(path))
                 .andExpect(status().is3xxRedirection())
@@ -129,20 +137,27 @@ class ManagerControllerTest {
     }
 
     @Test
+    // Group requests by employee and escape untrusted course/name text in HTML.
     void pendingApplicationsRenderAGroupedTableWithEscapedContent() throws Exception {
         var application = application(ApplicationStatus.APPLIED);
         var groups = List.of(new ApplicationGroup(2, "Alex & Team", "S002", List.of(application)));
         when(managerService.getPendingApplicationGroups(1)).thenReturn(groups);
 
-        mockMvc.perform(get("/manager/approvals").param("managerId", "99")
-                .sessionAttr("user", manager()))
+        mockMvc.perform(
+                        get("/manager/approvals")
+                                .param("managerId", "99")
+                                .sessionAttr("user", manager()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("manager-approvals"))
                 .andExpect(model().attribute("groups", groups))
                 .andExpect(model().attribute("applicationCount", 1))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(containsString("Alex &amp; Team")))
-                .andExpect(content().string(containsString("Java &lt;script&gt;alert(1)&lt;/script&gt;")))
+                .andExpect(
+                        content()
+                                .string(
+                                        containsString(
+                                                "Java &lt;script&gt;alert(1)&lt;/script&gt;")))
                 .andExpect(content().string(containsString("href=\"/manager/applications/10\"")))
                 .andExpect(content().string(containsString("$1,800.00")))
                 .andExpect(content().string(containsString("12 Nov 2026")))
@@ -152,6 +167,7 @@ class ManagerControllerTest {
     }
 
     @Test
+    // An empty review queue provides a useful page rather than an empty table.
     void emptyPendingListShowsAnEmptyState() throws Exception {
         when(managerService.getPendingApplicationGroups(1)).thenReturn(List.of());
 
@@ -161,6 +177,7 @@ class ManagerControllerTest {
     }
 
     @Test
+    // Decided requests show their saved reason without another decision form.
     void detailsRenderApplicationAndDecisionFieldsAsReadOnly() throws Exception {
         var application = application(ApplicationStatus.REJECTED);
         when(managerService.getApplicationForManager(1, 10)).thenReturn(application);
@@ -175,13 +192,21 @@ class ManagerControllerTest {
                 .andExpect(content().string(containsString("Share the learning with the team.")))
                 .andExpect(content().string(containsString("Conflicts with a project deadline.")))
                 .andExpect(content().string(containsString("cats-status-rejected")))
-                .andExpect(content().string(not(containsString("action=\"/manager/applications/10/decision\""))));
+                .andExpect(
+                        content()
+                                .string(
+                                        not(
+                                                containsString(
+                                                        "action=\"/manager/applications/10/decision\""))));
     }
 
     @Test
+    // Unknown and foreign requests use the same 404 response.
     void missingOrOtherTeamApplicationReturns404() throws Exception {
         when(managerService.getApplicationForManager(1, 99))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Course application not found"));
+                .thenThrow(
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Course application not found"));
 
         mockMvc.perform(get("/manager/applications/99").sessionAttr("user", manager()))
                 .andExpect(status().isNotFound());
@@ -190,26 +215,36 @@ class ManagerControllerTest {
     // Pending details have a reason field and a version-bound decision form.
     @Test
     void pendingDetailsShowTheDecisionForm() throws Exception {
-        when(managerService.getApplicationForManager(1,10)).thenReturn(application(ApplicationStatus.APPLIED));
-        mockMvc.perform(get("/manager/applications/10").sessionAttr("user",manager()))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("name=\"version\"")))
+        when(managerService.getApplicationForManager(1, 10))
+                .thenReturn(application(ApplicationStatus.APPLIED));
+        mockMvc.perform(get("/manager/applications/10").sessionAttr("user", manager()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("name=\"version\"")))
                 .andExpect(content().string(containsString("Reason for approving or rejecting")));
     }
 
     // The browser cannot replace session identity with a posted manager ID.
     @Test
     void decisionUsesTheSignedInManager() throws Exception {
-        mockMvc.perform(post("/manager/applications/10/decision").sessionAttr("user",manager())
-                .param("managerId","99").param("decision","approve").param("reason","Useful training").param("version","0"))
+        mockMvc.perform(
+                        post("/manager/applications/10/decision")
+                                .sessionAttr("user", manager())
+                                .param("managerId", "99")
+                                .param("decision", "approve")
+                                .param("reason", "Useful training")
+                                .param("version", "0"))
                 .andExpect(redirectedUrl("/manager/approvals"));
-        verify(managerService).decide(1,10,"approve","Useful training",0L);
+        verify(managerService).decide(1, 10, "approve", "Useful training", 0L);
     }
 
     // Anonymous decisions never call the approval service.
     @Test
     void anonymousDecisionReturnsToLogin() throws Exception {
-        mockMvc.perform(post("/manager/applications/10/decision").param("decision","approve")
-                .param("reason","Useful training").param("version","0"))
+        mockMvc.perform(
+                        post("/manager/applications/10/decision")
+                                .param("decision", "approve")
+                                .param("reason", "Useful training")
+                                .param("version", "0"))
                 .andExpect(redirectedUrl("/employee/login"));
         verifyNoInteractions(managerService);
     }
@@ -219,11 +254,14 @@ class ManagerControllerTest {
     void historyRequiresLoginAndShowsAnEmptyTeam() throws Exception {
         mockMvc.perform(get("/manager/history")).andExpect(redirectedUrl("/employee/login"));
         when(managerService.getSubordinates(1)).thenReturn(List.of());
-        mockMvc.perform(get("/manager/history").sessionAttr("user",manager()))
-                .andExpect(status().isOk()).andExpect(view().name("manager-history"))
-                .andExpect(content().string(containsString("No team members are assigned to you.")));
+        mockMvc.perform(get("/manager/history").sessionAttr("user", manager()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("manager-history"))
+                .andExpect(
+                        content().string(containsString("No team members are assigned to you.")));
     }
 
+    // Create a Manager identity for the reviewer or role-scope fixture.
     private Manager manager() {
         Manager manager = new Manager();
         manager.setUserId(1);
@@ -232,13 +270,31 @@ class ManagerControllerTest {
         return manager;
     }
 
+    // Build an application snapshot with the fields needed by this test.
     private ApplicationView application(ApplicationStatus status) {
-        return new ApplicationView(10, 2, "Alex & Team", "S002",
-                "Java <script>alert(1)</script>", CourseCategoryType.EXTERNAL_COURSE, "NUS-ISS",
-                LocalDate.of(2026, 11, 12), LocalDate.of(2026, 11, 13), 2.0, null, new java.math.BigDecimal("1800.00"),
-                "Improve our system design.", "Share the learning with the team.", status,
-                LocalDateTime.of(2026, 10, 9, 10, 0), null,
+        return new ApplicationView(
+                10,
+                2,
+                "Alex & Team",
+                "S002",
+                "Java <script>alert(1)</script>",
+                CourseCategoryType.EXTERNAL_COURSE,
+                "NUS-ISS",
+                LocalDate.of(2026, 11, 12),
+                LocalDate.of(2026, 11, 13),
+                2.0,
+                null,
+                new java.math.BigDecimal("1800.00"),
+                "Improve our system design.",
+                "Share the learning with the team.",
+                status,
+                LocalDateTime.of(2026, 10, 9, 10, 0),
+                null,
                 status == ApplicationStatus.REJECTED ? LocalDateTime.of(2026, 10, 9, 11, 0) : null,
-                status == ApplicationStatus.REJECTED ? "Conflicts with a project deadline." : null, null, null, 0L, 1);
+                status == ApplicationStatus.REJECTED ? "Conflicts with a project deadline." : null,
+                null,
+                null,
+                0L,
+                1);
     }
 }

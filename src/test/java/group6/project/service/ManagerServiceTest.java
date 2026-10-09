@@ -9,21 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
 import group6.project.model.ApplicationStatus;
 import group6.project.model.CourseApplication;
 import group6.project.model.CourseCategoryType;
@@ -32,23 +17,36 @@ import group6.project.model.Staff;
 import group6.project.repo.CourseApplicationRepo;
 import group6.project.repo.ManagerRepo;
 
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 @ExtendWith(MockitoExtension.class)
 class ManagerServiceTest {
 
-    @Mock
-    private ManagerRepo managerRepo;
+    @Mock private ManagerRepo managerRepo;
 
-    @Mock
-    private CourseApplicationRepo courseApplicationRepo;
+    @Mock private CourseApplicationRepo courseApplicationRepo;
 
     @Mock private ApprovalRoutingService routing;
     @Mock private CourseApplicationService policy;
     @Mock private group6.project.repo.StaffRepo staffRepo;
 
-    @InjectMocks
-    private ManagerService managerService;
+    @InjectMocks private ManagerService managerService;
 
     @Test
+    // A saved Manager can be resolved by its database identity.
     void getManagerReturnsTheManager() {
         Manager manager = new Manager();
         manager.setUserId(1);
@@ -62,27 +60,33 @@ class ManagerServiceTest {
     // Disabled managers must not become the actor for a decision after session access was revoked.
     @Test
     void disabledManagerCannotDecide() {
-        Manager manager = new Manager(); manager.setUserId(1); manager.setActive(false);
-        when(courseApplicationRepo.findApplicantIdForManager(7,1)).thenReturn(Optional.of(2));
-        when(routing.lockParticipants(2,1)).thenReturn(java.util.Map.of(1,manager));
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.decide(1, 7, "approve", "Useful course", 0L));
+        Manager manager = new Manager();
+        manager.setUserId(1);
+        manager.setActive(false);
+        when(courseApplicationRepo.findApplicantIdForManager(7, 1)).thenReturn(Optional.of(2));
+        when(routing.lockParticipants(2, 1)).thenReturn(java.util.Map.of(1, manager));
+        ResponseStatusException error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.decide(1, 7, "approve", "Useful course", 0L));
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
         verifyNoInteractions(policy);
-        verify(courseApplicationRepo,never()).save(any());
+        verify(courseApplicationRepo, never()).save(any());
     }
 
     @Test
+    // Missing Manager identities produce the agreed 404.
     void getManagerThatDoesNotExistGivesNotFound() {
         when(managerRepo.findById(99)).thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getManager(99));
+        ResponseStatusException error =
+                assertThrows(ResponseStatusException.class, () -> managerService.getManager(99));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
     }
 
     @Test
+    // Inherited Staff ID lookup still resolves a Manager.
     void getManagerByStaffIdReturnsTheManager() {
         Manager manager = new Manager();
         manager.setStaffId("M001");
@@ -92,24 +96,28 @@ class ManagerServiceTest {
     }
 
     @Test
+    // An unknown readable Staff ID produces a 404.
     void getManagerByUnknownStaffIdGivesNotFound() {
         when(managerRepo.findByStaffId("X999")).thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getManagerByStaffId("X999"));
+        ResponseStatusException error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.getManagerByStaffId("X999"));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
     }
 
     @Test
+    // Identical employee names must not combine two people's requests.
     void pendingApplicationsGroupByEmployeeIdEvenWhenNamesMatch() {
         Manager manager = manager();
         CourseApplication first = application(10, 2, "S002", ApplicationStatus.APPLIED);
         CourseApplication updated = application(11, 2, "S002", ApplicationStatus.UPDATED);
         CourseApplication namesake = application(12, 3, "S003", ApplicationStatus.APPLIED);
         when(managerRepo.findById(1)).thenReturn(Optional.of(manager));
-        when(courseApplicationRepo.findPendingForManager(1,
-                List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED)))
+        when(courseApplicationRepo.findPendingForManager(
+                        1, List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED)))
                 .thenReturn(List.of(first, updated, namesake));
 
         var groups = managerService.getPendingApplicationGroups(1);
@@ -117,8 +125,11 @@ class ManagerServiceTest {
         assertEquals(2, groups.size());
         assertEquals(2, groups.getFirst().employeeId());
         assertEquals("S002", groups.getFirst().staffId());
-        assertEquals(List.of(10, 11), groups.getFirst().applications().stream()
-                .map(ManagerService.ApplicationView::applicationId).toList());
+        assertEquals(
+                List.of(10, 11),
+                groups.getFirst().applications().stream()
+                        .map(ManagerService.ApplicationView::applicationId)
+                        .toList());
         assertEquals(3, groups.get(1).employeeId());
         assertEquals("S003", groups.get(1).staffId());
         assertEquals("Alex", groups.getFirst().employeeName());
@@ -127,27 +138,32 @@ class ManagerServiceTest {
     }
 
     @Test
+    // A valid Manager with no pending work receives an empty queue.
     void managerWithNoPendingApplicationsGetsAnEmptyList() {
         when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
-        when(courseApplicationRepo.findPendingForManager(1,
-                List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED)))
+        when(courseApplicationRepo.findPendingForManager(
+                        1, List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED)))
                 .thenReturn(List.of());
 
         assertEquals(List.of(), managerService.getPendingApplicationGroups(1));
     }
 
     @Test
+    // Do not query team applications for an unknown Manager.
     void unknownManagerCannotQueryApplications() {
         when(managerRepo.findById(99)).thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getPendingApplicationGroups(99));
+        ResponseStatusException error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.getPendingApplicationGroups(99));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
         verifyNoInteractions(courseApplicationRepo);
     }
 
     @Test
+    // The read-only DTO preserves review details without changing the saved request.
     void detailsKeepTheApplicationAndDecisionFieldsWithoutWriting() {
         CourseApplication application = application(10, 2, "S002", ApplicationStatus.REJECTED);
         application.setReviewedAt(LocalDateTime.of(2026, 10, 9, 11, 0));
@@ -177,12 +193,15 @@ class ManagerServiceTest {
     }
 
     @Test
+    // Foreign application IDs cannot reveal another team's records.
     void missingOrOtherTeamApplicationGivesNotFound() {
         when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
         when(courseApplicationRepo.findForManager(99, 1)).thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getApplicationForManager(1, 99));
+        ResponseStatusException error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.getApplicationForManager(1, 99));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
     }
@@ -191,76 +210,95 @@ class ManagerServiceTest {
     @ParameterizedTest
     @ValueSource(strings = {"approve", "reject"})
     void eitherDecisionRequiresAReason(String decision) {
-        var error=assertThrows(ResponseStatusException.class,()->managerService.decide(1,10,decision," ",0L));
-        assertEquals(HttpStatus.BAD_REQUEST,error.getStatusCode());
-        verifyNoInteractions(courseApplicationRepo,policy);
+        var error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.decide(1, 10, decision, " ", 0L));
+        assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+        verifyNoInteractions(courseApplicationRepo, policy);
     }
 
-    // Either pending state can be decided; the reviewer, reason and timestamp are persisted together.
+    // Either pending state can be decided; the reviewer, reason and timestamp are persisted
+    // together.
     @ParameterizedTest
     @ValueSource(strings = {"approve", "reject"})
     void decisionRecordsReviewerAndReason(String decision) {
-        Manager reviewer=manager();
-        CourseApplication course=application(10,2,"S002",ApplicationStatus.UPDATED);
+        Manager reviewer = manager();
+        CourseApplication course = application(10, 2, "S002", ApplicationStatus.UPDATED);
         course.setVersion(0L);
-        when(courseApplicationRepo.findApplicantIdForManager(10,1)).thenReturn(Optional.of(2));
-        when(routing.lockParticipants(2,1)).thenReturn(java.util.Map.of(1,reviewer));
-        when(courseApplicationRepo.lockForManager(10,1)).thenReturn(Optional.of(course));
-        managerService.decide(1,10,decision,"  Relevant to the role.  ",0L);
-        assertEquals("approve".equals(decision)?ApplicationStatus.APPROVED:ApplicationStatus.REJECTED,course.getStatus());
-        assertSame(reviewer,course.getReviewer());
-        assertEquals("Relevant to the role.",course.getDecisionReason());
+        when(courseApplicationRepo.findApplicantIdForManager(10, 1)).thenReturn(Optional.of(2));
+        when(routing.lockParticipants(2, 1)).thenReturn(java.util.Map.of(1, reviewer));
+        when(courseApplicationRepo.lockForManager(10, 1)).thenReturn(Optional.of(course));
+        managerService.decide(1, 10, decision, "  Relevant to the role.  ", 0L);
+        assertEquals(
+                "approve".equals(decision)
+                        ? ApplicationStatus.APPROVED
+                        : ApplicationStatus.REJECTED,
+                course.getStatus());
+        assertSame(reviewer, course.getReviewer());
+        assertEquals("Relevant to the role.", course.getDecisionReason());
         assertNotNull(course.getReviewedAt());
         verify(courseApplicationRepo).save(course);
-        if("approve".equals(decision)) verify(policy).validateForApproval(course);
-        else verify(policy,never()).validateForApproval(any());
+        if ("approve".equals(decision)) verify(policy).validateForApproval(course);
+        else verify(policy, never()).validateForApproval(any());
     }
 
     // A stale review page cannot decide an edited request.
     @Test
     void staleVersionRejectsTheDecisionWithoutSaving() {
-        CourseApplication course=application(10,2,"S002",ApplicationStatus.APPLIED);
+        CourseApplication course = application(10, 2, "S002", ApplicationStatus.APPLIED);
         course.setVersion(1L);
-        when(courseApplicationRepo.findApplicantIdForManager(10,1)).thenReturn(Optional.of(2));
-        when(routing.lockParticipants(2,1)).thenReturn(java.util.Map.of(1,manager()));
-        when(courseApplicationRepo.lockForManager(10,1)).thenReturn(Optional.of(course));
-        var error=assertThrows(ResponseStatusException.class,()->managerService.decide(1,10,"approve","Useful",0L));
-        assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
-        verify(courseApplicationRepo,never()).save(any());
-        verify(policy,never()).validateForApproval(any());
+        when(courseApplicationRepo.findApplicantIdForManager(10, 1)).thenReturn(Optional.of(2));
+        when(routing.lockParticipants(2, 1)).thenReturn(java.util.Map.of(1, manager()));
+        when(courseApplicationRepo.lockForManager(10, 1)).thenReturn(Optional.of(course));
+        var error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.decide(1, 10, "approve", "Useful", 0L));
+        assertEquals(HttpStatus.CONFLICT, error.getStatusCode());
+        verify(courseApplicationRepo, never()).save(any());
+        verify(policy, never()).validateForApproval(any());
     }
 
     // Repeated decisions cannot replace the original reviewer or reason.
     @Test
     void alreadyApprovedApplicationCannotBeDecidedAgain() {
-        CourseApplication course=application(10,2,"S002",ApplicationStatus.APPROVED);
+        CourseApplication course = application(10, 2, "S002", ApplicationStatus.APPROVED);
         course.setVersion(1L);
-        when(courseApplicationRepo.findApplicantIdForManager(10,1)).thenReturn(Optional.of(2));
-        when(routing.lockParticipants(2,1)).thenReturn(java.util.Map.of(1,manager()));
-        when(courseApplicationRepo.lockForManager(10,1)).thenReturn(Optional.of(course));
-        var error=assertThrows(ResponseStatusException.class,()->managerService.decide(1,10,"reject","Changed my mind",1L));
-        assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
-        verify(courseApplicationRepo,never()).save(any());
+        when(courseApplicationRepo.findApplicantIdForManager(10, 1)).thenReturn(Optional.of(2));
+        when(routing.lockParticipants(2, 1)).thenReturn(java.util.Map.of(1, manager()));
+        when(courseApplicationRepo.lockForManager(10, 1)).thenReturn(Optional.of(course));
+        var error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.decide(1, 10, "reject", "Changed my mind", 1L));
+        assertEquals(HttpStatus.CONFLICT, error.getStatusCode());
+        verify(courseApplicationRepo, never()).save(any());
     }
 
     // Selecting another team's application fails before any reservation or review write.
     @Test
     void anotherTeamCannotDecideThisApplication() {
-        when(courseApplicationRepo.findApplicantIdForManager(10,1)).thenReturn(Optional.empty());
-        var error=assertThrows(ResponseStatusException.class,()->managerService.decide(1,10,"approve","Useful",0L));
-        assertEquals(HttpStatus.NOT_FOUND,error.getStatusCode());
+        when(courseApplicationRepo.findApplicantIdForManager(10, 1)).thenReturn(Optional.empty());
+        var error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.decide(1, 10, "approve", "Useful", 0L));
+        assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
         verifyNoInteractions(policy);
-        verify(courseApplicationRepo,never()).save(any());
+        verify(courseApplicationRepo, never()).save(any());
     }
 
+    // Create a Manager identity for the reviewer or role-scope fixture.
     private Manager manager() {
         Manager manager = new Manager();
         manager.setUserId(1);
         return manager;
     }
 
-    private CourseApplication application(Integer id, Integer employeeId, String staffId,
-            ApplicationStatus status) {
+    // Build an application snapshot with the fields needed by this test.
+    private CourseApplication application(
+            Integer id, Integer employeeId, String staffId, ApplicationStatus status) {
         Staff employee = new Staff();
         employee.setUserId(employeeId);
         employee.setName("Alex");

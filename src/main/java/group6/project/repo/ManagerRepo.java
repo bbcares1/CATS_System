@@ -1,10 +1,10 @@
 package group6.project.repo;
 
-import java.util.Optional;
+import group6.project.model.Manager;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import group6.project.model.Manager;
+import java.util.Optional;
 
 public interface ManagerRepo extends JpaRepository<Manager, Integer> {
 

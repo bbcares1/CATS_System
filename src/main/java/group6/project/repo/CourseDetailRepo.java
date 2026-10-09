@@ -1,10 +1,13 @@
 package group6.project.repo;
 
-import java.util.Optional;
+import group6.project.model.CourseDetail;
+
 import jakarta.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
-import group6.project.model.CourseDetail;
+
+import java.util.Optional;
 
 public interface CourseDetailRepo extends JpaRepository<CourseDetail, Integer> {
     // Keep an offer stable while an employee snapshots it or Admin changes its schedules.

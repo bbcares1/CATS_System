@@ -6,8 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class ProjectApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
+    @Test
+    // Start the full isolated application context and validate its migrated mappings.
+    void contextLoads() {}
 }
