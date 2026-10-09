@@ -1,0 +1,39 @@
+name: cats-production
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: cats_prod
+      MYSQL_USER: cats_prod
+      MYSQL_PASSWORD: ${CATS_PROD_DB_PASSWORD:?Set CATS_PROD_DB_PASSWORD in .env.prod}
+      MYSQL_ROOT_PASSWORD: ${CATS_PROD_ROOT_PASSWORD:?Set CATS_PROD_ROOT_PASSWORD in .env.prod}
+    volumes:
+      - production-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+  app:
+    build: .
+    image: cats-system:local
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_SERVLET_CONTEXT_PATH: ${CATS_CONTEXT_PATH:-}
+      CATS_DB_URL: jdbc:mysql://db:3306/cats_prod
+      CATS_DB_USER: cats_prod
+      CATS_DB_PASSWORD: ${CATS_PROD_DB_PASSWORD:?Set CATS_PROD_DB_PASSWORD in .env.prod}
+      CATS_ADMIN_USER: ${CATS_ADMIN_USER:-}
+      CATS_ADMIN_PASSWORD: ${CATS_ADMIN_PASSWORD:-}
+      CATS_ADMIN_NAME: ${CATS_ADMIN_NAME:-CATS Administrator}
+      CATS_ADMIN_STAFF_ID: ${CATS_ADMIN_STAFF_ID:-ADMIN}
+    ports:
+      - "${CATS_BIND_ADDRESS:-127.0.0.1}:${CATS_HTTP_PORT:-8081}:8080"
+volumes:
+  production-data:

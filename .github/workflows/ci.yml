@@ -2,13 +2,17 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, "imran/**"]
   push:
     branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: cats-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -35,3 +39,48 @@ jobs:
       - name: Run fast unit tests
         # ProjectApplicationTests is an application-context smoke test.
         run: ./mvnw -B -ntp "-Dtest=*ServiceTest,*ControllerTest" test
+
+  h2:
+    name: Context, MVC and integration tests (H2)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: ./mvnw -B -ntp test
+
+  mysql:
+    name: Integration tests (MySQL)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: cats_test
+          MYSQL_USER: cats_test
+          MYSQL_PASSWORD: cats_test_password
+          MYSQL_ROOT_PASSWORD: cats_test_root_password
+        ports:
+          - 3308:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=5s --health-timeout=3s --health-retries=20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: ./mvnw -B -ntp -Dspring.profiles.active=mysql-test test

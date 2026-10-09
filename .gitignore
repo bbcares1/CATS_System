@@ -39,3 +39,6 @@ build/
 .env.*
 !.env.example
 .local-*.properties
+
+!.env.prod.example
+/backups/

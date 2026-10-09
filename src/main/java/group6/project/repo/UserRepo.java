@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 import group6.project.model.User;
 
 public interface UserRepo extends JpaRepository<User, Integer> {
+    // Bootstrap runs once when no active production Admin exists.
+    boolean existsByRoleAndActiveTrue(group6.project.model.Roles role);
     Optional<User> findByUserName(String userName);
     boolean existsByUserNameIgnoreCaseAndUserIdNot(String name, Integer id);
     boolean existsByStaffIdIgnoreCaseAndUserIdNot(String staffId, Integer id);

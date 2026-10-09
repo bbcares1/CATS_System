@@ -34,7 +34,7 @@ For local overrides, copy `.env.example` to `.env`. Compose reads that file; an 
 ./mvnw -B -ntp test
 ```
 
-The full suite uses isolated H2 with the real schema migrations. Check MySQL behaviour too:
+CI runs compile/fast tests first, then full H2 and MySQL suites. The full suite uses isolated H2 with the real schema migrations. Check MySQL behaviour too:
 
 After pulling changes to model or service signatures, run `./mvnw -B -ntp clean test` once to remove stale compiled classes.
 
@@ -58,7 +58,7 @@ Existing `group6` data is not migrated by this setup. Preserve it and plan a sep
 
 ## Production configuration
 
-Run with `SPRING_PROFILES_ACTIVE=prod` and set `CATS_DB_URL`, `CATS_DB_USER`, `CATS_DB_PASSWORD`. Production loads schema and required categories, never development accounts. Production deployment, initial Admin provisioning and backup instructions are part of the deployment follow-up.
+Run with `SPRING_PROFILES_ACTIVE=prod` and set `CATS_DB_URL`, `CATS_DB_USER`, `CATS_DB_PASSWORD`. Production loads schema and required categories, never development accounts. Use `compose.prod.yml` and `.env.prod.example` for a separate persistent production stack. Initial Admin provisioning and backup/recovery steps are in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Application rules
 
