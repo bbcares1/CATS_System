@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Course Batch Management</title>
+</head>
+
+<body>
+
+<h1>Course Batch Management</h1>
+
+<a th:href="@{/admin/batches/new}">Add New Batch</a>
+<a th:href="@{/admin/batches/delete}">Delete Batch</a>
+
+<hr>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Batch ID</th>
+            <th>Course</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Capacity</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr th:each="batch : ${batches}">
+            <td th:text="${batch.batchId}"></td>
+
+            <td th:text="${batch.courseDetail.title}"></td>
+
+            <td th:text="${batch.courseStartDate}"></td>
+
+            <td th:text="${batch.courseEndDate}"></td>
+
+            <td th:text="${batch.capacity}"></td>
+
+            <td>
+                <a th:href="@{/admin/batches/{id}(id=${batch.batchId})}">
+                    View
+                </a>
+
+                <a th:href="@{/admin/batches/edit/{id}(id=${batch.batchId})}">
+                    Edit
+                </a>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+</body>
+</html>
