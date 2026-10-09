@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Assign reviewers', 'Admin', 'review-routing', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>
+            Assign reviewers
+          </h1>
+          <p class="cats-sub">
+            Repair pending requests created before reviewer assignments were required. Choose another active Manager; existing decisions are preserved.
+          </p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="cats-card-title">
+            Unassigned course applications
+          </h2>
+        </div>
+        <div class="cats-table-wrap">
+          <table class="table cats-table">
+            <thead>
+              <tr>
+                <th>
+                  Employee
+                </th>
+                <th>
+                  Course
+                </th>
+                <th>
+                  Reviewer
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="a : ${applications.content}">
+                <td th:text="${a.applicant.name}">
+                </td>
+                <td th:text="${a.courseTitle}">
+                </td>
+                <td>
+                  <form th:action="@{/admin/reviews/application/{id}(id=${a.courseId})}" method="post" class="cats-page-actions">
+                    <input type="hidden" name="version" th:value="${a.version}">
+                    <label>
+                      Manager
+                      <select name="reviewerId" class="form-select" required>
+                        <option value="">
+                          Choose a Manager
+                        </option>
+                        <option th:each="m : ${managers}" th:value="${m.userId}" th:disabled="${m.userId == a.applicant.userId}" th:text="${m.name}">
+                        </option>
+                      </select>
+                    </label>
+                    <button class="btn btn-primary">
+                      Assign
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              <tr th:if="${applications.empty}">
+                <td colspan="3" class="cats-empty">
+                  No unassigned course applications on this page.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div th:replace="~{fragments/claim-pagination :: pager(${applications}, '/admin/reviews', 'applicationPage')}">
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="cats-card-title">
+            Unassigned fee claims
+          </h2>
+        </div>
+        <div class="cats-table-wrap">
+          <table class="table cats-table">
+            <thead>
+              <tr>
+                <th>
+                  Employee
+                </th>
+                <th>
+                  Course / amount
+                </th>
+                <th>
+                  Reviewer
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="c : ${claims.content}">
+                <td th:text="${c.applicantName ?: 'Missing applicant — import review needed'}">
+                </td>
+                <td>
+                  <span th:text="${c.courseTitle}">
+                  </span>
+                  <div th:text="'$' + ${c.amount}">
+                  </div>
+                </td>
+                <td>
+                  <form th:if="${c.applicantName != null}" th:action="@{/admin/reviews/claim/{id}(id=${c.applicationId})}" method="post" class="cats-page-actions">
+                    <input type="hidden" name="version" th:value="${c.version}">
+                    <label>
+                      Manager
+                      <select name="reviewerId" class="form-select" required>
+                        <option value="">
+                          Choose a Manager
+                        </option>
+                        <option th:each="m : ${managers}" th:value="${m.userId}" th:text="${m.name}">
+                        </option>
+                      </select>
+                    </label>
+                    <button class="btn btn-primary">
+                      Assign
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              <tr th:if="${claims.empty}">
+                <td colspan="3" class="cats-empty">
+                  No unassigned fee claims on this page.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div th:replace="~{fragments/claim-pagination :: pager(${claims}, '/admin/reviews', 'claimPage')}">
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

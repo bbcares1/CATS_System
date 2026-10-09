@@ -225,12 +225,13 @@ public class StaffController {
 
     // Fee claims: Retrieve claims and eligible courses.
     @GetMapping("/fee")
-    public String showFeeClaims(HttpSession session, Model model) {
+    public String showFeeClaims(HttpSession session, Model model,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size) {
         Staff staff = getCurrentStaff(session);
         if (staff == null) {
             return "redirect:/employee/login";
         }
-        model.addAttribute("claims", staffService.getClaims(staff));
+        var history=staffService.getClaims(staff,page,size);
+        model.addAttribute("claims",history.getContent());model.addAttribute("claimPage",history);model.addAttribute("claimRoute","/staff/fee");
         model.addAttribute("eligible", staffService.getClaimableCourses(staff));
         model.addAttribute("summary", staffService.summary(new CourseApplication(), staff, null));
         model.addAttribute("reimbursed", staffService.getReimbursedFees(staff, LocalDate.now().getYear()));

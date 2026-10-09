@@ -45,6 +45,7 @@
         <a th:replace="~{fragments/ui :: navlink(@{/staff/home}, 'staff', 'My staff workspace', 'briefcase', ${active})}"></a>
       </th:block>
       <th:block th:if="${role == 'Admin'}">
+        <a th:replace="~{fragments/ui :: navlink(@{/admin/reviews}, 'review-routing', 'Assign reviewers', 'users', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/payments}, 'payments', 'Reimbursements', 'receipt', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/admin/showBudgetList}, 'entitlement', 'Training entitlement', 'card', ${active})}"></a>

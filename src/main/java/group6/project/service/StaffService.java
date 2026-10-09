@@ -97,8 +97,8 @@ public class StaffService {
     }
 
     // Fee claims: Retrieve claims and eligible courses.
-    public List<CourseFeeApplication> getClaims(Staff staff) {
-        return courseFeeApplicationRepo.findByApplicant_UserId(staff.getUserId());
+    public org.springframework.data.domain.Page<group6.project.model.ClaimSummary> getClaims(Staff staff,int page,int size) {
+        return courseFeeApplicationService.personal(staff.getUserId(),page,size);
     }
 
     // Eligibility and upload checks live in the claim service for both employee roles.

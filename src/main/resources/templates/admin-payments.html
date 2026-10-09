@@ -35,17 +35,19 @@
             <tbody>
               <tr th:each="c : ${claims}">
                 <td>
-                  <strong th:text="${c.applicant.name}">
+                  <strong th:text="${c.applicantName}">
                   </strong>
-                  <div th:text="${c.courseApplication != null ? c.courseApplication.courseTitle : 'Legacy claim'}">
+                  <div th:text="${c.courseTitle}">
                   </div>
                 </td>
                 <td th:text="'$' + ${c.amount}">
                 </td>
-                <td th:text="${c.reviewer != null ? c.reviewer.name : 'Legacy approval'}">
+                <td th:text="${c.reviewerName ?: 'Legacy approval'}">
                 </td>
                 <td>
-                  <form th:if="${c.reimbursedAt == null}" th:action="@{/admin/payments/{id}(id=${c.applicationId})}" method="post" class="cats-stack" data-confirm-title="Record reimbursement?" data-confirm-message="Confirm that this payment has been made. This records the payment once.">
+                  <p class="form-text" th:if="${c.legacyClaim}">Legacy batch claim: verify the migrated fee against the receipt before recording payment.</p>
+                  <p class="text-secondary" th:if="${c.reimbursedAt == null and c.amount.signum() == 0}">Missing amount: review the imported record before payment.</p>
+                  <form th:if="${c.reimbursedAt == null and c.amount.signum() > 0}" th:action="@{/admin/payments/{id}(id=${c.applicationId})}" method="post" class="cats-stack" data-confirm-title="Record reimbursement?" data-confirm-message="Confirm that this payment has been made. This records the payment once.">
                     <input type="hidden" name="version" th:value="${c.version}">
                     <label class="visually-hidden" th:for="'reference-'+${c.applicationId}">
                       Payment reference
@@ -72,6 +74,7 @@
           </table>
         </div>
       </div>
+      <div th:replace="~{fragments/claim-pagination :: pager(${claimPage}, ${claimRoute}, 'page')}"></div>
     </section>
   </body>
 </html>

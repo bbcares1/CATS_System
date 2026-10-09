@@ -13,6 +13,13 @@ import group6.project.model.ApplicationStatus;
 import group6.project.model.CourseApplication;
 
 public interface CourseApplicationRepo extends JpaRepository<CourseApplication,Integer>{
+    @Query("select a from CourseApplication a where a.approvalManager is null and a.status in :statuses order by a.courseId")
+    org.springframework.data.domain.Page<CourseApplication> unassigned(@Param("statuses") List<ApplicationStatus> statuses,org.springframework.data.domain.Pageable page);
+    @Query("select a.applicant.userId from CourseApplication a where a.courseId=:id")
+    Optional<Integer> applicantId(@Param("id") Integer id);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from CourseApplication a where a.courseId=:id")
+    Optional<CourseApplication> lockById(@Param("id") Integer id);
     List<CourseApplication> findByApplicant_UserIdAndCourseStartDateBetweenOrderByCourseStartDateAsc(
             Integer userId, java.time.LocalDate from, java.time.LocalDate to);
 

@@ -289,7 +289,7 @@ class StaffWorkflowTest {
                 .param("courseId", course.getCourseId().toString()).param("paidPersonally", "true"))
                 .andExpect(redirectedUrl("/staff/fee"));
         claimRepo.flush();
-        CourseFeeApplication claim = staffService.getClaims(staff).getFirst();
+        CourseFeeApplication claim = claimRepo.findByApplicant_UserId(staff.getUserId()).getFirst();
         assertEquals(ApplicationStatus.APPLIED, claim.getApplicationStatus());
         assertEquals("receipt.pdf", claim.getReceiptFileName());
         assertEquals("application/pdf", claim.getReceiptContentType());
@@ -328,7 +328,7 @@ class StaffWorkflowTest {
         assertThrows(IllegalArgumentException.class, () -> staffService.submitClaim(pending.getCourseId(), true, bad, bad, staff, null));
         CourseApplication completed = staffService.getCourseHistory(staff, LocalDate.now().getYear()).getFirst();
         assertThrows(IllegalArgumentException.class, () -> staffService.submitClaim(completed.getCourseId(), true, bad, bad, staff, null));
-        assertTrue(staffService.getClaims(staff).isEmpty());
+        assertTrue(claimRepo.findByApplicant_UserId(staff.getUserId()).isEmpty());
     }
 
     // Course fee: Allow an external course with no fee.

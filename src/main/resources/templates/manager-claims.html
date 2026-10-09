@@ -35,12 +35,12 @@
             <tbody>
               <tr th:each="c : ${claims}">
                 <td>
-                  <strong th:text="${c.applicant.name}">
+                  <strong th:text="${c.applicantName}">
                   </strong>
-                  <div class="cats-cell-sub" th:text="${c.applicant.staffId}">
+                  <div class="cats-cell-sub" th:text="${c.staffId}">
                   </div>
                 </td>
-                <td th:text="${c.courseApplication != null ? c.courseApplication.courseTitle : 'Legacy claim'}">
+                <td th:text="${c.courseTitle}">
                 </td>
                 <td th:text="'$' + ${c.amount}">
                 </td>
@@ -61,6 +61,7 @@
           </table>
         </div>
       </div>
+      <div th:replace="~{fragments/claim-pagination :: pager(${claimPage}, ${claimRoute}, 'page')}"></div>
     </section>
   </body>
 </html>

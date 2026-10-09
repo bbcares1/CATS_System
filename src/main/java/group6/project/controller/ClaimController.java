@@ -21,8 +21,8 @@ public class ClaimController {
 
     // List claims waiting for this manager, including peer requests explicitly assigned to them.
     @GetMapping("/manager/claims")
-    public String queue(HttpSession session, Model model) {
-        model.addAttribute("claims",claims.pending(manager(session).getUserId())); return "manager-claims";
+    public String queue(HttpSession session, Model model,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size) {
+        var queue=claims.pending(manager(session).getUserId(),page,size);model.addAttribute("claims",queue.getContent());model.addAttribute("claimPage",queue);model.addAttribute("claimRoute","/manager/claims");return "manager-claims";
     }
 
     // The manager reads the evidence before approving or rejecting a claim.
@@ -60,7 +60,7 @@ public class ClaimController {
 
     // Only approved claims appear here; paid entries remain visible.
     @GetMapping("/admin/payments")
-    public String payments(HttpSession session,Model model) { admin(session); model.addAttribute("claims",claims.approved()); return "admin-payments"; }
+    public String payments(HttpSession session,Model model,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size) { admin(session);var payments=claims.approved(page,size);model.addAttribute("claims",payments.getContent());model.addAttribute("claimPage",payments);model.addAttribute("claimRoute","/admin/payments");return "admin-payments"; }
 
     // Admin records the real payment reference once; this does not approve a claim.
     @PostMapping("/admin/payments/{id}")

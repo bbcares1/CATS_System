@@ -61,8 +61,8 @@ public class CourseFeeApplicationService {
     }
 
     // Managers see pending claims assigned to them, not every employee's claim.
-    public List<CourseFeeApplication> pending(Integer managerId) {
-        return claims.findByApprovalManager_UserIdAndApplicationStatusOrderBySubmittedAtAsc(managerId,ApplicationStatus.APPLIED);
+    public org.springframework.data.domain.Page<ClaimSummary> pending(Integer managerId,int page,int size) {
+        return claims.pending(managerId,ApplicationStatus.APPLIED,page(page,size));
     }
 
     // Both decisions require a reason; approval leaves the payment date empty.
@@ -101,13 +101,19 @@ public class CourseFeeApplicationService {
     }
 
     // Keep paid entries in the payment list as an audit trail.
-    public List<CourseFeeApplication> approved() { return claims.findByApplicationStatusOrderByReviewedAtAsc(ApplicationStatus.APPROVED); }
+    public org.springframework.data.domain.Page<ClaimSummary> approved(int page,int size) { return claims.approved(ApplicationStatus.APPROVED,page(page,size)); }
 
     // Claim payments do not spend the annual course budget a second time.
     public BigDecimal reimbursed(User employee, int year) {
-        return claims.findByApplicant_UserId(employee.getUserId()).stream().filter(c -> c.getReimbursedAt()!=null
-                && c.getCourseApplication()!=null && c.getCourseApplication().getCourseStartDate().getYear()==year)
-                .map(CourseFeeApplication::getAmount).reduce(BigDecimal.ZERO,BigDecimal::add);
+        return claims.reimbursed(employee.getUserId(),java.time.LocalDate.of(year,1,1),java.time.LocalDate.of(year,12,31));
+    }
+
+    // Personal history is paged too; neither page reads the evidence blobs.
+    public org.springframework.data.domain.Page<ClaimSummary> personal(Integer id,int page,int size) { return claims.personal(id,page(page,size)); }
+
+    // Keep page sizes small and reject negative offsets without exposing framework errors.
+    private org.springframework.data.domain.Pageable page(int page,int size) {
+        return org.springframework.data.domain.PageRequest.of(Math.max(0,page),Set.of(10,20,25).contains(size)?size:10);
     }
 
     // Filename, declared type and file signature must agree, and each attachment is limited to 5 MB.

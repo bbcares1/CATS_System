@@ -48,7 +48,7 @@ class ClaimWorkflowIntegrationTest {
         service.decide(claim.getApplicationId(),boss.getUserId(),decision,"Receipt checked",old); claims.flush();
         assertEquals("approve".equals(decision)?ApplicationStatus.APPROVED:ApplicationStatus.REJECTED,claim.getApplicationStatus());
         assertSame(boss,claim.getReviewer()); assertNull(claim.getReimbursedAt());
-        assertEquals(BigDecimal.ZERO,service.reimbursed(employee,LocalDate.now().getYear()));
+        assertEquals(0,service.reimbursed(employee,LocalDate.now().getYear()).compareTo(BigDecimal.ZERO));
         if ("approve".equals(decision)) {
             assertThrows(IllegalArgumentException.class,()->service.reimburse(claim.getApplicationId(),admin.getUserId(),"TX-1",old));
             service.reimburse(claim.getApplicationId(),admin.getUserId(),"TX-1",claim.getVersion()); claims.flush();
@@ -124,7 +124,7 @@ class ClaimWorkflowIntegrationTest {
     @Test void reportingChangesDoNotMovePendingClaims() {
         var claim=submit(employee,null); employee.setManager(peer); users.saveAndFlush(employee);
         assertEquals(boss.getUserId(),claim.getApprovalManager().getUserId());
-        assertEquals(1,service.pending(boss.getUserId()).size()); assertTrue(service.pending(peer.getUserId()).isEmpty());
+        assertEquals(1,service.pending(boss.getUserId(),0,10).getTotalElements()); assertTrue(service.pending(peer.getUserId(),0,10).isEmpty());
     }
 
     // An incomplete legacy claim can be rejected with a reason, but cannot be approved or paid.
