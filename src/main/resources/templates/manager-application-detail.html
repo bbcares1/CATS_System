@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('Course application', 'Manager', 'approvals', ~{::#content})}">
+<body>
+<section id="content" th:with="a=${courseApplication}">
+  <div class="cats-page-header">
+    <div>
+      <h1 th:text="${a.title}">Course application</h1>
+      <p class="cats-sub"><span th:text="${a.applicantName}">Team member</span> &middot; <span th:text="${a.staffId}">S0001</span></p>
+    </div>
+    <div class="cats-page-actions">
+      <a class="btn btn-outline-secondary" th:href="@{/manager/approvals}">Back to applications</a>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <h2 class="cats-card-title">Course and schedule</h2>
+      <span th:replace="~{fragments/ui :: status(${a.status})}"></span>
+    </div>
+    <div class="card-body">
+      <dl class="cats-dl mb-0">
+        <dt>Applicant</dt><dd th:text="${a.applicantName}">Team member</dd>
+        <dt>Staff ID</dt><dd th:text="${a.staffId}">S0001</dd>
+        <dt>Category</dt><dd th:text="${a.category != null ? #strings.capitalize(#strings.toLowerCase(a.category.displayName)) : '—'}">External course</dd>
+        <dt>Provider</dt><dd th:text="${a.provider ?: '—'}">NUS-ISS</dd>
+        <dt>Start date</dt><dd th:text="${a.startDate != null ? #temporals.format(a.startDate, 'd MMM yyyy') : '—'}">12 Nov 2026</dd>
+        <dt>End date</dt><dd th:text="${a.endDate != null ? #temporals.format(a.endDate, 'd MMM yyyy') : '—'}">14 Nov 2026</dd>
+        <dt>Training days</dt><dd th:text="${a.trainingDays ?: '—'}">3</dd>
+        <dt th:if="${!#strings.isEmpty(a.halfDayPeriod)}">Half-day period</dt>
+        <dd th:if="${!#strings.isEmpty(a.halfDayPeriod)}" th:text="${a.halfDayPeriod}">AM</dd>
+        <dt>Course fee</dt><dd th:text="'$' + ${#numbers.formatDecimal(a.fee, 1, 'COMMA', 2, 'POINT')}">$1,800.00</dd>
+        <dt>Submitted</dt><dd th:text="${a.submittedAt != null ? #temporals.format(a.submittedAt, 'd MMM yyyy HH:mm') : '—'}">9 Oct 2026 10:00</dd>
+        <dt th:if="${a.updatedAt != null}">Last updated</dt>
+        <dd th:if="${a.updatedAt != null}" th:text="${#temporals.format(a.updatedAt, 'd MMM yyyy HH:mm')}">9 Oct 2026 11:00</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header"><h2 class="cats-card-title">Justification and work arrangements</h2></div>
+    <div class="card-body">
+      <dl class="cats-dl mb-0">
+        <dt>Justification</dt><dd class="text-break" th:text="${a.justification ?: '—'}">Explain the benefit.</dd>
+        <dt>Work arrangements</dt><dd class="text-break" th:text="${a.workDissemination ?: '—'}">Share the learning with the team.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="card" th:if="${a.reviewedAt != null or !#strings.isEmpty(a.decisionReason) or !#strings.isEmpty(a.experienceComments)}">
+    <div class="card-header"><h2 class="cats-card-title">Decision and course feedback</h2></div>
+    <div class="card-body">
+      <dl class="cats-dl mb-0">
+        <dt th:if="${a.reviewedAt != null}">Reviewed</dt>
+        <dd th:if="${a.reviewedAt != null}" th:text="${#temporals.format(a.reviewedAt, 'd MMM yyyy HH:mm')}">10 Oct 2026 10:00</dd>
+        <dt th:if="${!#strings.isEmpty(a.decisionReason)}">Decision reason</dt>
+        <dd class="text-break" th:if="${!#strings.isEmpty(a.decisionReason)}" th:text="${a.decisionReason}">Share the learning with the team.</dd>
+        <dt th:if="${!#strings.isEmpty(a.experienceComments)}">Course feedback</dt>
+        <dd class="text-break" th:if="${!#strings.isEmpty(a.experienceComments)}" th:text="${a.experienceComments}">Useful training.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+</body>
+</html>
