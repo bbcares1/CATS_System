@@ -1,6 +1,6 @@
 package group6.project.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -33,18 +33,21 @@ class CourseApplicationServiceTest {
     @Mock CourseApplicationRepo applicationRepo;
     @Mock TrainingEntitlementRepo entitlementRepo;
     @Mock ExcludedDaysRepo excludedDaysRepo;
+    @Mock group6.project.repo.StaffRepo employees;
 
     private CourseApplicationService service;
     private Staff staff;
 
     @BeforeEach
     void setUp() {
-        service = new CourseApplicationService(applicationRepo, entitlementRepo, excludedDaysRepo);
+        service = new CourseApplicationService(applicationRepo, entitlementRepo, excludedDaysRepo, employees);
         staff = new Staff();
         staff.setUserId(7);
-        staff.setTrainingDays(5);
-        staff.setTrainingBudget(1000d);
-        lenient().when(entitlementRepo.findByStaff_UserIdAndYear(any(), any())).thenReturn(Optional.empty());
+        var allowance = new group6.project.model.TrainingEntitlement(LocalDate.now().getYear());
+        allowance.setDayLimit(5d);
+        allowance.setBudget(new java.math.BigDecimal("1000"));
+        lenient().when(employees.lockById(any())).thenReturn(Optional.of(staff));
+        lenient().when(entitlementRepo.findByStaff_UserIdAndYear(any(), any())).thenReturn(Optional.of(allowance));
         lenient().when(applicationRepo.findByApplicant_UserIdAndStatusIn(any(), any())).thenReturn(java.util.List.of());
         lenient().when(excludedDaysRepo.existsByDate(any())).thenReturn(false);
         lenient().when(applicationRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -57,7 +60,7 @@ class CourseApplicationServiceTest {
 
         CourseApplication saved = service.create(application, staff);
 
-        assertEquals(0, saved.getCourseFee());
+        assertEquals(0, saved.getCourseFee().signum());
         assertEquals(0.5, saved.getTrainingDays());
     }
 
@@ -91,7 +94,7 @@ class CourseApplicationServiceTest {
     @Test
     void negativeFeesAreRejected() {
         CourseApplication application = valid(CourseCategoryType.EXTERNAL_COURSE);
-        application.setCourseFee(-1);
+        application.setCourseFee(new java.math.BigDecimal("-1"));
 
         assertThrows(IllegalArgumentException.class, () -> service.create(application, staff));
     }
@@ -105,18 +108,89 @@ class CourseApplicationServiceTest {
         when(applicationRepo.findById(10)).thenReturn(Optional.of(existing));
 
         CourseApplication edit = valid(CourseCategoryType.EXTERNAL_COURSE);
-        edit.setCourseFee(100);
+        edit.setCourseFee(new java.math.BigDecimal("100"));
         assertEquals(group6.project.model.ApplicationStatus.UPDATED,
                 service.update(10, edit, staff).getStatus());
+    }
+
+    // Completed reservations must be included before accepting another course.
+    @Test
+    void completedCoursesUseAllowanceAndDecimalFeesAreExact() {
+        CourseApplication first = valid(CourseCategoryType.EXTERNAL_COURSE);
+        first.setCourseId(11); first.setStatus(group6.project.model.ApplicationStatus.COMPLETED);
+        first.setTrainingDays(2d); first.setCourseFee(new java.math.BigDecimal("0.10"));
+        CourseApplication second = valid(CourseCategoryType.EXTERNAL_COURSE);
+        second.setCourseId(12); second.setStatus(group6.project.model.ApplicationStatus.COMPLETED);
+        second.setTrainingDays(3d); second.setCourseFee(new java.math.BigDecimal("0.20"));
+        when(applicationRepo.findByApplicant_UserIdAndStatusIn(any(), any())).thenReturn(java.util.List.of(first, second));
+        var summary = service.summaryForYear(staff, first.getCourseStartDate().getYear(), null);
+        assertEquals(0d, summary.remainingDays());
+        assertEquals(new java.math.BigDecimal("0.30"), summary.usedBudget());
+        assertThrows(IllegalArgumentException.class, () -> service.create(valid(CourseCategoryType.EXTERNAL_COURSE), staff));
+        verify(applicationRepo, never()).save(any());
+    }
+
+    // A missing annual allocation cannot inherit another year's allowance.
+    @Test
+    void missingYearHasNoAllowance() {
+        when(entitlementRepo.findByStaff_UserIdAndYear(any(), any())).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> service.create(valid(CourseCategoryType.EXTERNAL_COURSE), staff));
+        verify(applicationRepo, never()).save(any());
+    }
+
+    // Half-day periods apply to one date, avoiding an ambiguous multi-day duration.
+    @Test
+    void multiDayHalfSessionIsRejected() {
+        CourseApplication form = valid(CourseCategoryType.INTERNAL_TRAINING);
+        form.setHalfDayPeriod("AM");
+        form.setCourseEndDate(form.getCourseStartDate().plusWeeks(1));
+        assertThrows(IllegalArgumentException.class, () -> service.create(form, staff));
+        verify(applicationRepo, never()).save(any());
+    }
+
+    // Cross-year periods must be split so every request belongs to one allowance.
+    @Test
+    void crossYearDatesAreRejected() {
+        CourseApplication form = valid(CourseCategoryType.EXTERNAL_COURSE);
+        int year = LocalDate.now().getYear()+1;
+        form.setCourseStartDate(LocalDate.of(year,12,30));
+        form.setCourseEndDate(LocalDate.of(year+1,1,2));
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> service.create(form, staff));
+        assertEquals("A course must be within one calendar year.", error.getMessage());
+    }
+
+    // Bound entity fields are never trusted to set identity, status or an existing review.
+    @Test
+    void createCopiesOnlyEditableDetails() {
+        CourseApplication form = valid(CourseCategoryType.EXTERNAL_COURSE);
+        form.setCourseId(900); form.setDecisionReason("Forged approval");
+        form.setStatus(group6.project.model.ApplicationStatus.APPROVED);
+        CourseApplication saved = service.create(form, staff);
+        assertNull(saved.getCourseId());
+        assertNull(saved.getDecisionReason());
+        assertEquals(group6.project.model.ApplicationStatus.APPLIED, saved.getStatus());
+        assertSame(staff, saved.getApplicant());
+    }
+
+    // Completion on the end date is too early, even through the shared service.
+    @Test
+    void completionWaitsUntilTheDayAfterEndDate() {
+        CourseApplication course = valid(CourseCategoryType.EXTERNAL_COURSE);
+        course.setApplicant(staff); course.setStatus(group6.project.model.ApplicationStatus.APPROVED);
+        course.setCourseEndDate(LocalDate.now());
+        when(applicationRepo.findById(11)).thenReturn(Optional.of(course));
+        assertThrows(IllegalStateException.class, () -> service.complete(11, "Useful course", staff));
+        verify(applicationRepo, never()).save(any());
     }
 
     private CourseApplication valid(CourseCategoryType category) {
         CourseApplication application = new CourseApplication();
         application.setCourseTitle("Effective Java");
+        application.setTrainingProvider("NUS-ISS");
         application.setCourseCategory(category);
         application.setCourseStartDate(nextWorkingDay());
         application.setCourseEndDate(application.getCourseStartDate());
-        application.setCourseFee(100);
+        application.setCourseFee(new java.math.BigDecimal("100"));
         application.setJustification("Improve delivery quality");
         return application;
     }

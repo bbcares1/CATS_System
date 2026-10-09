@@ -25,6 +25,7 @@ import group6.project.service.*;
 class StaffWorkflowTest {
     @Autowired WebApplicationContext context;
     @Autowired StaffRepo staffRepo;
+    @Autowired TrainingEntitlementRepo entitlements;
     @Autowired UserRepo userRepo;
     @Autowired CourseApplicationRepo applicationRepo;
     @Autowired ExcludedDaysRepo excludedDaysRepo;
@@ -46,11 +47,21 @@ class StaffWorkflowTest {
         staff.setStaffId("S001");
         staff.setDesignation("Professional");
         staff.setRole(Roles.STAFF);
-        staff.setTrainingDays(10);
-        staff.setTrainingBudget(2000d);
         staff = staffRepo.saveAndFlush(staff);
+        setAllowance(10, "2000");
         session = new MockHttpSession();
         session.setAttribute("user", staff);
+    }
+
+    // Keep test limits in the same annual records used by the application.
+    void setAllowance(double days, String budget) {
+        int year = futureDay().getYear();
+        TrainingEntitlement allowance = entitlements.findByStaff_UserIdAndYear(staff.getUserId(), year)
+                .orElseGet(() -> new TrainingEntitlement(year));
+        allowance.setStaff(staff);
+        allowance.setDayLimit(days);
+        allowance.setBudget(new java.math.BigDecimal(budget));
+        entitlements.saveAndFlush(allowance);
     }
 
     LocalDate futureDay() {
@@ -66,7 +77,7 @@ class StaffWorkflowTest {
         course.setTrainingProvider("NUS-ISS");
         course.setCourseStartDate(futureDay());
         course.setCourseEndDate(futureDay());
-        course.setCourseFee(300);
+        course.setCourseFee(new java.math.BigDecimal("300"));
         course.setJustification("Use Java EE to build web applications");
         course.setHalfDayPeriod("");
         return course;
@@ -112,7 +123,7 @@ class StaffWorkflowTest {
         Manager manager = new Manager();
         manager.setUserName("junie"); manager.setPassword("test-password");
         manager.setName("Junie"); manager.setRole(Roles.MANAGER);
-        manager.setStaffId("S002"); manager.setTrainingDays(10); manager.setTrainingBudget(2000d);
+        manager.setStaffId("S002");
         staffRepo.saveAndFlush(manager);
         MockHttpSession managerSession = new MockHttpSession();
         mvc.perform(post("/employee/login").session(managerSession).param("userName", "junie")
@@ -129,6 +140,7 @@ class StaffWorkflowTest {
     void formBindingDoesNotAllowIdentityOrStatusChanges() throws Exception {
         mvc.perform(post("/staff/applications/save").session(session)
                 .param("courseTitle", "Design 1").param("courseCategory", "EXTERNAL_COURSE")
+                .param("trainingProvider", "NUS-ISS")
                 .param("courseStartDate", futureDay().toString()).param("courseEndDate", futureDay().toString())
                 .param("courseFee", "100").param("justification", "Improve software design skills")
                 .param("courseId", "999999").param("status", "APPROVED").param("applicant.userId", "999999"))
@@ -184,7 +196,7 @@ class StaffWorkflowTest {
                 .andExpect(redirectedUrl("/staff/applications/" + ended.getCourseId()));
         assertEquals(ApplicationStatus.COMPLETED, ended.getStatus());
         assertEquals(1, staffService.summary(new CourseApplication(), staff, null).usedDays());
-        assertEquals(300, staffService.summary(new CourseApplication(), staff, null).usedBudget());
+        assertEquals(0, new java.math.BigDecimal("300").compareTo(staffService.summary(new CourseApplication(), staff, null).usedBudget()));
         saved(ApplicationStatus.COMPLETED, LocalDate.now().minusYears(1));
         for (CourseApplication row : staffService.getCourseHistory(staff, LocalDate.now().getYear())) {
             assertEquals(LocalDate.now().getYear(), row.getCourseStartDate().getYear());
@@ -201,11 +213,11 @@ class StaffWorkflowTest {
         assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, course, staff));
         course.setCourseStartDate(futureDay()); course.setCourseEndDate(futureDay().minusDays(1));
         assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, course, staff));
-        course.setCourseEndDate(futureDay()); course.setCourseFee(2001);
+        course.setCourseEndDate(futureDay()); course.setCourseFee(new java.math.BigDecimal("2001"));
         assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, course, staff));
-        course.setCourseFee(Double.NaN);
+        course.setCourseFee(new java.math.BigDecimal("300.001"));
         assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, course, staff));
-        course.setCourseFee(300); course.setHalfDayPeriod("AM");
+        course.setCourseFee(new java.math.BigDecimal("300")); course.setHalfDayPeriod("AM");
         assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, course, staff));
         course.setHalfDayPeriod("");
         ExcludedDays holiday = new ExcludedDays(); holiday.setDate(futureDay()); holiday.setDescription("Company Holiday");
@@ -225,15 +237,18 @@ class StaffWorkflowTest {
         ExcludedDays holiday = new ExcludedDays(); holiday.setDate(monday.plusDays(2)); holiday.setDescription("Company Holiday");
         excludedDaysRepo.saveAndFlush(holiday);
         CourseApplication period = form(); period.setCourseStartDate(monday); period.setCourseEndDate(monday.plusDays(7));
-        assertEquals(5d, staffService.saveApplication(null, period, staff).getTrainingDays());
+        period = staffService.saveApplication(null, period, staff);
+        assertEquals(5d, period.getTrainingDays());
         staffService.deleteApplication(period.getCourseId(), staff);
         CourseApplication morning = form(); morning.setCourseCategory(CourseCategoryType.INTERNAL_TRAINING);
         morning.setCourseStartDate(monday); morning.setCourseEndDate(monday); morning.setHalfDayPeriod("AM");
-        assertEquals(0.5, staffService.saveApplication(null, morning, staff).getTrainingDays());
-        assertEquals(0, morning.getCourseFee());
+        morning = staffService.saveApplication(null, morning, staff);
+        assertEquals(0.5, morning.getTrainingDays());
+        assertEquals(0, morning.getCourseFee().signum());
         CourseApplication afternoon = form(); afternoon.setCourseCategory(CourseCategoryType.INTERNAL_TRAINING);
         afternoon.setCourseStartDate(monday); afternoon.setCourseEndDate(monday); afternoon.setHalfDayPeriod("PM");
-        assertEquals(0.5, staffService.saveApplication(null, afternoon, staff).getTrainingDays());
+        afternoon = staffService.saveApplication(null, afternoon, staff);
+        assertEquals(0.5, afternoon.getTrainingDays());
         CourseApplication fullDay = form(); fullDay.setCourseStartDate(monday); fullDay.setCourseEndDate(monday);
         assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, fullDay, staff));
         staffService.deleteApplication(morning.getCourseId(), staff);
@@ -243,7 +258,9 @@ class StaffWorkflowTest {
         training.setCourseStartDate(monday);
         training.setCourseEndDate(monday.plusDays(1));
         training.setHalfDayPeriod("AM");
-        assertEquals(1.5, staffService.saveApplication(null, training, staff).getTrainingDays());
+        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, training, staff));
+        training.setHalfDayPeriod("");
+        assertEquals(2d, staffService.saveApplication(null, training, staff).getTrainingDays());
         CourseApplication overlapping = form();
         overlapping.setCourseCategory(CourseCategoryType.INTERNAL_TRAINING);
         overlapping.setCourseStartDate(monday);
@@ -297,9 +314,9 @@ class StaffWorkflowTest {
     @Test
     void completedCoursesConsumeAllowanceAndClaimValidationRejectsInvalidInput() {
         saved(ApplicationStatus.COMPLETED, LocalDate.now().minusDays(2));
-        staff.setTrainingDays(1);
+        setAllowance(1, "2000");
         assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, form(), staff));
-        staff.setTrainingDays(10); staff.setTrainingBudget(500d);
+        setAllowance(10, "500");
         assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, form(), staff));
         CourseApplication pending = saved(ApplicationStatus.APPLIED, futureDay());
         MockMultipartFile bad = new MockMultipartFile("receipt", "empty.pdf", "application/pdf", new byte[0]);
@@ -313,8 +330,8 @@ class StaffWorkflowTest {
     @Test
     void externalCourseCanHaveZeroFee() {
         CourseApplication course = form();
-        course.setCourseFee(0);
-        assertEquals(0, staffService.saveApplication(null, course, staff).getCourseFee());
+        course.setCourseFee(new java.math.BigDecimal("0"));
+        assertEquals(0, staffService.saveApplication(null, course, staff).getCourseFee().signum());
     }
 
     // Reporting manager: Save the relationship and find the correct staff.
@@ -326,8 +343,6 @@ class StaffWorkflowTest {
         manager.setName("Michael");
         manager.setRole(Roles.MANAGER);
         manager.setStaffId("S003");
-        manager.setTrainingDays(10);
-        manager.setTrainingBudget(2000d);
         staffRepo.saveAndFlush(manager);
         staff.setManager(manager);
         staffRepo.saveAndFlush(staff);

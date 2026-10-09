@@ -147,7 +147,7 @@ class ManagerServiceTest {
         assertEquals(LocalDate.of(2026, 11, 12), detail.startDate());
         assertEquals(LocalDate.of(2026, 11, 13), detail.endDate());
         assertEquals(2.0, detail.trainingDays());
-        assertEquals(1800.0, detail.fee());
+        assertEquals(0, new java.math.BigDecimal("1800").compareTo(detail.fee()));
         assertEquals("Improve our system design.", detail.justification());
         assertEquals("Share the learning with the team.", detail.workDissemination());
         assertEquals(ApplicationStatus.REJECTED, detail.status());
@@ -190,7 +190,7 @@ class ManagerServiceTest {
         application.setCourseStartDate(LocalDate.of(2026, 11, 12));
         application.setCourseEndDate(LocalDate.of(2026, 11, 13));
         application.setTrainingDays(2.0);
-        application.setCourseFee(1800.0);
+        application.setCourseFee(new java.math.BigDecimal("1800.0"));
         application.setJustification("Improve our system design.");
         application.setWorkDissemination("Share the learning with the team.");
         application.setStatus(status);

@@ -1,6 +1,7 @@
 package group6.project.service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,92 +64,13 @@ public class StaffService {
                 || application.getStatus() == ApplicationStatus.UPDATED;
     }
 
-    // Discussion: CourseApplicationService.summary() should also count completed courses. Keep the extra totals here until agreed.
+    // Every workspace uses the same allowance totals and validation rules.
     public CourseApplicationService.Summary summary(CourseApplication form, Staff staff, Integer id) {
-        if (form.getCourseStartDate() != null && form.getCourseEndDate() != null
-                && form.getCourseEndDate().isBefore(form.getCourseStartDate())) {
-            throw new IllegalArgumentException("The end date cannot be before the start date.");
-        }
-        CourseApplicationService.Summary total = courseApplicationService.summary(form, staff, id);
-        int year = LocalDate.now().getYear();
-        if (form.getCourseStartDate() != null) {
-            year = form.getCourseStartDate().getYear();
-        }
-        // Annual allowance - Include completed courses in the days and budget used.
-        double completedDays = 0;
-        double completedFees = 0;
-        for (CourseApplication course : getCourseHistory(staff, year)) {
-            if (course.getStatus() == ApplicationStatus.COMPLETED && !course.getCourseId().equals(id)) {
-                if (course.getTrainingDays() != null) {
-                    completedDays += course.getTrainingDays();
-                }
-                completedFees += course.getCourseFee();
-            }
-        }
-        return new CourseApplicationService.Summary(total.requestedDays(),
-                Math.max(0, total.remainingDays() - completedDays),
-                Math.max(0, total.remainingBudget() - completedFees),
-                total.usedDays() + completedDays, total.usedBudget() + completedFees);
-    }
-
-    // Application validation - Check staff rules
-    private void checkStaffApplication(CourseApplication form, Staff staff, Integer id) {
-        // Required fields: Check title, category, course dates and justification.
-        boolean titleMissing = form.getCourseTitle() == null || form.getCourseTitle().isBlank();
-        boolean categoryMissing = form.getCourseCategory() == null;
-        boolean datesMissing = form.getCourseStartDate() == null || form.getCourseEndDate() == null;
-        boolean justificationMissing = form.getJustification() == null || form.getJustification().isBlank();
-        if (titleMissing || categoryMissing || datesMissing || justificationMissing) {
-            throw new IllegalArgumentException("Course title, category, dates and justification are required.");
-        }
-        double fee = form.getCourseFee();
-        boolean halfDay = form.getHalfDayPeriod() != null && !form.getHalfDayPeriod().isBlank();
-        // Half-day training: Allow half-day periods only for internal training.
-        if (halfDay && form.getCourseCategory() != CourseCategoryType.INTERNAL_TRAINING) {
-            throw new IllegalArgumentException("Please check the half-day selection.");
-        }
-        CourseApplicationService.Summary total = summary(form, staff, id);
-        // Training days: Check the remaining annual allowance.
-        if (total.requestedDays() > total.remainingDays()) {
-            throw new IllegalArgumentException("Not enough training days remaining.");
-        }
-        // Training budget: Check external course and certification fees against the remaining budget.
-        if (form.getCourseCategory() != CourseCategoryType.INTERNAL_TRAINING) {
-            boolean feeWithinBudget = fee >= 0 && fee <= total.remainingBudget();
-            if (!feeWithinBudget) {
-                throw new IllegalArgumentException("Please check the course fee and remaining budget.");
-            }
-        }
-        // Discussion: CourseApplicationService.overlaps() should treat only AM and PM as separate sessions
-        // Course overlap: Check against applied, updated and approved courses.
-        for (CourseApplication other : getCourseHistory(staff, form.getCourseStartDate().getYear())) {
-            if (other.getCourseId().equals(id)) {
-                continue;
-            }
-            boolean activeApplication = isPending(other) || other.getStatus() == ApplicationStatus.APPROVED;
-            if (!activeApplication) {
-                continue;
-            }
-            if (form.getCourseEndDate().isBefore(other.getCourseStartDate())
-                    || other.getCourseEndDate().isBefore(form.getCourseStartDate())) {
-                continue;
-            }
-            boolean otherHalfDay = "AM".equals(other.getHalfDayPeriod()) || "PM".equals(other.getHalfDayPeriod());
-            if (halfDay && otherHalfDay) {
-                boolean oneDay = form.getCourseStartDate().equals(form.getCourseEndDate())
-                        && other.getCourseStartDate().equals(other.getCourseEndDate());
-                boolean differentSessions = !form.getHalfDayPeriod().equals(other.getHalfDayPeriod());
-                if (oneDay && differentSessions) {
-                    continue;
-                }
-            }
-            throw new IllegalArgumentException("The course dates clash with another application.");
-        }
+        return courseApplicationService.summary(form, staff, id);
     }
 
     @Transactional
     public CourseApplication saveApplication(Integer id, CourseApplication form, Staff staff) {
-        checkStaffApplication(form, staff, id);
         if (id == null) {
             form.setCourseId(null);
             return courseApplicationService.create(form, staff);
@@ -166,13 +88,8 @@ public class StaffService {
         courseApplicationService.cancel(id, staff);
     }
 
-    // Discussion: CourseApplicationService.complete() allows completion on the end date
+    // Completion rules are shared with the legacy routes.
     public void completeApplication(Integer id, String comments, Staff staff) {
-        CourseApplication course = getCourseApplication(id, staff);
-        // Complete course: Check the end date; the shared service checks status and comments.
-        if (course.getCourseEndDate() == null || !course.getCourseEndDate().isBefore(LocalDate.now())) {
-            throw new IllegalStateException("A course can only be marked completed after it ends.");
-        }
         courseApplicationService.complete(id, comments, staff);
     }
 
@@ -198,7 +115,7 @@ public class StaffService {
         for (CourseApplication application : courseApplicationRepo.findByApplicant_UserIdAndStatusIn(
                 staff.getUserId(), List.of(ApplicationStatus.COMPLETED))) {
             if (application.getCourseCategory() != CourseCategoryType.INTERNAL_TRAINING
-                    && application.getCourseFee() > 0 && !alreadyClaimed(application.getCourseId(), claims)) {
+                    && application.getCourseFee().signum() > 0 && !alreadyClaimed(application.getCourseId(), claims)) {
                 result.add(application);
             }
         }
@@ -216,7 +133,7 @@ public class StaffService {
         }
         if (course.getStatus() != ApplicationStatus.COMPLETED
                 || course.getCourseCategory() == CourseCategoryType.INTERNAL_TRAINING
-                || course.getCourseFee() <= 0) {
+                || course.getCourseFee().signum() <= 0) {
             throw new IllegalArgumentException("Only completed fee-paying courses can be claimed.");
         }
         if (alreadyClaimed(courseId, getClaims(staff))) {
@@ -251,12 +168,12 @@ public class StaffService {
     }
 
     // Reimbursement total - Add fees already reimbursed for the selected year
-    public double getReimbursedFees(Staff staff, int year) {
-        double total = 0;
+    public BigDecimal getReimbursedFees(Staff staff, int year) {
+        BigDecimal total = BigDecimal.ZERO;
         for (CourseFeeApplication claim : getClaims(staff)) {
             if (claim.getReimbursedAt() != null && claim.getCourseApplication() != null
                     && claim.getCourseApplication().getCourseStartDate().getYear() == year) {
-                total += claim.getCourseApplication().getCourseFee();
+                total = total.add(claim.getCourseApplication().getCourseFee());
             }
         }
         return total;

@@ -4,6 +4,8 @@ package group6.project.model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import java.math.BigDecimal;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -29,7 +31,8 @@ public class CourseApplication {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer courseId;
 
-    private double courseFee;
+    @Column(precision = 12, scale = 2, nullable = false)
+    private BigDecimal courseFee = BigDecimal.ZERO;
 
     private LocalDate courseStartDate;
 
@@ -41,7 +44,9 @@ public class CourseApplication {
     private CourseCategoryType courseCategory;
 
     private String trainingProvider;
+    @Column(length = 2000)
     private String justification;
+    @Column(length = 2000)
     private String workDissemination;
     private Double trainingDays;
     private String halfDayPeriod;
@@ -56,7 +61,9 @@ public class CourseApplication {
     private LocalDateTime submittedAt;
     private LocalDateTime updatedAt;
     private LocalDateTime reviewedAt;
+    @Column(length = 2000)
     private String decisionReason;
+    @Column(length = 2000)
     private String experienceComments;
 
     public ApplicationStatus getApplicationStatus() {

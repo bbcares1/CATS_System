@@ -1,6 +1,8 @@
 package group6.project.controller;
 
 import java.util.List;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.stereotype.Controller;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import group6.project.model.Admin;
@@ -20,6 +23,7 @@ import group6.project.model.Roles;
 import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.service.AdminService;
+import group6.project.service.TrainingEntitlementService;
 import group6.project.service.CourseCategoryService;
 import group6.project.service.ExcludedDaysService;
 import jakarta.servlet.http.HttpSession;
@@ -29,15 +33,18 @@ import jakarta.validation.Valid;
 @RequestMapping("/admin")
 public class AdminController {
 
+    private final TrainingEntitlementService entitlements;
     private final AdminService adminService;
     private final CourseCategoryService courseCategoryService;
     private final ExcludedDaysService excludedDaysService;
 
     public AdminController(
             AdminService adminService,
+            TrainingEntitlementService entitlements,
             CourseCategoryService courseCategoryService,
             ExcludedDaysService excludedDaysService) {
        this.adminService = adminService;
+       this.entitlements = entitlements;
        this.courseCategoryService = courseCategoryService;
        this.excludedDaysService = excludedDaysService;
 }
@@ -55,38 +62,42 @@ public class AdminController {
     }
 
     
-  // ------- this part below is about budgetmanagement
-  // -----------------------------------------------
-
-    @GetMapping("/update/{Id}")
-    public String update_budget(Model model, @PathVariable("Id") Integer Id) {
-        Optional<Staff> selectedStaff = adminService.getIdStaff(Id);
-        if (selectedStaff.isEmpty()) {
-            throw new RuntimeException("未找到 ID 为 " + Id + " 的员工");
-        } else {
-            Staff staff = selectedStaff.get();
-            model.addAttribute("staff", staff); 
-            return "ChangeBudget"; 
-        }
+    // Select an employee and year without binding a whole Staff entity from the form.
+    @GetMapping({"/update/{id}", "/entitlements/{id}"})
+    public String editEntitlement(@PathVariable Integer id,
+            @RequestParam(required = false) Integer year, HttpSession session, Model model) {
+        if (!(session.getAttribute("user") instanceof Admin)) return "redirect:/admin/login";
+        int selectedYear = year == null ? LocalDate.now().getYear() : year;
+        model.addAttribute("staff", entitlements.employee(id));
+        model.addAttribute("year", selectedYear);
+        model.addAttribute("summary", entitlements.summary(id, selectedYear));
+        return "ChangeBudget";
     }
 
-    @GetMapping("/showBudgetList")
-    public String showBudgetList(Model model) {
-        List<Staff> staffs = adminService.getAllStaff();
-        model.addAttribute("staffs", staffs);
+    // A single annual list shows the limits alongside the same totals used by Staff and Manager.
+    @GetMapping({"/showBudgetList", "/entitlements"})
+    public String showBudgetList(@RequestParam(required = false) Integer year, HttpSession session, Model model) {
+        if (!(session.getAttribute("user") instanceof Admin)) return "redirect:/admin/login";
+        int selectedYear = year == null ? LocalDate.now().getYear() : year;
+        model.addAttribute("year", selectedYear);
+        model.addAttribute("rows", entitlements.rows(selectedYear));
         return "BudgetList";
     }
 
-    @PostMapping("/save")
-    public String postMethodName(Staff staff) {
-        adminService.save(staff);
-        return "redirect:/admin/showBudgetList";
-    }
-
-    @GetMapping("/delete/{id}")
-    public String deleteById(@PathVariable("id") Integer id) {
-        adminService.deleteById(id);
-        return "redirect:/admin/showBudgetList";
+    // Keep previous years intact and reject a limit below existing reservations.
+    @PostMapping({"/save", "/entitlements/save"})
+    public String saveEntitlement(@RequestParam Integer staffId, @RequestParam int year,
+            @RequestParam double dayLimit, @RequestParam BigDecimal budget,
+            HttpSession session, org.springframework.web.servlet.mvc.support.RedirectAttributes redirect) {
+        if (!(session.getAttribute("user") instanceof Admin)) return "redirect:/admin/login";
+        try {
+            entitlements.saveLimits(staffId, year, dayLimit, budget);
+            redirect.addFlashAttribute("success", "Annual allowance saved.");
+            return "redirect:/admin/entitlements?year=" + year;
+        } catch (IllegalArgumentException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/entitlements/" + staffId + "?year=" + year;
+        }
     }
 
   // this part below is about excludeddays

@@ -1,5 +1,6 @@
 package group6.project.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -96,7 +97,7 @@ public class ManagerService {
     public record ApplicationView(Integer applicationId, Integer applicantId, String applicantName,
             String staffId, String title, CourseCategoryType category, String provider,
             LocalDate startDate, LocalDate endDate, Double trainingDays, String halfDayPeriod,
-            double fee, String justification, String workDissemination, ApplicationStatus status,
+            BigDecimal fee, String justification, String workDissemination, ApplicationStatus status,
             LocalDateTime submittedAt, LocalDateTime updatedAt, LocalDateTime reviewedAt,
             String decisionReason, String experienceComments) {
     }

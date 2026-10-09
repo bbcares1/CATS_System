@@ -51,8 +51,6 @@ class LoginIntegrationTest {
     void managerCanUseBothWorkspacesAndTheSharedSessionResolver() throws Exception {
         Manager manager = new Manager();
         manager.setStaffId("FIXTURE_MGR");
-        manager.setTrainingDays(10);
-        manager.setTrainingBudget(2000d);
         saveAccount(manager, "manager_fixture", Roles.MANAGER);
         CourseApplication course = new CourseApplication();
         course.setApplicant(manager);
@@ -60,7 +58,7 @@ class LoginIntegrationTest {
         course.setCourseCategory(CourseCategoryType.EXTERNAL_COURSE);
         course.setCourseStartDate(LocalDate.now().withDayOfYear(1));
         course.setCourseEndDate(course.getCourseStartDate());
-        course.setCourseFee(0);
+        course.setCourseFee(new java.math.BigDecimal("0"));
         course.setStatus(ApplicationStatus.COMPLETED);
         applications.saveAndFlush(course);
         MockHttpSession session = new MockHttpSession();

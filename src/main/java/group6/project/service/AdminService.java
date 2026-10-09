@@ -40,22 +40,6 @@ public class AdminService {
      @Autowired
      public ApprovalHierarchyRepo approvalHierarchyRepo;
 
-     @Transactional
-     public void updateStaffBudget(Integer Id, Double new_budget, Integer new_days) {
-
-          Optional<Staff> targeted_staff = staffRepo.findById(Id);
-          if (targeted_staff.isEmpty()) {
-               throw new RuntimeException("未找到 ID 为 " + Id + " 的员工");
-          } else {
-               Staff staff = targeted_staff.get();
-               staff.setTrainingBudget(new_budget);
-               staff.setTrainingDays(new_days);
-
-               staffRepo.save(staff);
-          }
-
-     }
-
      public List<Staff> getAllStaff() {
           return staffRepo.findAll();
      }

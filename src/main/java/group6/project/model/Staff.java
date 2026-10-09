@@ -18,10 +18,6 @@ public class Staff extends User {
 
     private String staffId;
 
-    private Double trainingBudget;
-
-    private Integer trainingDays;
-
     // Reporting manager: Each staff member reports to one manager.
     @ManyToOne
     @JoinColumn(name = "manager_id")

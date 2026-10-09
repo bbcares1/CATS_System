@@ -53,3 +53,12 @@ Existing `group6` data is not migrated by this setup. Preserve it and plan a sep
 ## Production configuration
 
 Run with `SPRING_PROFILES_ACTIVE=prod` and set `CATS_DB_URL`, `CATS_DB_USER`, `CATS_DB_PASSWORD`. Production loads schema and required categories, never development accounts. Production deployment, initial Admin provisioning and backup instructions are part of the deployment follow-up.
+
+## Application rules
+
+- Allowances are allocated per employee and calendar year. No allocation means zero available days/budget.
+- Applied, Updated, Approved and Completed courses reserve days and fees. Rejected, Deleted and Cancelled records remain in history but release the reservation.
+- Start/end dates must be future working days when applying or editing. Weekends and public holidays are excluded from duration.
+- Split cross-year courses into separate requests. AM/PM is allowed only for a single-date Internal Training session; multi-day courses use full working days. Opposite AM/PM sessions can share a date.
+- Internal Training has no course fee. Money uses decimal SGD values, with up to two decimal places.
+- Complete an approved course only after its end date, with experience comments. Admin cannot lower limits below already reserved days/fees.
