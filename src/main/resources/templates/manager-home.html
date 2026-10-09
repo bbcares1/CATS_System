@@ -14,6 +14,12 @@
       <a class="btn btn-outline-secondary" th:href="@{/staff/home}">
         <svg th:replace="~{fragments/icons :: icon('briefcase')}"></svg>My staff workspace
       </a>
+      <a class="btn btn-outline-secondary" th:href="@{/staff/apply}">
+        <svg th:replace="~{fragments/icons :: icon('file-plus')}"></svg>Apply for a course
+      </a>
+      <a class="btn btn-outline-secondary" th:href="@{/staff/personal}">
+        <svg th:replace="~{fragments/icons :: icon('clock')}"></svg>My course history
+      </a>
     </div>
   </div>
 
@@ -21,10 +27,10 @@
     <div class="card">
       <div class="card-header">
         <h2 class="cats-card-title">Approvals</h2>
-        <span th:replace="~{fragments/ui :: tag('Coming soon')}"></span>
       </div>
       <div class="card-body">
-        <p class="mb-0 text-secondary">Course applications from your team that are waiting for your decision.</p>
+        <p class="text-secondary">Course applications from your team that are waiting for your decision.</p>
+        <a class="btn btn-primary" th:href="@{/manager/approvals}">View course applications</a>
       </div>
     </div>
     <div class="card">

@@ -38,7 +38,7 @@
       </th:block>
       <th:block th:if="${role == 'Manager'}">
         <a th:replace="~{fragments/ui :: navlink(@{/manager/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
-        <a th:replace="~{fragments/ui :: navsoon('Approvals', 'check-square')}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{/manager/approvals}, 'approvals', 'Approvals', 'check-square', ${active})}"></a>
         <a th:replace="~{fragments/ui :: navsoon('Team course history', 'users')}"></a>
         <a th:replace="~{fragments/ui :: navlink(@{/staff/home}, 'staff', 'My staff workspace', 'briefcase', ${active})}"></a>
       </th:block>
