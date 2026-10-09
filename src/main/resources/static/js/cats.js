@@ -34,7 +34,6 @@
   var backdrop = document.getElementById('backdrop');
   if (backdrop) backdrop.addEventListener('click', function () { layout.classList.remove('open'); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') layout.classList.remove('open'); });
-
   var accountRole = document.querySelector('[data-account-role]');
   var accountFields = document.querySelector('[data-account-fields]');
   if (accountRole && accountFields) {
@@ -68,6 +67,8 @@
 
   var scheduleForm = document.getElementById('scheduleForm');
   if (scheduleForm) {
+    var batchSelect = document.getElementById('batchId');
+    var requestedStartDate = document.getElementById('requestedStartDate');
     var weekendDatePicker = document.getElementById('weekendDatePicker');
     var weekendTrainingInput = document.getElementById('weekendTrainingDates');
     var selectedWeekendDates = document.getElementById('selectedWeekendDates');
@@ -78,6 +79,12 @@
       scheduleForm.querySelectorAll('[data-excluded-date]'),
       function (item) { return item.getAttribute('data-date'); }
     ));
+
+    batchSelect.addEventListener('change', function () {
+      var option = batchSelect.options[batchSelect.selectedIndex];
+      var batchStartDate = option.getAttribute('data-start-date');
+      if (batchStartDate) requestedStartDate.value = batchStartDate;
+    });
 
     var updateWeekendDates = function () {
       selectedWeekendDates.replaceChildren();

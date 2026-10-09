@@ -1,0 +1,77 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Application Details</title>
+        <link rel="stylesheet" th:href="@{/css/category.css}">
+        <link rel="stylesheet" th:href="@{/css/staff.css}">
+    </head>
+    <body>
+        <main class="container">
+            <nav>
+                <a th:href="@{/staff/home}">Dashboard</a>
+                <a class="active" th:href="@{/staff/personal}">Personal Course History</a>
+                <a th:href="@{/staff/apply}">Apply for Course</a>
+                <a th:href="@{/logout}">Logout</a>
+            </nav>
+            <h1 th:text="${course.courseTitle}"></h1>
+            <p class="success" th:if="${success}" th:text="${success}"></p>
+            <p class="error" th:if="${error}" th:text="${error}"></p>
+            <!-- Application details: Show the course information and decision. -->
+            <dl>
+                <dt>Application ID</dt>
+                <dd th:text="${course.courseId}"></dd>
+                <dt>Status</dt>
+                <dd th:text="${course.status}"></dd>
+                <dt>Category</dt>
+                <dd th:text="${course.courseCategory.displayName}"></dd>
+                <dt>Training provider</dt>
+                <dd th:text="${course.trainingProvider}"></dd>
+                <dt>Course period</dt>
+                <dd>
+                    <span th:text="${course.courseStartDate}"></span> to <span th:text="${course.courseEndDate}"></span></dd>
+                <dt>Session</dt>
+                <dd th:text="${#strings.isEmpty(course.halfDayPeriod) ? 'Full days' : course.halfDayPeriod}"></dd>
+                <dt>Training days</dt>
+                <dd th:text="${course.trainingDays}"></dd>
+                <dt>Course fee ($)</dt>
+                <dd th:text="${course.courseFee}"></dd>
+                <dt>Justification</dt>
+                <dd th:text="${course.justification}"></dd>
+                <dt>Work dissemination</dt>
+                <dd th:text="${course.workDissemination}"></dd>
+                <dt>Manager decision / reason</dt>
+                <dd th:text="${course.decisionReason ?: 'No decision recorded'}"></dd>
+                <dt>Reviewed at</dt>
+                <dd th:text="${course.reviewedAt}"></dd>
+                <dt>Experience comments</dt>
+                <dd th:text="${course.experienceComments}"></dd>
+            </dl>
+            <!-- Pending application: Show the edit and delete options. -->
+            <div class="actions" th:if="${course.status.name() == 'APPLIED' or course.status.name() == 'UPDATED'}">
+                <a class="btn btn-edit" th:href="@{/staff/applications/{id}/edit(id=${course.courseId})}">Edit</a>
+                <form th:action="@{/staff/applications/{id}/delete(id=${course.courseId})}" method="post">
+                    <button class="btn btn-delete" type="submit">Delete</button>
+                </form>
+            </div>
+            <section th:if="${course.status.name() == 'APPROVED'}">
+                <!-- Cancel application: Submit a cancellation for the approved course. -->
+                <form th:action="@{/staff/applications/{id}/cancel(id=${course.courseId})}" method="post">
+                    <button class="btn btn-delete" type="submit">Cancel Application</button>
+                </form>
+                <!-- Complete course: Enter experience comments after the course ends. -->
+                <form th:if="${course.courseEndDate.isBefore(today)}" th:action="@{/staff/applications/{id}/complete(id=${course.courseId})}" method="post">
+                    <div class="form-group">
+                        <label for="experienceComments">Experience comments *</label>
+                        <textarea id="experienceComments" name="experienceComments" rows="4" maxlength="255" required></textarea>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Mark Completed</button>
+                </form>
+                <p th:unless="${course.courseEndDate.isBefore(today)}">You can mark this course completed after its end date.</p>
+            </section>
+            <p>
+                <a th:href="@{/staff/personal}">Back to History</a></p>
+        </main>
+    </body>
+</html>

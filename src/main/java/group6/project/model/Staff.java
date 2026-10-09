@@ -30,7 +30,9 @@ public class Staff extends User {
     @Min(value = 0, message = "Annual training days must be zero or greater")
     private Integer trainingDays;
 
+    // Reporting manager: Each staff member reports to one manager.
     @ManyToOne
     @JoinColumn(name = "manager_id")
-    private Staff manager;
+    @EqualsAndHashCode.Exclude
+    private Manager manager;
 }

@@ -1,11 +1,16 @@
 package group6.project.model;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+import group6.project.model.CourseDetail;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -22,11 +27,15 @@ public class CourseBatch {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long courseId;
-
     private Long batchId;
 
-    private LocalDateTime courseStartDate;
+    @ManyToOne 
+    @JoinColumn (name = "course_id")
+    private CourseDetail courseDetail;
+
+    private LocalDate courseStartDate;
+
+    private LocalDate courseEndDate;
 
     private Integer capacity;
 }
