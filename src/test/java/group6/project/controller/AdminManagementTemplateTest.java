@@ -1,6 +1,8 @@
 package group6.project.controller;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -18,6 +20,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import group6.project.model.Admin;
+import group6.project.model.AdminEmailForm;
 import group6.project.model.ApprovalHierarchy;
 import group6.project.model.CourseCategory;
 import group6.project.model.CourseDetail;
@@ -27,6 +30,7 @@ import group6.project.model.Roles;
 import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.service.AdminService;
+import group6.project.service.AdminEmailService;
 import group6.project.service.CourseApplicationService;
 import group6.project.service.CourseCategoryService;
 import group6.project.service.CourseScheduleService;
@@ -48,6 +52,9 @@ class AdminManagementTemplateTest {
 
     @MockitoBean
     private AdminService adminService;
+
+    @MockitoBean
+    private AdminEmailService adminEmailService;
 
     @MockitoBean
     private CourseCategoryService courseCategoryService;
@@ -143,6 +150,8 @@ class AdminManagementTemplateTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Calculate a course schedule")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Course batch")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "min=\"" + LocalDate.now() + "\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Spring (Batch 18, 5.0 days)")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("OCTOBER 2026")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("cats-calendar-table")));
@@ -160,6 +169,34 @@ class AdminManagementTemplateTest {
         mockMvc.perform(get("/admin/categories/delete")).andExpect(status().isOk());
         mockMvc.perform(get("/excluded-days")).andExpect(status().isOk());
         mockMvc.perform(get("/excluded-days/edit/2")).andExpect(status().isOk());
+    }
+
+    @Test
+    void adminDashboardLinksToEveryAdministrationFeature() throws Exception {
+        Admin admin = new Admin();
+        admin.setName("Admin User");
+        admin.setRole(Roles.ADMIN);
+
+        mockMvc.perform(get("/admin/home").sessionAttr("user", admin))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Staff and accounts")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Training entitlement")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Approval hierarchy")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Course categories")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Course catalogue")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Course batches")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Course calendar")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Email staff and managers")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Public holidays")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/staffs\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/budgets\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/hierarchy\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/categories\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/courses\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/batches\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/calendar\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/emails\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/excluded-days\"")));
     }
 
     @Test
@@ -248,6 +285,62 @@ class AdminManagementTemplateTest {
                         org.hamcrest.Matchers.containsString("admin@example.com"))))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Send email")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/emails\"")));
+    }
+
+    @Test
+    void emailComposerPrefillsRecipientAndSubmitsEditedAddress() throws Exception {
+        Admin admin = new Admin();
+        admin.setRole(Roles.ADMIN);
+        mockMvc.perform(get("/admin/emails")
+                        .param("compose", "true")
+                        .param("recipientEmail", "original@example.com")
+                        .sessionAttr("user", admin))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "value=\"original@example.com\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "action=\"/admin/emails/send\"")));
+
+        mockMvc.perform(post("/admin/emails/send")
+                        .sessionAttr("user", admin)
+                        .param("recipientEmail", "edited@example.com")
+                        .param("subject", "Course update")
+                        .param("body", "Please review the new course schedule."))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .redirectedUrl("/admin/emails"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .flash().attribute("success", org.hamcrest.Matchers.containsString(
+                                "QQ SMTP accepted the email for delivery")));
+
+        org.mockito.ArgumentCaptor<AdminEmailForm> formCaptor =
+                org.mockito.ArgumentCaptor.forClass(AdminEmailForm.class);
+        verify(adminEmailService).send(formCaptor.capture());
+        org.junit.jupiter.api.Assertions.assertEquals(
+                "edited@example.com", formCaptor.getValue().getRecipientEmail());
+    }
+
+    @Test
+    void emailSendFailureShowsConfigurationHintAndKeepsFormValues() throws Exception {
+        Admin admin = new Admin();
+        admin.setRole(Roles.ADMIN);
+        doThrow(new org.springframework.mail.MailAuthenticationException("SMTP auth failure"))
+                .when(adminEmailService).send(org.mockito.ArgumentMatchers.any(AdminEmailForm.class));
+
+        mockMvc.perform(post("/admin/emails/send")
+                        .sessionAttr("user", admin)
+                        .param("recipientEmail", "recipient@example.com")
+                        .param("subject", "Course update")
+                        .param("body", "Please review the schedule."))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Check the QQ SMTP profile and credentials")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "value=\"recipient@example.com\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "value=\"Course update\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Please review the schedule.")));
     }
 
     @Test

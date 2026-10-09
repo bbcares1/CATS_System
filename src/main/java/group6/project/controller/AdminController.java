@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,8 +22,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.mail.MailException;
 
 import group6.project.model.Admin;
+import group6.project.model.AdminEmailForm;
 import group6.project.model.AccountForm;
 import group6.project.model.ApprovalHierarchy;
 import group6.project.model.CourseCategory;
@@ -31,6 +35,7 @@ import group6.project.model.Roles;
 import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.service.AdminService;
+import group6.project.service.AdminEmailService;
 import group6.project.service.CourseCategoryService;
 import group6.project.service.ExcludedDaysService;
 import jakarta.servlet.http.HttpSession;
@@ -44,6 +49,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/admin")
 public class AdminController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
     private static final String CALENDAR_BATCH_ID = "adminCalendarBatchId";
     private static final String CALENDAR_START_DATE = "adminCalendarStartDate";
     private static final String CALENDAR_WEEKEND_DATES = "adminCalendarWeekendDates";
@@ -54,18 +60,21 @@ public class AdminController {
     private final ExcludedDaysService excludedDaysService;
     private final CourseScheduleService courseScheduleService;
     private final CourseBatchService courseBatchService;
+    private final AdminEmailService adminEmailService;
 
     public AdminController(
             AdminService adminService,
             CourseCategoryService courseCategoryService,
             ExcludedDaysService excludedDaysService,
             CourseScheduleService courseScheduleService,
-            CourseBatchService courseBatchService) {
+            CourseBatchService courseBatchService,
+            AdminEmailService adminEmailService) {
        this.adminService = adminService;
        this.courseCategoryService = courseCategoryService;
        this.excludedDaysService = excludedDaysService;
        this.courseScheduleService = courseScheduleService;
        this.courseBatchService = courseBatchService;
+       this.adminEmailService = adminEmailService;
     }
 
 
@@ -81,16 +90,63 @@ public class AdminController {
     }
 
     @GetMapping("/emails")
-    public String showEmailRecipients(HttpSession session, Model model) {
+    public String showEmailRecipients(
+            @RequestParam(required = false) String compose,
+            @RequestParam(required = false) String recipientEmail,
+            HttpSession session, Model model) {
         if (!(session.getAttribute("user") instanceof Admin)) {
             return "redirect:/admin/login";
         }
-        List<User> recipients = adminService.viewList().stream()
-                .filter(user -> user.getRole() == Roles.MANAGER || user.getRole() == Roles.STAFF)
-                .sorted(Comparator.comparing(User::getName, String.CASE_INSENSITIVE_ORDER))
-                .toList();
-        model.addAttribute("recipients", recipients);
+        boolean composeMode = "true".equalsIgnoreCase(compose);
+        model.addAttribute("composeMode", composeMode);
+        if (composeMode) {
+            AdminEmailForm form = new AdminEmailForm();
+            form.setRecipientEmail(recipientEmail);
+            model.addAttribute("emailForm", form);
+        } else {
+            List<User> recipients = adminService.viewList().stream()
+                    .filter(user -> user.getRole() == Roles.MANAGER || user.getRole() == Roles.STAFF)
+                    .sorted(Comparator.comparing(User::getName, String.CASE_INSENSITIVE_ORDER))
+                    .toList();
+            model.addAttribute("recipients", recipients);
+        }
         return "admin-email-list";
+    }
+
+    @PostMapping("/emails/send")
+    public String sendAdminEmail(
+            @Valid @ModelAttribute("emailForm") AdminEmailForm form,
+            BindingResult result,
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        if (!(session.getAttribute("user") instanceof Admin)) {
+            return "redirect:/admin/login";
+        }
+        if (result.hasErrors()) {
+            model.addAttribute("composeMode", true);
+            return "admin-email-list";
+        }
+
+        try {
+            adminEmailService.send(form);
+        } catch (MailException error) {
+            logger.error("Admin email delivery failed. Check the active mail profile and SMTP authentication settings.", error);
+            model.addAttribute("composeMode", true);
+            model.addAttribute("error",
+                    "Email could not be sent. Check the QQ SMTP profile and credentials, then review the application console for diagnostic details.");
+            return "admin-email-list";
+        } catch (IllegalStateException error) {
+            logger.error("Admin email delivery is not configured.", error);
+            model.addAttribute("composeMode", true);
+            model.addAttribute("error", error.getMessage());
+            return "admin-email-list";
+        }
+
+        redirectAttributes.addFlashAttribute(
+                "success",
+                "QQ SMTP accepted the email for delivery. Delivery may take time; check the recipient's spam folder if it does not arrive.");
+        return "redirect:/admin/emails";
     }
 
     
@@ -297,6 +353,8 @@ public class AdminController {
             Model model,
             HttpSession session) {
        model.addAttribute("batches", courseBatchService.getAllBatches());
+       LocalDate today = LocalDate.now();
+       model.addAttribute("today", today);
       // Generate the current month's calendar
        YearMonth selectedMonth = (month == null || month.isBlank())
         ? YearMonth.now()
@@ -331,7 +389,13 @@ public class AdminController {
                 parseWeekendTrainingDates(weekendTrainingDates);
         boolean selectedExcludedDay = selectedWeekends.stream()
                 .anyMatch(excludedDaysService::isExcludedDay);
-        if (selectedExcludedDay) {
+        boolean startDateBeforeToday =
+                requestedStartDate != null && requestedStartDate.isBefore(today);
+        if (startDateBeforeToday) {
+            model.addAttribute(
+                    "scheduleError",
+                    "Course schedules cannot start before today.");
+        } else if (selectedExcludedDay) {
             model.addAttribute(
                     "scheduleError",
                     "Excluded days cannot be selected for weekend training.");
@@ -349,7 +413,9 @@ public class AdminController {
             model.addAttribute("selectedBatch", batch);
             model.addAttribute("selectedBatchId", batchId);
             model.addAttribute("requestedStartDate", requestedStartDate);
-            if (requestedStartDate != null && batch.getTrainingDays() != null) {
+            if (requestedStartDate != null
+                    && !startDateBeforeToday
+                    && batch.getTrainingDays() != null) {
                 CourseScheduleService.Schedule schedule =
                         courseScheduleService.calculateSchedule(
                                 requestedStartDate,

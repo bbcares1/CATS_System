@@ -63,6 +63,10 @@ public class CourseScheduleService {
             throw new IllegalArgumentException(
                     "Start date is required.");
         }
+        if (requestedStartDate.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                    "Course schedules cannot start before today.");
+        }
         // Validate training days
         if (!Double.isFinite(trainingDays)
                 || trainingDays <= 0

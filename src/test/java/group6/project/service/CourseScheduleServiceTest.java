@@ -1,6 +1,7 @@
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -38,13 +39,22 @@ class CourseScheduleServiceTest {
 
     @Test
     void shouldSkipWeekendWhenCalculatingSchedule() {
+        LocalDate requestedStart = nextWeekday(LocalDate.now().plusDays(1));
         CourseScheduleService.Schedule schedule =
                 courseScheduleService.calculateSchedule(
-                        LocalDate.of(2026, 10, 8),
+                        requestedStart,
                         5.0);
 
-        assertEquals(LocalDate.of(2026, 10, 8), schedule.actualStartDate());
-        assertEquals(LocalDate.of(2026, 10, 14), schedule.actualEndDate());
+        assertEquals(requestedStart, schedule.actualStartDate());
+        assertEquals(addWeekdays(requestedStart, 4), schedule.actualEndDate());
+    }
+
+    @Test
+    void shouldRejectRequestedStartDateBeforeToday() {
+        assertThrows(IllegalArgumentException.class,
+                () -> courseScheduleService.calculateSchedule(
+                        LocalDate.now().minusDays(1),
+                        1.0));
     }
 
     @Test
@@ -152,5 +162,22 @@ class CourseScheduleServiceTest {
         assertEquals(2026, calendars.get(0).year());
         assertEquals("NOVEMBER", calendars.get(1).month());
         assertEquals(2026, calendars.get(1).year());
+    }
+
+    private LocalDate nextWeekday(LocalDate date) {
+        while (date.getDayOfWeek().getValue() > 5) {
+            date = date.plusDays(1);
+        }
+        return date;
+    }
+
+    private LocalDate addWeekdays(LocalDate date, int weekdays) {
+        while (weekdays > 0) {
+            date = date.plusDays(1);
+            if (date.getDayOfWeek().getValue() <= 5) {
+                weekdays--;
+            }
+        }
+        return date;
     }
 }

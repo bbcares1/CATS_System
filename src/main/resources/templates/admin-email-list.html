@@ -3,14 +3,59 @@
       th:replace="~{fragments/layout :: layout('Email', 'Admin', 'emails', ~{::#content})}">
 <body>
 <section id="content">
-  <div class="cats-page-header">
+  <div class="cats-page-header" th:unless="${composeMode}">
     <div>
       <h1>Email</h1>
       <p class="cats-sub">Choose a staff member or manager as the recipient of an Admin email.</p>
     </div>
   </div>
 
-  <section class="card" aria-labelledby="email-recipients-title">
+  <div th:if="${composeMode}">
+    <div class="cats-page-header">
+      <div>
+        <a class="cats-back" th:href="@{/admin/emails}">Back to recipients</a>
+        <h1>Compose email</h1>
+        <p class="cats-sub">Review the recipient and write your message.</p>
+      </div>
+    </div>
+
+    <section class="card" aria-labelledby="email-compose-title">
+      <div class="card-header">
+        <h2 id="email-compose-title" class="cats-card-title">New email</h2>
+      </div>
+      <div class="card-body">
+        <form th:action="@{/admin/emails/send}" th:object="${emailForm}" method="post" class="cats-form">
+          <div class="cats-field" th:classappend="${#fields.hasErrors('recipientEmail')} ? 'has-error'">
+            <label class="form-label cats-req" for="recipientEmail">To</label>
+            <input id="recipientEmail" th:field="*{recipientEmail}" type="email" class="form-control"
+                   autocomplete="email" required>
+            <div class="form-text">You can edit the recipient address before sending.</div>
+            <div class="cats-field-msg" th:if="${#fields.hasErrors('recipientEmail')}"
+                 th:errors="*{recipientEmail}"></div>
+          </div>
+          <div class="cats-field" th:classappend="${#fields.hasErrors('subject')} ? 'has-error'">
+            <label class="form-label cats-req" for="subject">Subject</label>
+            <input id="subject" th:field="*{subject}" type="text" class="form-control"
+                   maxlength="200" required>
+            <div class="cats-field-msg" th:if="${#fields.hasErrors('subject')}"
+                 th:errors="*{subject}"></div>
+          </div>
+          <div class="cats-field" th:classappend="${#fields.hasErrors('body')} ? 'has-error'">
+            <label class="form-label cats-req" for="body">Message</label>
+            <textarea id="body" th:field="*{body}" class="form-control" rows="10" required></textarea>
+            <div class="cats-field-msg" th:if="${#fields.hasErrors('body')}"
+                 th:errors="*{body}"></div>
+          </div>
+          <div class="cats-form-footer">
+            <a class="btn btn-outline-secondary" th:href="@{/admin/emails}">Cancel</a>
+            <button class="btn btn-primary" type="submit">Send email</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="email-recipients-title" th:unless="${composeMode}">
     <div class="card-header">
       <div>
         <h2 id="email-recipients-title" class="cats-card-title">Staff and managers</h2>
@@ -41,8 +86,14 @@
                     class="text-secondary">No email on record</span>
             </td>
             <td class="cats-row-actions">
-              <button type="button" class="btn btn-sm btn-primary" disabled
-                      aria-disabled="true" title="Email composition will be available in the next step">
+              <a th:if="${recipient.email != null and !#strings.isEmpty(recipient.email)}"
+                 class="btn btn-sm btn-primary"
+                 th:href="@{/admin/emails(compose=true,recipientEmail=${recipient.email})}">
+                Send email
+              </a>
+              <button th:if="${recipient.email == null or #strings.isEmpty(recipient.email)}"
+                      type="button" class="btn btn-sm btn-primary" disabled
+                      aria-disabled="true" title="Add an email address to this account first">
                 Send email
               </button>
             </td>
@@ -56,8 +107,8 @@
       </table>
     </div>
   </section>
-  <p class="text-secondary small mt-3 mb-0">
-    Selecting a recipient and opening the email editor will be connected in the next step.
+  <p class="text-secondary small mt-3 mb-0" th:unless="${composeMode}">
+    Select a recipient to open the email editor.
   </p>
 </section>
 </body>

@@ -44,12 +44,13 @@
             <div class="col-lg-6">
               <label class="form-label" for="requestedStartDate">Requested start date</label>
               <input id="requestedStartDate" name="requestedStartDate" type="date" class="form-control"
-                     th:value="${requestedStartDate}" required>
+                     th:value="${requestedStartDate}" th:attr="min=${today}" required>
             </div>
             <div class="col-lg-8">
               <label class="form-label" for="weekendDatePicker">Optional weekend training dates</label>
               <div class="d-flex flex-wrap gap-2">
-                <input id="weekendDatePicker" type="date" class="form-control cats-calendar-date-picker">
+                <input id="weekendDatePicker" type="date" class="form-control cats-calendar-date-picker"
+                       th:attr="min=${today}">
                 <button type="button" class="btn btn-outline-secondary" data-weekend-add>Add weekend date</button>
               </div>
               <div class="form-text">Only selected Saturdays and Sundays are used. Weekdays remain scheduled automatically.</div>

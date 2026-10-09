@@ -23,6 +23,7 @@ import group6.project.model.CourseDetail;
 import group6.project.service.AdminService;
 import group6.project.service.CourseCategoryService;
 import group6.project.service.CourseBatchService;
+import group6.project.service.AdminEmailService;
 import group6.project.service.ExcludedDaysService;
 import group6.project.service.CourseScheduleService;
 
@@ -43,6 +44,9 @@ public class AdminCalendarControllerTest {
     @Mock
     private CourseBatchService courseBatchService;
 
+    @Mock
+    private AdminEmailService adminEmailService;
+
     private AdminController adminController;
 
     @BeforeEach
@@ -55,7 +59,8 @@ public class AdminCalendarControllerTest {
                 courseCategoryService,
                 excludedDaysService,
                 courseScheduleService,
-                courseBatchService);
+                courseBatchService,
+                adminEmailService);
     }
 
     // Test 1: Display selected month
@@ -91,6 +96,55 @@ public class AdminCalendarControllerTest {
         assertEquals(
                 "2026-12",
                 model.getAttribute("nextMonth"));
+    }
+
+    @Test
+    void pastRequestedStartDateIsRejectedWithoutUpdatingBatchSchedule() {
+        Long batchId = 7L;
+        LocalDate pastStartDate = LocalDate.now().minusDays(1);
+        CourseBatch batch = new CourseBatch();
+        batch.setBatchId(batchId);
+        batch.setTrainingDays(3.0);
+        CourseDetail detail = new CourseDetail();
+        detail.setTitle("Past-date test course");
+        batch.setCourseDetail(detail);
+        when(courseBatchService.getAllBatches()).thenReturn(List.of(batch));
+        when(excludedDaysService.getAllExcludedDays()).thenReturn(Collections.emptyList());
+        when(courseBatchService.getBatchById(batchId)).thenReturn(java.util.Optional.of(batch));
+
+        Model model = new ExtendedModelMap();
+
+        String viewName = adminController.calculateCourseCalendar(
+                null,
+                batchId,
+                pastStartDate,
+                "",
+                model,
+                new MockHttpSession());
+
+        assertEquals("CourseCalendar", viewName);
+        assertEquals("Course schedules cannot start before today.",
+                model.getAttribute("scheduleError"));
+        assertEquals(pastStartDate, model.getAttribute("requestedStartDate"));
+        assertEquals(LocalDate.now(), model.getAttribute("today"));
+        org.junit.jupiter.api.Assertions.assertNull(model.getAttribute("schedule"));
+        org.mockito.Mockito.verify(courseScheduleService).generateCalendars(
+                org.mockito.ArgumentMatchers.any(LocalDate.class),
+                org.mockito.ArgumentMatchers.any(LocalDate.class));
+        org.mockito.Mockito.verify(courseScheduleService,
+                org.mockito.Mockito.never()).calculateSchedule(
+                        org.mockito.ArgumentMatchers.any(LocalDate.class),
+                        org.mockito.ArgumentMatchers.anyDouble(),
+                        org.mockito.ArgumentMatchers.anySet());
+        org.mockito.Mockito.verify(courseScheduleService,
+                org.mockito.Mockito.never()).getTrainingDates(
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.anySet());
+        org.mockito.Mockito.verify(courseBatchService,
+                org.mockito.Mockito.never()).updateScheduleDates(
+                        org.mockito.ArgumentMatchers.anyLong(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any());
     }
 
     // Test 2: Keep course when switching months
