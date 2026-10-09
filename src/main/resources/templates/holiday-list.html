@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Public holidays', 'Admin', 'holidays', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>
+            Public holidays
+          </h1>
+        </div>
+      </div>
+      <!-- Date changes protect active requests and published schedules. -->
+      <p class="cats-sub">
+        Weekends and these dates do not count as training days. Resolve active requests or published sessions before changing a date they use.
+      </p>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="cats-card-title">
+            Add a holiday
+          </h2>
+        </div>
+        <div class="card-body">
+          <form class="cats-stack" th:action="@{/admin/excludedDays/add}" th:object="${form}" method="post">
+            <div class="cats-grid cats-grid-2">
+              <div>
+                <label for="date" class="form-label cats-req">
+                  Holiday date
+                </label>
+                <input id="date" th:field="*{date}" type="date" class="form-control" min="2000-01-01" max="2100-12-31" required>
+              </div>
+              <div>
+                <label for="description" class="form-label cats-req">
+                  Description
+                </label>
+                <input id="description" th:field="*{description}" class="form-control" maxlength="255" required>
+              </div>
+            </div>
+            <div>
+              <button class="btn btn-primary">
+                Add holiday
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cats-table-wrap" tabindex="0">
+          <table class="table cats-table">
+            <thead>
+              <tr>
+                <th>
+                  Date
+                </th>
+                <th>
+                  Description
+                </th>
+                <th>
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="day : ${holidays}">
+                <td th:text="${#temporals.format(day.date,'d MMM yyyy')}">
+                </td>
+                <td th:text="${day.description}">
+                </td>
+                <td class="cats-row-actions">
+                  <a th:href="@{/admin/excludedDays/edit/{id}(id=${day.id})}">
+                    Edit
+                  </a>
+                  <form th:action="@{/admin/excludedDays/{id}/delete(id=${day.id})}" method="post" data-confirm-title="Remove this holiday?" data-confirm-message="This changes the working calendar. Active courses and published sessions must be resolved first.">
+                    <input type="hidden" name="version" th:value="${day.version}">
+                    <button class="btn btn-sm btn-outline-danger">
+                      Remove
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(holidays)}">
+                <td colspan="3" class="cats-empty">
+                  No holidays configured.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

@@ -30,6 +30,7 @@ import group6.project.repo.TrainingEntitlementRepo;
 
 @ExtendWith(MockitoExtension.class)
 class CourseApplicationServiceTest {
+    @Mock group6.project.repo.TrainingCalendarPolicyRepo calendar;
     @Mock ApprovalRoutingService routing;
     @Mock CourseApplicationRepo applicationRepo;
     @Mock TrainingEntitlementRepo entitlementRepo;
@@ -41,7 +42,8 @@ class CourseApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new CourseApplicationService(applicationRepo, entitlementRepo, excludedDaysRepo, employees, routing);
+        service = new CourseApplicationService(applicationRepo, entitlementRepo, excludedDaysRepo, employees, routing, calendar);
+        lenient().when(calendar.readCalendar()).thenReturn(Optional.of(new group6.project.model.TrainingCalendarPolicy()));
         staff = new Staff();
         staff.setUserId(7);
         var allowance = new group6.project.model.TrainingEntitlement(LocalDate.now().getYear());

@@ -27,6 +27,9 @@ public class ExcludedDays {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @jakarta.persistence.Version
+    private Long version;
+
     @NotNull(message = "Holiday date is required")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;

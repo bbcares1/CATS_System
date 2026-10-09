@@ -22,12 +22,12 @@ public class AuthInterceptor implements HandlerInterceptor {
         User user = users.currentUser(request.getSession(false));
         boolean admin = path.equals("/admin") || path.startsWith("/admin/") || path.startsWith("/excluded-days");
         boolean manager = path.equals("/manager") || path.startsWith("/manager/");
-        boolean allowed = admin ? user instanceof Admin : manager ? user instanceof Manager : user instanceof Staff;
+        boolean allowed = path.equals("/training/calendar") ? user != null : admin ? user instanceof Admin : manager ? user instanceof Manager : user instanceof Staff;
         if (allowed) return true;
         if (path.endsWith("/receipt") || path.endsWith("/certificate")) {
             response.sendError(user == null ? 401 : 403);
         } else {
-            response.sendRedirect(request.getContextPath() + (admin ? "/admin/login" : "/employee/login"));
+            response.sendRedirect(request.getContextPath() + (path.equals("/training/calendar") ? "/login" : admin ? "/admin/login" : "/employee/login"));
         }
         return false;
     }

@@ -5,7 +5,9 @@ public enum CourseCategoryType {
     EXTERNAL_COURSE,
     PROFESSIONAL_CERTIFICATION;
 
+    // Human labels are independent of the enum values already stored in the database.
     public String getDisplayName() {
-        return name().replace('_', ' ');
+        return switch(this) { case INTERNAL_TRAINING -> "Internal Training"; case EXTERNAL_COURSE -> "External Course";
+            case PROFESSIONAL_CERTIFICATION -> "Professional Certification"; };
     }
 }

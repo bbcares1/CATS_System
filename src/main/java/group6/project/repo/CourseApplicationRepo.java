@@ -20,6 +20,12 @@ public interface CourseApplicationRepo extends JpaRepository<CourseApplication,I
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select a from CourseApplication a where a.courseId=:id")
     Optional<CourseApplication> lockById(@Param("id") Integer id);
+    // A course may start earlier and still be attended during the requested period.
+    @Query("select a from CourseApplication a where a.applicant.userId in :ids and a.courseStartDate <= :to and a.courseEndDate >= :from order by a.courseStartDate, a.courseId")
+    List<CourseApplication> findForReport(@Param("ids") List<Integer> ids,
+            @Param("from") java.time.LocalDate from, @Param("to") java.time.LocalDate to);
+    List<CourseApplication> findByStatusAndCourseStartDateLessThanEqualAndCourseEndDateGreaterThanEqual(
+            ApplicationStatus status, java.time.LocalDate end, java.time.LocalDate start);
     List<CourseApplication> findByApplicant_UserIdAndCourseStartDateBetweenOrderByCourseStartDateAsc(
             Integer userId, java.time.LocalDate from, java.time.LocalDate to);
 

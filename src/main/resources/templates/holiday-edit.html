@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Edit holiday', 'Admin', 'holidays', ~{::#content})}">
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>
+            Edit holiday
+          </h1>
+        </div>
+      </div>
+      <a class="cats-back" th:href="@{/admin/excludedDays}">
+        Public holidays
+      </a>
+      <div class="card">
+        <div class="card-body">
+          <form class="cats-stack" th:action="@{/admin/excludedDays/edit/{id}(id=${id})}" th:object="${form}" method="post">
+            <input type="hidden" th:field="*{version}">
+            <div class="cats-grid cats-grid-2">
+              <div>
+                <label for="date" class="form-label cats-req">
+                  Holiday date
+                </label>
+                <input id="date" th:field="*{date}" type="date" class="form-control" min="2000-01-01" max="2100-12-31" required>
+              </div>
+              <div>
+                <label for="description" class="form-label cats-req">
+                  Description
+                </label>
+                <input id="description" th:field="*{description}" class="form-control" maxlength="255" required>
+              </div>
+            </div>
+            <p class="form-text">
+              Descriptions can be corrected without changing saved training days.
+            </p>
+            <div class="cats-page-actions">
+              <a class="btn btn-outline-secondary" th:href="@{/admin/excludedDays}">
+                Cancel
+              </a>
+              <button class="btn btn-primary">
+                Save holiday
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

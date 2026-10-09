@@ -71,6 +71,9 @@ Run with `SPRING_PROFILES_ACTIVE=prod` and set `CATS_DB_URL`, `CATS_DB_USER`, `C
 - Internal Training has no course fee. Money uses decimal SGD values, with up to two decimal places.
 - Complete an approved course only after its end date, with experience comments. Admin cannot lower limits below already reserved days/fees.
 - Requests keep their assigned reviewer when the reporting manager changes. Staff use their assigned manager; a Manager without one chooses another active Manager. Self-review is blocked. Admin must resolve assigned pending reviews before removing Manager access.
+- `/training/calendar` shows approved working-day attendance to every signed-in role, with month/category filters. It contains names and course details, not private reasons or evidence.
+- Manager reports cover current direct reports; Admin reports cover all accounts. Period filters include courses overlapping the dates. Attendance-only reports include Approved/Completed courses. CSV includes every filtered row, with formula-safe cells. Course fees/days are full course amounts; annual allowances always cover the whole year.
+- Holiday date changes are blocked while active requests or published future sessions depend on them. Correcting the label is safe.
 - Fee claims require a completed, personally paid External Course or Certification and a receipt/certificate (PDF, JPEG or PNG, up to 5 MB each). One claim per course. Both Manager decisions need a reason; Admin records actual payment separately with a reference. Claims never spend the training budget twice.
 
 ## MVC entry points
@@ -79,8 +82,9 @@ Run with `SPRING_PROFILES_ACTIVE=prod` and set `CATS_DB_URL`, `CATS_DB_USER`, `C
 | --- | --- |
 | Public | `/login`, `/employee/login`, `/admin/login` |
 | Staff (including Manager) | `/staff/home`, `/staff/apply`, `/staff/personal`, `/staff/applications/{id}`, `/staff/fee` |
-| Manager | `/manager/home`, `/manager/approvals`, `/manager/applications/{id}`, `/manager/history`, `/manager/claims` |
-| Admin | `/admin/home`, `/admin/accounts`, `/admin/entitlements`, `/admin/courses`, `/admin/categories`, `/admin/batches`, `/admin/excludedDays`, `/admin/payments` |
+| Shared | `/training/calendar` |
+| Manager | `/manager/home`, `/manager/approvals`, `/manager/applications/{id}`, `/manager/history`, `/manager/claims`, `/manager/reports` |
+| Admin | `/admin/home`, `/admin/accounts`, `/admin/entitlements`, `/admin/courses`, `/admin/categories`, `/admin/batches`, `/admin/excludedDays`, `/admin/payments`, `/admin/reviews`, `/admin/reports` |
 
 Admin also manages all account types at `/admin/accounts`. Blank edit passwords keep the current password; stored passwords never appear in forms. Changes expire old sessions. Reassign reports before removing Manager access and resolve pending employee requests before disabling them or changing to Admin. Delete is only for unused accounts; disable accounts with history instead. At least one active Admin must remain. Employee annual limits are maintained separately.
 

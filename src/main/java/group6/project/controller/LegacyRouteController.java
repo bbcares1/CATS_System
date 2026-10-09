@@ -43,4 +43,7 @@ public class LegacyRouteController {
     // The Admin edit page applies the same validation as the retained list.
     @GetMapping("/excluded-days/edit/{id}")
     public String editHoliday(@PathVariable Integer id) { return "redirect:/admin/excludedDays/edit/" + id; }
+    // Old deletion bookmarks open holiday maintenance; GET never changes data.
+    @GetMapping("/admin/deleteExcludedDays/{id}")
+    public String retiredHolidayDelete(@org.springframework.web.bind.annotation.PathVariable Integer id) {return "redirect:/admin/excludedDays";}
 }

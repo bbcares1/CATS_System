@@ -42,4 +42,10 @@ public interface CourseFeeApplicationRepo
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select c from CourseFeeApplication c where c.applicationId=:id")
   Optional<CourseFeeApplication> lockById(@Param("id") Integer id);
+  // Reports need payment totals, never the receipt/certificate blobs.
+  @Query("select c.courseApplication.courseId as courseId, c.applicationStatus as status, c.amount as amount, c.reimbursedAt as paidAt from CourseFeeApplication c where c.courseApplication.courseId in :ids")
+  List<ClaimTotal> totalsForCourses(@Param("ids") List<Integer> ids);
+  interface ClaimTotal {
+    Integer getCourseId(); ApplicationStatus getStatus(); java.math.BigDecimal getAmount(); java.time.LocalDateTime getPaidAt();
+  }
 }

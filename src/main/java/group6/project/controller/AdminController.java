@@ -26,13 +26,10 @@ import jakarta.validation.Valid;
 public class AdminController {
 
     private final TrainingEntitlementService entitlements;
-    private final ExcludedDaysService excludedDaysService;
 
     public AdminController(
-            TrainingEntitlementService entitlements,
-            ExcludedDaysService excludedDaysService) {
+            TrainingEntitlementService entitlements) {
        this.entitlements = entitlements;
-       this.excludedDaysService = excludedDaysService;
 }
 
 
@@ -85,56 +82,6 @@ public class AdminController {
             return "redirect:/admin/entitlements/" + staffId + "?year=" + year;
         }
     }
-
-  // this part below is about excludeddays
-  // -------------------------------------
-
-    @GetMapping("/excludedDays")
-    public String showExcludedDays(Model model) {
-        List<ExcludedDays> dayList =excludedDaysService.getAllExcludedDays();
-        model.addAttribute("excludedDaysList", dayList);
-        model.addAttribute("newExcludedDay", new ExcludedDays());
-        return "ExcludedDaysList";
-    }
-
-    @PostMapping("/excludedDays/add")
-    public String addExcludedDays(@Valid @ModelAttribute("newExcludedDay") ExcludedDays excludedDays,BindingResult result,Model model) {
-        if (result.hasErrors()) {
-        model.addAttribute(
-                "excludedDaysList",
-                excludedDaysService.getAllExcludedDays());
-        return "ExcludedDaysList";
-    }
-    excludedDaysService.addExcludedDay(excludedDays);
-        return "redirect:/admin/excludedDays";
-    }
-
-    @GetMapping("/excludedDays/edit/{id}")
-    public String showEditExcludedDay(
-            @PathVariable("id") Integer id,Model model) {
-       ExcludedDays excludedDay =excludedDaysService.getExcludedDayById(id);
-       model.addAttribute("excludedDay", excludedDay);
-       return "ExcludedDaysEdit";
-    }
-
-    @PostMapping("/excludedDays/edit/{id}")
-    public String updateExcludedDay(
-            @PathVariable("id") Integer id,
-            @Valid @ModelAttribute("excludedDay") ExcludedDays excludedDay,BindingResult result) {
-       if (result.hasErrors()) {
-           return "ExcludedDaysEdit";
-    }
-       excludedDaysService.updateExcludedDay(id, excludedDay);
-       return "redirect:/admin/excludedDays";
-    }
-
-    @GetMapping("/deleteExcludedDays/{id}")
-    public String deleteExcludedDays(@PathVariable("id") Integer id) {
-        excludedDaysService.deleteExcludedDay(id);
-        return "redirect:/admin/excludedDays";
-    }
-
-   
 
     // Reporting managers now use actual employee identities, rather than unused role-level rows.
     @GetMapping({"/hierarchy", "/staffs"})

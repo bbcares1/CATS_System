@@ -188,6 +188,9 @@ h1, h2, h3 { text-wrap: balance; }
 .cats-grid { display: grid; gap: 16px; }
 .cats-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .cats-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cats-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
+.cats-table-wrap { max-width: 100%; overflow-x: auto; }
+@media (max-width: 767.98px) { .cats-grid-3 { grid-template-columns: 1fr; } }
 .cats-grid-main { grid-template-columns: minmax(0, 7fr) minmax(300px, 4fr); align-items: start; }
 @media (max-width: 991.98px) { .cats-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cats-grid-main { grid-template-columns: 1fr; } }
 @media (max-width: 575.98px) { .cats-grid-4, .cats-grid-2 { grid-template-columns: 1fr; } .cats-main { padding: 16px 16px 32px; } }
@@ -230,7 +233,7 @@ h1, h2, h3 { text-wrap: balance; }
 .cats-status-approved { color: #15713f; background: #e5f5ec; }
 .cats-status-rejected { color: #b02a37; background: #fdeef0; }
 .cats-status-completed { color: #3c4654; background: #e8ecf1; }
-.cats-status-cancelled, .cats-status-deleted { color: #6b7684; background: #f1f3f6; }
+.cats-status-cancelled, .cats-status-deleted { color: #566170; background: #f1f3f6; }
 .cats-tag { display: inline-block; padding: .2em .55em; font-size: .78rem; border: 1px solid var(--cats-border); border-radius: .25rem; color: var(--cats-muted); background: #fafbfc; white-space: nowrap; }
 /* empty state */
 .cats-empty { text-align: center; padding: 44px 20px; color: var(--cats-muted); }
@@ -280,3 +283,11 @@ h1, h2, h3 { text-wrap: balance; }
 .cats-login-brand .cats-brand-text small { color: var(--cats-muted); }
 .cats-login h1 { font-size: 1.2rem; font-weight: 600; margin: 0 0 16px; }
 .cats-login-foot { text-align: center; font-size: .8rem; color: var(--cats-muted); }
+
+/* Month cells keep seven weekdays aligned; small screens can scroll the table. */
+.cats-calendar { table-layout: fixed; min-width: 900px; margin: 0; }
+.cats-calendar td { vertical-align: top; height: 120px; padding: 12px; border: 1px solid var(--cats-border, #dbe3ec); }
+.cats-calendar time { font-weight: 600; }
+.cats-calendar-outside { opacity: .55; background: #f7f9fc; }
+.cats-calendar-nonworking { background: #f7f9fc; }
+.cats-calendar-entry { margin-top: 10px; padding: 8px; border-left: 3px solid #0b63ce; background: #edf5ff; font-size: .82rem; overflow-wrap: anywhere; }

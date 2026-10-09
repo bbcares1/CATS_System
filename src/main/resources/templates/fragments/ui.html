@@ -16,12 +16,12 @@
 <a th:fragment="navlink(href, key, label, iconName, active)"
    th:href="${href}"
    th:classappend="${active == key} ? 'active'"
-   th:attr="aria-current=${active == key} ? 'page' : null, data-label=${label}">
+   th:attr="aria-current=${active == key} ? 'page' : null, data-label=${label}, aria-label=${label}">
   <svg th:replace="~{fragments/icons :: icon(${iconName})}"></svg><span th:text="${label}">Dashboard</span>
 </a>
 
 <!-- Sidebar link for a page that is not built yet. -->
-<a th:fragment="navsoon(label, iconName)" href="#" aria-disabled="true" tabindex="-1" th:attr="data-label=${label}">
+<a th:fragment="navsoon(label, iconName)" href="#" aria-disabled="true" tabindex="-1" th:attr="data-label=${label}, aria-label=${label}">
   <svg th:replace="~{fragments/icons :: icon(${iconName})}"></svg><span th:text="${label}">Approvals</span><span class="cats-soon">Soon</span>
 </a>
 

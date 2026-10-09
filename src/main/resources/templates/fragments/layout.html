@@ -30,6 +30,10 @@
 
     <div class="cats-nav-section" th:text="${role} + ' workspace'">Staff workspace</div>
     <nav class="cats-nav" aria-label="Main">
+      <a th:replace="~{fragments/ui :: navlink(@{/training/calendar}, 'calendar', 'Training calendar', 'calendar', ${active})}"></a>
+      <th:block th:if="${role == 'Admin' or role == 'Manager'}">
+        <a th:replace="~{fragments/ui :: navlink(${role == 'Admin' ? '/admin/reports' : '/manager/reports'}, 'reports', 'Training reports', 'chart', ${active})}"></a>
+      </th:block>
       <th:block th:if="${role == 'Staff'}">
         <a th:if="${u instanceof T(group6.project.model.Manager)}" th:href="@{/manager/home}"><svg th:replace="~{fragments/icons :: icon('briefcase')}"></svg><span>Manager workspace</span></a>
         <a th:replace="~{fragments/ui :: navlink(@{/staff/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"></a>
@@ -63,7 +67,7 @@
         <svg th:replace="~{fragments/icons :: icon('chevrons-right')}"></svg>
         <span>Collapse</span>
       </button>
-      <a th:href="@{/logout}" data-label="Log out"><svg th:replace="~{fragments/icons :: icon('logout')}"></svg><span>Log out</span></a>
+      <a th:href="@{/logout}" data-label="Log out" aria-label="Log out"><svg th:replace="~{fragments/icons :: icon('logout')}"></svg><span>Log out</span></a>
     </div>
   </aside>
   <div class="cats-backdrop" id="backdrop"></div>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"><body>
 <!-- Paged metadata lists never load receipt or certificate bytes. -->
-<nav th:fragment="pager(page,route,pageParameter)" aria-label="List pagination" class="card-footer">
+<nav th:fragment="pager(page,route,pageParameter)" th:attr="aria-label=${pageParameter} + ' pagination'" class="card-footer">
   <form method="get" th:action="${route}" class="cats-page-actions">
     <button class="btn btn-outline-secondary" th:name="${pageParameter}" th:value="${page.number-1}" th:disabled="${!page.hasPrevious()}">Previous</button>
     <span th:text="'Page ' + ${page.number+1} + ' of ' + ${page.totalPages == 0 ? 1 : page.totalPages}"></span>

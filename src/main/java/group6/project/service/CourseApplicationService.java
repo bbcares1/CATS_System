@@ -31,15 +31,18 @@ public class CourseApplicationService {
     private final ExcludedDaysRepo holidays;
     private final StaffRepo employees;
     private final ApprovalRoutingService routing;
+    private final group6.project.repo.TrainingCalendarPolicyRepo calendar;
 
     // Both workspaces share this policy and the same persisted employee identity.
     public CourseApplicationService(CourseApplicationRepo applications,
-            TrainingEntitlementRepo entitlements, ExcludedDaysRepo holidays, StaffRepo employees, ApprovalRoutingService routing) {
+            TrainingEntitlementRepo entitlements, ExcludedDaysRepo holidays, StaffRepo employees, ApprovalRoutingService routing,
+            group6.project.repo.TrainingCalendarPolicyRepo calendar) {
         this.applications = applications;
         this.entitlements = entitlements;
         this.holidays = holidays;
         this.employees = employees;
         this.routing = routing;
+        this.calendar = calendar;
     }
 
     // Keep soft-deleted and cancelled records in the employee's annual history.
@@ -189,6 +192,7 @@ public class CourseApplicationService {
 
     // Apply server-side rules once, regardless of which page submits the request.
     private void validateAndPrepare(CourseApplication form, User staff, Integer excludedId, boolean future) {
+        calendar.readCalendar().orElseThrow(() -> new IllegalStateException("Working calendar is not configured."));
         if (form.getCourseTitle() == null || form.getCourseTitle().isBlank()
                 || form.getCourseCategory() == null || form.getCourseStartDate() == null
                 || form.getCourseEndDate() == null || form.getJustification() == null
@@ -226,6 +230,7 @@ public class CourseApplicationService {
 
     // Admin schedules and employee applications use identical working-day and half-day rules.
     public void validateSchedule(CourseCategoryType category, LocalDate start, LocalDate end, String halfDay, boolean future) {
+        calendar.readCalendar().orElseThrow(() -> new IllegalStateException("Working calendar is not configured."));
         if (start == null || end == null || category == null) throw new IllegalArgumentException("Category and both dates are required.");
         CourseApplication schedule = new CourseApplication();
         schedule.setCourseCategory(category); schedule.setCourseStartDate(start); schedule.setCourseEndDate(end); schedule.setHalfDayPeriod(halfDay);
