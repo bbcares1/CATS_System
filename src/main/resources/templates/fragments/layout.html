@@ -57,7 +57,7 @@
       </th:block>
       <a th:replace="~{fragments/ui :: navlink(@{/training/calendar}, 'calendar', 'Training calendar', 'calendar', ${active})}"></a>
       <th:block th:if="${role == 'Admin' or role == 'Manager'}">
-        <a th:replace="~{fragments/ui :: navlink(${role == 'Admin' ? '/admin/reports' : '/manager/reports'}, 'reports', 'Training reports', 'chart', ${active})}"></a>
+        <a th:replace="~{fragments/ui :: navlink(@{${role == 'Admin' ? '/admin/reports' : '/manager/reports'}}, 'reports', 'Training reports', 'chart', ${active})}"></a>
       </th:block>
     </nav>
 

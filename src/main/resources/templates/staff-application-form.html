@@ -7,7 +7,7 @@
             <div class="cats-page-header"><div><h1 th:text="${editId == null ? 'Apply for another course' : 'Edit Application'}"></h1></div></div>
 
             <!-- Course application: Enter or edit the course details. -->
-            <form class="card card-body cats-stack" th:action="${formAction}" th:object="${course}" method="post">
+            <form class="card card-body cats-stack" th:action="@{${formAction}}" th:object="${course}" method="post">
 <th:block th:if="${editId == null}"><div th:replace="~{fragments/reviewer :: choice(${course.approvalManagerId})}"></div></th:block>
                 <input th:if="${editId != null}" type="hidden" th:field="*{version}">
                 <input th:if="${editId != null}" type="hidden" name="applicationId" th:value="${editId}">

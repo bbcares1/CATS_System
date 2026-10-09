@@ -55,6 +55,20 @@ class FormSafetyIntegrationTest {
         assertFalse(session.isInvalid());
     }
 
+    // Shared form actions include the servlet context when deployed below the host root.
+    @Test void formActionsKeepTheDeploymentContextPath() throws Exception {
+        mvc.perform(get("/cats/employee/login").contextPath("/cats")).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("action=\"/cats/employee/login\"")));
+        mvc.perform(get("/cats/admin/login").contextPath("/cats")).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("action=\"/cats/admin/login\"")));
+        Manager manager=account(new Manager(),"context_manager");var session=new MockHttpSession();session.setAttribute("user",manager);
+        mvc.perform(get("/cats/manager/approvals").contextPath("/cats").session(session)).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("action=\"/cats/manager/approvals\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/cats/manager/reports\"")));
+        mvc.perform(get("/cats/staff/apply/other").contextPath("/cats").session(session)).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("action=\"/cats/staff/applications/save\"")));
+    }
+
     // Two tabs cannot silently overwrite an application edited in the other tab.
     @Test void staleOtherCourseEditDoesNotOverwriteTheSavedDetails() {
         Manager manager=account(new Manager(),"form_manager");Staff employee=new Staff();employee.setManager(manager);employee=account(employee,"form_staff");

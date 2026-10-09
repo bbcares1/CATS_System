@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"><body>
 <!-- One GET form preserves the selected employee or year while paging a list. -->
 <nav th:fragment="pager(page,route,filterName,filterValue)" aria-label="Results pagination" class="card card-body">
-<form method="get" th:action="${route}" class="cats-page-actions">
+<form method="get" th:action="@{${route}}" class="cats-page-actions">
 <input th:if="${filterName != null and filterValue != null}" type="hidden" th:name="${filterName}" th:value="${filterValue}">
 <button class="btn btn-outline-secondary" name="page" th:value="${page.number-1}" th:disabled="${!page.hasPrevious()}">Previous</button>
 <span th:text="'Page ' + ${page.number+1} + ' of ' + ${page.totalPages == 0 ? 1 : page.totalPages}"></span>

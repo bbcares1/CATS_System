@@ -15,7 +15,7 @@
       </p>
       <div class="card">
         <div class="card-body">
-          <form method="get" th:action="${route}" class="cats-stack">
+          <form method="get" th:action="@{${route}}" class="cats-stack">
             <div class="cats-grid cats-grid-2">
               <div>
                 <label for="from" class="form-label">
@@ -174,7 +174,7 @@
           <a th:if="${page < lastPage}" th:href="@{${route}(from=${from},to=${to},category=${category},employeeId=${employeeId},attendanceOnly=${attendanceOnly},page=${page+1},size=${size})}">
             Next
           </a>
-          <form method="get" th:action="${route}">
+          <form method="get" th:action="@{${route}}">
             <input type="hidden" name="from" th:value="${from}">
             <input type="hidden" name="to" th:value="${to}">
             <input type="hidden" name="category" th:value="${category}">
