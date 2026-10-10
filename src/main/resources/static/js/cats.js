@@ -1,4 +1,3 @@
-// We handle the shared sidebar, confirmations and small form controls here.
 (function () {
   var layout = document.getElementById("layout");
   if (!layout) return;
