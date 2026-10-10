@@ -1,12 +1,12 @@
-name: cats-final-production
+name: cats-production
 services:
   db:
     image: mysql:8.4
     restart: unless-stopped
     environment:
       TZ: Asia/Singapore
-      MYSQL_DATABASE: cats_final_prod
-      MYSQL_USER: cats_final_prod
+      MYSQL_DATABASE: cats-prod
+      MYSQL_USER: cats-prod
       MYSQL_PASSWORD: ${CATS_PROD_DB_PASSWORD:?Set CATS_PROD_DB_PASSWORD in .env.prod}
       MYSQL_ROOT_PASSWORD: ${CATS_PROD_ROOT_PASSWORD:?Set CATS_PROD_ROOT_PASSWORD in .env.prod}
     volumes:
@@ -35,8 +35,8 @@ services:
       CATS_MAIL_PASSWORD: ${CATS_MAIL_PASSWORD:-}
       CATS_MAIL_FROM: ${CATS_MAIL_FROM:-}
       SERVER_SERVLET_CONTEXT_PATH: ${CATS_CONTEXT_PATH:-}
-      CATS_DB_URL: jdbc:mysql://db:3306/cats_final_prod
-      CATS_DB_USER: cats_final_prod
+      CATS_DB_URL: jdbc:mysql://db:3306/cats-prod
+      CATS_DB_USER: cats-prod
       CATS_DB_PASSWORD: ${CATS_PROD_DB_PASSWORD:?Set CATS_PROD_DB_PASSWORD in .env.prod}
       CATS_ADMIN_USER: ${CATS_ADMIN_USER:-}
       CATS_ADMIN_PASSWORD: ${CATS_ADMIN_PASSWORD:-}

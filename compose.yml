@@ -1,15 +1,15 @@
-name: cats-final-dev
+name: cats-dev
 services:
   db:
     image: mysql:8.4
     environment:
       TZ: Asia/Singapore
-      MYSQL_DATABASE: cats_final_dev
-      MYSQL_USER: ${CATS_DEV_DB_USER:-cats_final_dev}
-      MYSQL_PASSWORD: ${CATS_DEV_DB_PASSWORD:-cats_final_dev_password}
-      MYSQL_ROOT_PASSWORD: ${CATS_DEV_ROOT_PASSWORD:-cats_final_dev_root_password}
+      MYSQL_DATABASE: cats-dev
+      MYSQL_USER: ${CATS_DEV_DB_USER:-cats-dev}
+      MYSQL_PASSWORD: ${CATS_DEV_DB_PASSWORD:-cats-dev_password}
+      MYSQL_ROOT_PASSWORD: ${CATS_DEV_ROOT_PASSWORD:-cats-dev_root_password}
     ports:
-      - "127.0.0.1:${CATS_DEV_DB_PORT:-3309}:3306"
+      - "127.0.0.1:${CATS_DEV_DB_PORT:-3307}:3306"
     volumes:
       - dev-data:/var/lib/mysql
     healthcheck:

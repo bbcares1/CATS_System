@@ -54,13 +54,13 @@ docker compose -f compose.test.yml up -d --wait
 
 | Purpose | Database | Port | Data |
 |---|---|---|---|
-| Development | `cats_final_dev` | 3309 | Fixed sample accounts, persistent Docker volume |
-| Automated tests | `cats_final_test` | 3310 | Test fixtures, disposable Docker storage |
-| Deployment | `cats_final_prod` | Internal Docker network | Own persistent volume, no demo accounts |
+| Development | `cats-dev` | 3307 | Fixed sample accounts, persistent Docker volume |
+| Automated tests | `cats-tests` | 3308 | Test fixtures, disposable Docker storage |
+| Deployment | `cats-prod` | Internal Docker network | Own persistent volume, no demo accounts |
 
-The `final` names separate this version from the earlier integration demo on port 3307. Do not point this branch at that old database.
+Only the development and test databases run locally. The production database runs separately on the deployment server.
 Containers use Singapore time for course dates and yearly allowances. Flyway is the schema source; Hibernate validates it. Starting the application does not drop tables or reload saved demo records.
-Details for deployment, backup and existing databases are in [docs/DATABASE.md](docs/DATABASE.md).
+Details for deployment and backup are in [docs/DATABASE.md](docs/DATABASE.md).
 
 ## Email
 
