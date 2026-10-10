@@ -12,9 +12,9 @@ permissions:
 
 jobs:
   build:
-    name: Compile and unit tests
+    name: Compile and tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Check out code
@@ -33,5 +33,17 @@ jobs:
         run: ./mvnw -B -ntp -DskipTests compile
 
       - name: Run fast unit tests
-        # ProjectApplicationTests is an application-context smoke test.
         run: ./mvnw -B -ntp "-Dtest=*ServiceTest,*ControllerTest" test
+
+      - name: Run all tests with H2
+        run: ./mvnw -B -ntp test
+
+      - name: Start isolated MySQL tests database
+        run: docker compose -f compose.test.yml up -d --wait
+
+      - name: Run all tests with MySQL
+        run: ./mvnw -B -ntp "-Dspring.profiles.active=mysql-test" test
+
+      - name: Stop tests database
+        if: always()
+        run: docker compose -f compose.test.yml down
