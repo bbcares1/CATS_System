@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 public interface UserRepo extends JpaRepository<User, Integer> {
     Optional<User> findByUserName(String userName);
     Optional<User> findByUserNameIgnoreCase(String userName);
+    boolean existsByRoleAndActiveTrue(group6.project.model.Roles role);
     Optional<User> findByEmail(String email);
 
     // Account maintenance shares one lock order for this small team application.

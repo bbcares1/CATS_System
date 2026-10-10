@@ -15,15 +15,16 @@ public class AdminEmailService {
 
     // SMTP is optional at startup; sending still requires a configured sender.
     public AdminEmailService(java.util.Optional<JavaMailSender> mailSender,
-            @Value("${spring.mail.username:}") String senderAddress) {
+            @Value("${cats.mail.from:}") String senderAddress,
+            @Value("${spring.mail.username:}") String username) {
         this.mailSender = mailSender.orElse(null);
-        this.senderAddress = senderAddress;
+        this.senderAddress = senderAddress.isBlank() ? username : senderAddress;
     }
 
     // Send the administrator's message without changing its body.
     public void send(AdminEmailForm form) {
         if (mailSender == null || senderAddress.isBlank()) {
-            throw new IllegalStateException("Email sender is not configured. Set QQ_MAIL_USERNAME and activate the qqmail profile.");
+            throw new IllegalStateException("Email sender is not configured. Set SMTP credentials and activate the mail or qqmail profile.");
         }
 
         SimpleMailMessage message = new SimpleMailMessage();

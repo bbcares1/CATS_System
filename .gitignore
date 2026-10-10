@@ -34,3 +34,12 @@ build/
 
 ### macOS ###
 .DS_Store
+
+# Local credentials and database exports never belong in Git.
+.env
+.env.*
+!.env.prod.example
+backups/
+*.log
+
+.local-tmp/
