@@ -205,7 +205,7 @@ class ManagerControllerTest {
     private ApplicationView application(ApplicationStatus status) {
         return new ApplicationView(10, 2, "Alex & Team", "S002",
                 "Java <script>alert(1)</script>", CourseCategoryType.EXTERNAL_COURSE, "NUS-ISS",
-                LocalDate.of(2026, 11, 12), LocalDate.of(2026, 11, 13), 2.0, null, 1800.0,
+                LocalDate.of(2026, 11, 12), LocalDate.of(2026, 11, 13), 2.0, null, new java.math.BigDecimal("1800.0"),
                 "Improve our system design.", "Share the learning with the team.", status,
                 LocalDateTime.of(2026, 10, 9, 10, 0), null,
                 status == ApplicationStatus.REJECTED ? LocalDateTime.of(2026, 10, 9, 11, 0) : null,

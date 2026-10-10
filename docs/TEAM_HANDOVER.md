@@ -38,8 +38,19 @@ The old `imran/final-audit` branch remains a reference for verified rules and te
 - `AccountAdminService` is the single write boundary for account changes. It checks unique identifiers, reporting cycles, open work, the last Admin and old form versions. History-bearing accounts are disabled instead of deleted.
 - The role update is deliberately contained in `UserRepo.changeRole`: JPA cannot turn a managed Staff object into an Admin with `setRole`. Reloading after the update gives the correct subtype.
 - Sessions expire after account changes. Login is case-insensitive for usernames; passwords remain simple classroom credentials and never appear in edit forms.
-- Annual allowances are the next integration step. The old global Staff fields still exist temporarily in this commit and are not the final design.
+- Annual days and budgets now live in `TrainingEntitlement`, with one record per employee and year. Staff has no duplicate global allowance fields.
 
 Read: `admin-account-form.html` → `AccountAdminController` → `AccountAdminService` → `UserRepo`.
 
 Check: `AccountAdministrationIntegrationTest` covers identity/history through role changes, reporting cycles, session expiry, deletion protection and rendered forms. All 89 current tests pass against isolated H2; MySQL validation is still pending.
+
+## Annual allowance and dates — Hong Fan, Ryan and Martin
+
+- `TrainingEntitlementService.summary` is the one annual calculation. Applied/Updated reserve allowance; Approved/Completed use it. Rejected/Deleted/Cancelled release it. The pages show reserved and used amounts separately.
+- Removed the extra Completed-course calculation and duplicate application validation from `StaffService`. `CourseApplicationService` applies the rules for either employee entry point.
+- Application fees use `BigDecimal`. Limits cannot be reduced below amounts already reserved or used. A missing year's allocation is zero until Admin allocates it.
+- Admin keeps the budget pages, now with a year selector and `AnnualAllowanceForm`. The designation examples are Administrative 5 days and Professional 10 days; Admin can set a different allocation.
+- `TrainingDayCalculator` takes plain dates, category, half-day choice and holidays. It has no repository or session. AM/PM is Internal-only and single-day; multiday courses use full working days.
+- Corrected an old overlap bug: an empty half-day value must not avoid a clash with AM or PM. Only opposite AM/PM periods on the same date can coexist.
+
+Check: all 96 tests pass on H2, including annual separation, decimal totals, reservation release, limit reduction and date rules. The old multiday-half-day expectation was changed to the agreed single-day rule, with a full-day overlap regression retained.

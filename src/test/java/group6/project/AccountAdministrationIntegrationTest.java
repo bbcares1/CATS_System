@@ -153,7 +153,7 @@ class AccountAdministrationIntegrationTest {
         CourseApplication course = new CourseApplication(); course.setApplicant(employee); course.setStatus(ApplicationStatus.COMPLETED);
         course.setCourseTitle("Historical course"); course.setCourseCategory(CourseCategoryType.EXTERNAL_COURSE);
         course.setTrainingProvider("Training centre"); course.setCourseStartDate(LocalDate.now().minusDays(20));
-        course.setCourseEndDate(LocalDate.now().minusDays(20)); course.setCourseFee(100d);
+        course.setCourseEndDate(LocalDate.now().minusDays(20)); course.setCourseFee(new java.math.BigDecimal("100"));
         course.setTrainingDays(1d); course.setJustification("Develop skills"); course.setDecisionReason("Previous decision"); return course;
     }
 

@@ -24,13 +24,15 @@ public class CourseApplicationService {
     private static final List<ApplicationStatus> ACTIVE_STATUSES =
             List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED, ApplicationStatus.APPROVED);
     private final CourseApplicationRepo courseApplicationRepo;
-    private final TrainingEntitlementRepo entitlementRepo;
+    private final TrainingEntitlementService entitlements;
+    private final group6.project.repo.StaffRepo employees;
     private final ExcludedDaysRepo excludedDaysRepo;
 
     public CourseApplicationService(CourseApplicationRepo courseApplicationRepo,
-            TrainingEntitlementRepo entitlementRepo, ExcludedDaysRepo excludedDaysRepo) {
+            TrainingEntitlementService entitlements, ExcludedDaysRepo excludedDaysRepo, group6.project.repo.StaffRepo employees) {
         this.courseApplicationRepo = courseApplicationRepo;
-        this.entitlementRepo = entitlementRepo;
+        this.entitlements = entitlements;
+        this.employees = employees;
         this.excludedDaysRepo = excludedDaysRepo;
     }
 
@@ -49,8 +51,9 @@ public class CourseApplicationService {
         return application;
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public CourseApplication create(CourseApplication form, Staff staff) {
+        lockEmployee(staff);
         validateAndPrepare(form, staff, null, true);
         form.setApplicant(staff);
         form.setStatus(ApplicationStatus.APPLIED);
@@ -59,8 +62,9 @@ public class CourseApplicationService {
         return courseApplicationRepo.save(form);
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public CourseApplication update(Integer id, CourseApplication form, Staff staff) {
+        lockEmployee(staff);
         CourseApplication existing = getOwned(id, staff);
         if (existing.getStatus() != ApplicationStatus.APPLIED
                 && existing.getStatus() != ApplicationStatus.UPDATED) {
@@ -82,8 +86,9 @@ public class CourseApplicationService {
         return courseApplicationRepo.save(existing);
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public void delete(Integer id, Staff staff) {
+        lockEmployee(staff);
         CourseApplication application = getOwned(id, staff);
         if (application.getStatus() != ApplicationStatus.APPLIED
                 && application.getStatus() != ApplicationStatus.UPDATED) {
@@ -94,8 +99,9 @@ public class CourseApplicationService {
         courseApplicationRepo.save(application);
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public void cancel(Integer id, Staff staff) {
+        lockEmployee(staff);
         CourseApplication application = getOwned(id, staff);
         if (application.getStatus() != ApplicationStatus.APPROVED) {
             throw new IllegalStateException("Only Approved applications can be cancelled.");
@@ -105,14 +111,15 @@ public class CourseApplicationService {
         courseApplicationRepo.save(application);
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public void complete(Integer id, String comments, Staff staff) {
+        lockEmployee(staff);
         CourseApplication application = getOwned(id, staff);
         if (application.getStatus() != ApplicationStatus.APPROVED) {
             throw new IllegalStateException("Only Approved applications can be completed.");
         }
         if (application.getCourseEndDate() == null
-                || application.getCourseEndDate().isAfter(LocalDate.now())) {
+                || !application.getCourseEndDate().isBefore(LocalDate.now())) {
             throw new IllegalStateException("A course can only be marked completed after it ends.");
         }
         if (comments == null || comments.isBlank()) {
@@ -124,85 +131,42 @@ public class CourseApplicationService {
         courseApplicationRepo.save(application);
     }
 
+    // A partial form can show annual allowance before dates have been chosen.
     public Summary summary(CourseApplication form, Staff staff, Integer excludedId) {
-        if (form.getCourseCategory() == null || form.getCourseStartDate() == null
-                || form.getCourseEndDate() == null) {
-            double allowance = allowanceDays(staff, LocalDate.now().getYear());
-            double budget = allowanceBudget(staff, LocalDate.now().getYear());
-            List<CourseApplication> used = usedApplications(staff, LocalDate.now().getYear(), excludedId);
-            double usedDays = used.stream().mapToDouble(a -> a.getTrainingDays() == null ? 0 : a.getTrainingDays()).sum();
-            double usedBudget = used.stream().mapToDouble(a -> a.getCourseFee()).sum();
-            return new Summary(0, Math.max(0, allowance - usedDays),
-                    Math.max(0, budget - usedBudget), usedDays, usedBudget);
+        int year = form.getCourseStartDate() == null ? LocalDate.now().getYear() : form.getCourseStartDate().getYear();
+        var annual = entitlements.summary(staff, year, excludedId);
+        double requested = 0;
+        if (form.getCourseCategory() != null && form.getCourseStartDate() != null && form.getCourseEndDate() != null) {
+            requested = calculateTrainingDays(form, false);
         }
+        return new Summary(requested, annual.remainingDays(), annual.remainingBudget(),
+                annual.usedDays(), annual.usedBudget(), annual.reservedDays(), annual.reservedBudget());
+    }
+
+    public record Summary(double requestedDays, double remainingDays, BigDecimal remainingBudget,
+            double usedDays, BigDecimal usedBudget, double reservedDays, BigDecimal reservedBudget) {}
+
+    // Submission, editing and the annual Admin form coordinate on the same employee row.
+    private void lockEmployee(Staff staff) {
+        employees.lockById(staff.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found."));
+    }
+
+    // Apply one set of rules regardless of which employee page submitted the application.
+    private void validateAndPrepare(CourseApplication form, Staff staff, Integer excludedId, boolean futureRequired) {
         validateBasic(form);
-        double days = form.getCourseStartDate() == null || form.getCourseEndDate() == null
-                ? 0 : calculateTrainingDays(form);
-        double usedDays = usedApplications(staff, form.getCourseStartDate() == null
-                ? LocalDate.now().getYear() : form.getCourseStartDate().getYear(), excludedId)
-                .stream().mapToDouble(a -> a.getTrainingDays() == null ? 0 : a.getTrainingDays()).sum();
-        double usedBudget = usedApplications(staff, form.getCourseStartDate() == null
-                ? LocalDate.now().getYear() : form.getCourseStartDate().getYear(), excludedId)
-                .stream().mapToDouble(a -> a.getCourseFee()).sum();
-        int year = form.getCourseStartDate().getYear();
-        double entitlementDays = allowanceDays(staff, year);
-        double entitlementBudget = allowanceBudget(staff, year);
-        return new Summary(days, Math.max(0, entitlementDays == 0 ? 0 : entitlementDays - usedDays),
-                Math.max(0, entitlementBudget - usedBudget),
-                usedDays, usedBudget);
-    }
-
-    private double allowanceDays(Staff staff, int year) {
-        return entitlementRepo.findByStaff_UserIdAndYear(staff.getUserId(), year)
-                .map(e -> staff.getTrainingDays() == null ? 0 : staff.getTrainingDays())
-                .orElse(staff.getTrainingDays() == null ? 0 : staff.getTrainingDays());
-    }
-
-    private double allowanceBudget(Staff staff, int year) {
-        return entitlementRepo.findByStaff_UserIdAndYear(staff.getUserId(), year)
-                .map(e -> staff.getTrainingBudget() == null ? 0 : staff.getTrainingBudget())
-                .orElse(staff.getTrainingBudget() == null ? 0 : staff.getTrainingBudget());
-    }
-
-    public record Summary(double requestedDays, double remainingDays, double remainingBudget,
-            double usedDays, double usedBudget) {}
-
-    private void validateAndPrepare(CourseApplication form, Staff staff, Integer excludedId,
-            boolean futureRequired) {
-        validateBasic(form);
-        if (futureRequired && !form.getCourseStartDate().isAfter(LocalDate.now())) {
-            throw new IllegalArgumentException("The course start date must be after today.");
+        BigDecimal fee = form.getCourseFee();
+        if (fee == null || fee.signum() < 0 || fee.scale() > 2
+                || fee.compareTo(new BigDecimal("9999999999.99")) > 0) {
+            throw new IllegalArgumentException("Course fee must be a non-negative amount with up to two decimal places.");
         }
-        if (form.getCourseEndDate().isBefore(form.getCourseStartDate())) {
-            throw new IllegalArgumentException("The end date cannot be before the start date.");
-        }
-        if (form.getCourseStartDate().getYear() != form.getCourseEndDate().getYear()) {
-            throw new IllegalArgumentException("A course must be within one calendar year.");
-        }
-        if (isNonWorkingDay(form.getCourseStartDate()) || isNonWorkingDay(form.getCourseEndDate())) {
-            throw new IllegalArgumentException("Start and end dates must be working days.");
-        }
-        if (form.getCourseFee() < 0) {
-            throw new IllegalArgumentException("Course fee cannot be negative.");
-        }
-        if (form.getCourseCategory() == CourseCategoryType.INTERNAL_TRAINING) {
-            form.setCourseFee(0);
-        } else if ("HALF_DAY".equals(form.getHalfDayPeriod())
-                || "AM".equals(form.getHalfDayPeriod()) || "PM".equals(form.getHalfDayPeriod())) {
-            throw new IllegalArgumentException("Only Internal Training supports half-day sessions.");
-        }
-        if (form.getCourseCategory() == CourseCategoryType.INTERNAL_TRAINING
-                && form.getHalfDayPeriod() != null && !form.getHalfDayPeriod().isBlank()
-                && !Set.of("AM", "PM").contains(form.getHalfDayPeriod())) {
-            throw new IllegalArgumentException("Half-day period must be AM or PM.");
-        }
-        form.setTrainingDays(calculateTrainingDays(form));
-        Summary summary = summary(form, staff, excludedId);
-        if (summary.requestedDays() > summary.remainingDays() + 0.0001) {
+        if (form.getCourseCategory() == CourseCategoryType.INTERNAL_TRAINING) form.setCourseFee(BigDecimal.ZERO);
+        form.setTrainingDays(calculateTrainingDays(form, futureRequired));
+        var total = entitlements.summary(staff, form.getCourseStartDate().getYear(), excludedId);
+        if (form.getTrainingDays() > total.remainingDays()) {
             throw new IllegalArgumentException("Training days exceed the remaining annual allowance.");
         }
-        if (form.getCourseCategory() != CourseCategoryType.INTERNAL_TRAINING
-                && form.getCourseFee() > summary.remainingBudget() + 0.0001) {
+        if (form.getCourseFee().compareTo(total.remainingBudget()) > 0) {
             throw new IllegalArgumentException("Course fee exceeds the remaining annual training budget.");
         }
         for (CourseApplication other : usedApplications(staff, form.getCourseStartDate().getYear(), excludedId)) {
@@ -221,24 +185,12 @@ public class CourseApplicationService {
         }
     }
 
-    private boolean isNonWorkingDay(LocalDate date) {
-        return date.getDayOfWeek() == DayOfWeek.SATURDAY
-                || date.getDayOfWeek() == DayOfWeek.SUNDAY
-                || excludedDaysRepo.existsByDate(date);
-    }
-
-    private double calculateTrainingDays(CourseApplication application) {
-        double days = 0;
-        for (LocalDate date = application.getCourseStartDate();
-                !date.isAfter(application.getCourseEndDate()); date = date.plusDays(1)) {
-            if (!isNonWorkingDay(date)) {
-                days += 1;
-            }
-        }
-        if ("AM".equals(application.getHalfDayPeriod()) || "PM".equals(application.getHalfDayPeriod())) {
-            days -= 0.5;
-        }
-        return round(days);
+    // Load the calendar once, then let the pure date utility count the working days.
+    private double calculateTrainingDays(CourseApplication course, boolean future) {
+        Set<LocalDate> holidays = new java.util.HashSet<>();
+        for (var holiday : excludedDaysRepo.findAll()) holidays.add(holiday.getDate());
+        return TrainingDayCalculator.count(course.getCourseCategory(), course.getCourseStartDate(),
+                course.getCourseEndDate(), course.getHalfDayPeriod(), holidays, future);
     }
 
     private List<CourseApplication> usedApplications(Staff staff, int year, Integer excludedId) {
@@ -254,16 +206,13 @@ public class CourseApplicationService {
                 || second.getCourseEndDate().isBefore(first.getCourseStartDate())) {
             return false;
         }
+        boolean oppositePeriods = "AM".equals(first.getHalfDayPeriod()) && "PM".equals(second.getHalfDayPeriod())
+                || "PM".equals(first.getHalfDayPeriod()) && "AM".equals(second.getHalfDayPeriod());
         if (first.getCourseStartDate().equals(first.getCourseEndDate())
-                && second.getCourseStartDate().equals(second.getCourseEndDate())
-                && first.getHalfDayPeriod() != null && second.getHalfDayPeriod() != null
-                && !first.getHalfDayPeriod().equals(second.getHalfDayPeriod())) {
+                && second.getCourseStartDate().equals(second.getCourseEndDate()) && oppositePeriods) {
             return false;
         }
         return true;
     }
 
-    private double round(double value) {
-        return BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP).doubleValue();
-    }
 }

@@ -54,26 +54,6 @@ public class AdminService {
      @Autowired
      public ManagerRepo managerRepo;
 
-     @Transactional
-     public void updateStaffBudget(Integer Id, Double new_budget, Integer new_days) {
-          if (new_budget == null || new_budget < 0 || new_days == null || new_days < 0) {
-               throw new IllegalArgumentException(
-                         "Training budget and days must be zero or greater");
-          }
-
-          Optional<Staff> targeted_staff = staffRepo.findById(Id);
-          if (targeted_staff.isEmpty()) {
-               throw new RuntimeException("can not find ID as " + Id + " staff");
-          } else {
-               Staff staff = targeted_staff.get();
-               staff.setTrainingBudget(new_budget);
-               staff.setTrainingDays(new_days);
-
-               staffRepo.save(staff);
-          }
-
-     }
-
      public List<Staff> getAllStaff() {
           return staffRepo.findAll();
      }

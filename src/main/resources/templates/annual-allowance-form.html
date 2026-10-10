@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('Annual allowance', 'Admin', 'entitlement', ~{::#content})}">
+<body><section id="content">
+  <div class="cats-page-header"><div><h1>Annual allowance</h1>
+    <p class="cats-sub" th:text="${staff.name + ' · ' + staff.staffId}">Employee</p></div></div>
+  <section class="card"><div class="card-body">
+    <form th:action="@{/admin/entitlements/save}" th:object="${form}" method="post" class="cats-form">
+      <input type="hidden" th:field="*{staffId}">
+      <div class="cats-error-summary" th:if="${#fields.hasAnyErrors()}" role="alert">
+        <div><h2>Check these values</h2><ul><li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li></ul></div>
+      </div>
+      <div><label for="year" class="form-label">Calendar year</label>
+        <input type="number" th:field="*{year}" min="2000" max="2100" class="form-control" required></div>
+      <div><label for="dayLimit" class="form-label">Training day limit</label>
+        <input type="number" th:field="*{dayLimit}" min="0" max="366" step="0.5" class="form-control" required>
+        <p class="form-text" th:if="${suggestedDays > 0}"
+           th:text="${staff.designation + ' designation: suggested ' + suggestedDays + ' days per year.'}"></p>
+        <p class="form-text" th:unless="${suggestedDays > 0}">Set the allowance for this employee's designation. Administrative: 5 days; Professional: 10 days.</p>
+      </div>
+      <div><label for="budget" class="form-label">Training budget ($)</label>
+        <input type="number" th:field="*{budget}" min="0" step="0.01" class="form-control" required></div>
+      <p class="form-text">Pending applications reserve allowance. Approved and completed courses use it. Other years stay unchanged.</p>
+      <div class="cats-form-footer"><a class="btn btn-outline-secondary" th:href="@{/admin/entitlements(year=${form.year})}">Cancel</a>
+        <button class="btn btn-primary" type="submit">Save allowance</button></div>
+    </form>
+  </div></section>
+</section></body></html>

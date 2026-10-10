@@ -54,6 +54,7 @@ public class AdminController {
     private static final String CALENDAR_WEEKEND_DATES = "adminCalendarWeekendDates";
     private static final String CALENDAR_MONTH = "adminCalendarMonth";
 
+    private final group6.project.service.TrainingEntitlementService entitlements;
     private final AdminService adminService;
     private final CourseCategoryService courseCategoryService;
     private final ExcludedDaysService excludedDaysService;
@@ -67,7 +68,9 @@ public class AdminController {
             ExcludedDaysService excludedDaysService,
             CourseScheduleService courseScheduleService,
             CourseBatchService courseBatchService,
-            AdminEmailService adminEmailService) {
+            AdminEmailService adminEmailService,
+            group6.project.service.TrainingEntitlementService entitlements) {
+       this.entitlements = entitlements;
        this.adminService = adminService;
        this.courseCategoryService = courseCategoryService;
        this.excludedDaysService = excludedDaysService;
@@ -148,70 +151,56 @@ public class AdminController {
         return "redirect:/admin/emails";
     }
 
-    
-  // ------- this part below is about budgetmanagement
-  // -----------------------------------------------
-
-
-
-
-
-    @GetMapping("/budgets")
-    public String showBudgetList(Model model) {
-        model.addAttribute("staffs", adminService.getAllStaff());
-        return "BudgetList";
+    // The year selector keeps annual allowances separate from account details.
+    @GetMapping({"/budgets", "/entitlements"})
+    public String showBudgetList(@RequestParam(required = false) Integer year,
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, Model model) {
+        int selectedYear = year == null ? LocalDate.now().getYear() : year;
+        var result = PageSupport.page(entitlements.rows(selectedYear), page, size);
+        model.addAttribute("year", selectedYear);
+        model.addAttribute("rows", result.getContent());
+        model.addAttribute("pageData", result);
+        return "annual-allowance-list";
     }
 
-    @GetMapping("/budgets/edit/{id}")
-    public String editBudget(@PathVariable("id") Integer id, Model model) {
-        Optional<Staff> selectedStaff = adminService.getIdStaff(id);
-        if (selectedStaff.isEmpty()) {
-            return "redirect:/admin/budgets";
-        }
-        model.addAttribute("staff", selectedStaff.get());
-        return "ChangeBudget";
+    // Populate the selected year; a new year starts with the designation's suggested day limit.
+    @GetMapping({"/budgets/edit/{id}", "/entitlements/{id}"})
+    public String editBudget(@PathVariable Integer id, @RequestParam(required = false) Integer year, Model model) {
+        int selectedYear = year == null ? LocalDate.now().getYear() : year;
+        Staff staff = entitlements.employee(id);
+        var summary = entitlements.summary(staff, selectedYear, null);
+        var form = new group6.project.form.AnnualAllowanceForm();
+        form.setStaffId(id);
+        form.setYear(selectedYear);
+        form.setDayLimit(summary.dayLimit());
+        form.setBudget(summary.budget());
+        return allowanceForm(form, model);
     }
 
-    @PostMapping("/budgets/save")
-    public String saveBudget(
-            @ModelAttribute("staff") Staff staff,
-            BindingResult result,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        Optional<Staff> selectedStaff = staff.getUserId() == null
-                ? Optional.empty()
-                : adminService.getIdStaff(staff.getUserId());
-        if (selectedStaff.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Staff member could not be found");
-            return "redirect:/admin/budgets";
+    // Bind only allowance fields; bad input returns to the form with the entered values.
+    @PostMapping({"/budgets/save", "/entitlements/save"})
+    public String saveBudget(@Valid @ModelAttribute("form") group6.project.form.AnnualAllowanceForm form,
+            BindingResult binding, Model model, RedirectAttributes redirect) {
+        if (binding.hasErrors()) return allowanceForm(form, model);
+        try {
+            entitlements.saveLimits(form.getStaffId(), form.getYear(), form.getDayLimit(), form.getBudget());
+        } catch (org.springframework.web.server.ResponseStatusException error) {
+            if (error.getStatusCode().value() != 400) throw error;
+            binding.reject("allowance", error.getReason());
+            return allowanceForm(form, model);
         }
-        if (staff.getTrainingBudget() == null || staff.getTrainingBudget() < 0) {
-            result.rejectValue("trainingBudget", "invalid", "Budget must be zero or greater");
-        }
-        if (staff.getTrainingDays() == null || staff.getTrainingDays() < 0) {
-            result.rejectValue("trainingDays", "invalid", "Training days must be zero or greater");
-        }
-        if (result.hasErrors()) {
-            staff.setName(selectedStaff.get().getName());
-            staff.setStaffId(selectedStaff.get().getStaffId());
-            staff.setRole(selectedStaff.get().getRole());
-            model.addAttribute("staff", staff);
-            return "ChangeBudget";
-        }
-
-        adminService.updateStaffBudget(
-                staff.getUserId(), staff.getTrainingBudget(), staff.getTrainingDays());
-        redirectAttributes.addFlashAttribute("success", "Training entitlement updated successfully");
-        return "redirect:/admin/budgets";
+        redirect.addFlashAttribute("success", "Annual allowance saved.");
+        return "redirect:/admin/entitlements?year=" + form.getYear();
     }
 
-
-
-
-
-
-
-
+    // Show the employee and the designation rule after GETs and rejected form submissions.
+    private String allowanceForm(group6.project.form.AnnualAllowanceForm form, Model model) {
+        Staff staff = entitlements.employee(form.getStaffId());
+        model.addAttribute("staff", staff);
+        model.addAttribute("form", form);
+        model.addAttribute("suggestedDays", entitlements.suggestedDays(staff.getDesignation()));
+        return "annual-allowance-form";
+    }
 
     // this part below is about course schedule calendar
     // -------------------------------------------------

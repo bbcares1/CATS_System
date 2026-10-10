@@ -56,6 +56,7 @@ import group6.project.repo.CourseCategoryRepository;
         ExcludedDaysController.class
 })
 class AdminManagementTemplateTest {
+    @MockitoBean group6.project.service.TrainingEntitlementService entitlements;
 
     @Autowired
     private MockMvc mockMvc;
@@ -127,8 +128,6 @@ class AdminManagementTemplateTest {
         staff.setUserName("avery");
         staff.setStaffId("S0011");
         staff.setRole(Roles.STAFF);
-        staff.setTrainingBudget(1800.0);
-        staff.setTrainingDays(8);
 
         category = new CourseCategory();
         category.setCategoryId(4);
@@ -182,6 +181,12 @@ class AdminManagementTemplateTest {
                 org.mockito.ArgumentMatchers.any(LocalDate.class),
                 org.mockito.ArgumentMatchers.any(LocalDate.class)))
                 .thenReturn(List.of(new CourseScheduleService.CalendarMonth("OCTOBER", 2026, List.of())));
+        when(entitlements.employee(11)).thenReturn(staff);
+        var total = new group6.project.service.TrainingEntitlementService.AnnualSummary(8,
+                new java.math.BigDecimal("1800"), 0, java.math.BigDecimal.ZERO, 0, java.math.BigDecimal.ZERO);
+        when(entitlements.summary(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.isNull())).thenReturn(total);
+        when(entitlements.rows(org.mockito.ArgumentMatchers.anyInt())).thenReturn(List.of(
+                new group6.project.service.TrainingEntitlementService.AllowanceRow(staff, total)));
         when(courseBatchService.getAllBatches()).thenReturn(List.of(batch));
         when(courseBatchService.getBatchById(18L)).thenReturn(Optional.of(batch));
     }
@@ -397,7 +402,7 @@ class AdminManagementTemplateTest {
     @Test
     void invalidFormSubmissionsRenderValidationFeedback() throws Exception {
         mockMvc.perform(post("/admin/accounts/save")).andExpect(status().isOk());
-        mockMvc.perform(post("/admin/budgets/save").param("userId", "11"))
+        mockMvc.perform(post("/admin/budgets/save").param("staffId", "11"))
                 .andExpect(status().isOk());
         mockMvc.perform(post("/admin/courses/save")).andExpect(status().isOk());
         mockMvc.perform(post("/admin/hierarchy/save")).andExpect(status().isOk());

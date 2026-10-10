@@ -22,7 +22,7 @@ public interface UserRepo extends JpaRepository<User, Integer> {
 
     // Reload after changing the discriminator; a managed Staff object cannot become an Admin.
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query(value = "update users set role=:role, version=version+1, training_days=coalesce(training_days,0), training_budget=coalesce(training_budget,0) where user_id=:id", nativeQuery = true)
+    @Query(value = "update users set role=:role, version=version+1 where user_id=:id", nativeQuery = true)
     int changeRole(@Param("id") Integer id, @Param("role") String role);
 
     boolean existsByUserNameIgnoreCaseAndUserIdNot(String name, Integer id);

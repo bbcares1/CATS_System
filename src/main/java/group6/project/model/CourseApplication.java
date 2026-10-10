@@ -1,5 +1,8 @@
 package group6.project.model;
 
+import jakarta.persistence.Column;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -37,7 +40,8 @@ public class CourseApplication {
     @JoinColumn(name = "approval_manager_id")
     private User approvalManager;
 
-    private double courseFee;
+    @Column(precision = 12, scale = 2, nullable = false)
+    private BigDecimal courseFee = BigDecimal.ZERO;
 
     private LocalDate courseStartDate;
 

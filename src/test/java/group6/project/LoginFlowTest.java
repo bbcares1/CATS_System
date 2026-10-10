@@ -95,8 +95,6 @@ class LoginFlowTest {
         user.setRole(role);
         if (user instanceof Staff staff) {
             staff.setStaffId("LOGIN-" + role.name());
-            staff.setTrainingBudget(2000d);
-            staff.setTrainingDays(10);
         }
         return users.saveAndFlush(user);
     }

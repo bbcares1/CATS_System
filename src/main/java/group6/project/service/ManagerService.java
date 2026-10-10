@@ -97,7 +97,7 @@ public class ManagerService {
     public record ApplicationView(Integer applicationId, Integer applicantId, String applicantName,
             String staffId, String title, CourseCategoryType category, String provider,
             LocalDate startDate, LocalDate endDate, Double trainingDays, String halfDayPeriod,
-            double fee, String justification, String workDissemination, ApplicationStatus status,
+            java.math.BigDecimal fee, String justification, String workDissemination, ApplicationStatus status,
             LocalDateTime submittedAt, LocalDateTime updatedAt, LocalDateTime reviewedAt,
             String decisionReason, String experienceComments) {
     }

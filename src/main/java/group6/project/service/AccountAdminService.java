@@ -184,10 +184,6 @@ public class AccountAdminService {
                     case STAFF -> new Staff();
                 };
         user.setRole(role);
-        if (user instanceof Staff staff) {
-            staff.setTrainingDays(0);
-            staff.setTrainingBudget(0d);
-        }
         return user;
     }
 

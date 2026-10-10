@@ -30,6 +30,7 @@ import group6.project.repo.TrainingEntitlementRepo;
 
 @ExtendWith(MockitoExtension.class)
 class CourseApplicationServiceTest {
+    @Mock group6.project.repo.StaffRepo employees;
     @Mock CourseApplicationRepo applicationRepo;
     @Mock TrainingEntitlementRepo entitlementRepo;
     @Mock ExcludedDaysRepo excludedDaysRepo;
@@ -39,12 +40,14 @@ class CourseApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new CourseApplicationService(applicationRepo, entitlementRepo, excludedDaysRepo);
+        service = new CourseApplicationService(applicationRepo,
+                new TrainingEntitlementService(entitlementRepo, employees, applicationRepo), excludedDaysRepo, employees);
         staff = new Staff();
         staff.setUserId(7);
-        staff.setTrainingDays(5);
-        staff.setTrainingBudget(1000d);
-        lenient().when(entitlementRepo.findByStaff_UserIdAndYear(any(), any())).thenReturn(Optional.empty());
+        var allowance = new group6.project.model.TrainingEntitlement(LocalDate.now().getYear());
+        allowance.setStaff(staff); allowance.setDayLimit(5d); allowance.setBudget(new java.math.BigDecimal("1000"));
+        lenient().when(employees.lockById(7)).thenReturn(Optional.of(staff));
+        lenient().when(entitlementRepo.findByStaff_UserIdAndYear(any(), any())).thenReturn(Optional.of(allowance));
         lenient().when(applicationRepo.findByApplicant_UserIdAndStatusIn(any(), any())).thenReturn(java.util.List.of());
         lenient().when(excludedDaysRepo.existsByDate(any())).thenReturn(false);
         lenient().when(applicationRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -57,7 +60,7 @@ class CourseApplicationServiceTest {
 
         CourseApplication saved = service.create(application, staff);
 
-        assertEquals(0, saved.getCourseFee());
+        assertEquals(0, saved.getCourseFee().signum());
         assertEquals(0.5, saved.getTrainingDays());
     }
 
@@ -79,7 +82,8 @@ class CourseApplicationServiceTest {
     @Test
     void holidayStartDatesAreRejected() {
         CourseApplication application = valid(CourseCategoryType.EXTERNAL_COURSE);
-        when(excludedDaysRepo.existsByDate(application.getCourseStartDate())).thenReturn(true);
+        var holiday = new group6.project.model.ExcludedDays(); holiday.setDate(application.getCourseStartDate());
+        when(excludedDaysRepo.findAll()).thenReturn(java.util.List.of(holiday));
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> service.create(application, staff));
@@ -91,7 +95,7 @@ class CourseApplicationServiceTest {
     @Test
     void negativeFeesAreRejected() {
         CourseApplication application = valid(CourseCategoryType.EXTERNAL_COURSE);
-        application.setCourseFee(-1);
+        application.setCourseFee(new java.math.BigDecimal("-1"));
 
         assertThrows(IllegalArgumentException.class, () -> service.create(application, staff));
     }
@@ -105,7 +109,7 @@ class CourseApplicationServiceTest {
         when(applicationRepo.findById(10)).thenReturn(Optional.of(existing));
 
         CourseApplication edit = valid(CourseCategoryType.EXTERNAL_COURSE);
-        edit.setCourseFee(100);
+        edit.setCourseFee(new java.math.BigDecimal("100"));
         assertEquals(group6.project.model.ApplicationStatus.UPDATED,
                 service.update(10, edit, staff).getStatus());
     }
@@ -116,7 +120,7 @@ class CourseApplicationServiceTest {
         application.setCourseCategory(category);
         application.setCourseStartDate(nextWorkingDay());
         application.setCourseEndDate(application.getCourseStartDate());
-        application.setCourseFee(100);
+        application.setCourseFee(new java.math.BigDecimal("100"));
         application.setJustification("Improve delivery quality");
         return application;
     }

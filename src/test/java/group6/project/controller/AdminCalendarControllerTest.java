@@ -3,6 +3,7 @@ package group6.project.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -60,7 +61,7 @@ public class AdminCalendarControllerTest {
                 excludedDaysService,
                 courseScheduleService,
                 courseBatchService,
-                adminEmailService);
+                adminEmailService, mock(group6.project.service.TrainingEntitlementService.class));
     }
 
     // Test 1: Display selected month
