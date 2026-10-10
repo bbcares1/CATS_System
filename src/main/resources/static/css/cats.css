@@ -81,6 +81,8 @@ h1, h2, h3 { text-wrap: balance; }
 .btn-sm { --bs-btn-padding-y: .3rem; --bs-btn-padding-x: .65rem; }
 .btn .cats-icon { width: 16px; height: 16px; }
 .form-control, .form-select { border-color: var(--cats-border-strong); padding: .5rem .75rem; }
+/* Leave room for the dropdown arrow, including in narrow page-size selectors. */
+.form-select { padding-right: 2.25rem; }
 .form-control:focus, .form-select:focus { border-color: var(--bs-primary); box-shadow: 0 0 0 3px rgba(11, 99, 206, .18); outline: 0; }
 .form-control::placeholder { color: #9aa5b3; }
 .form-control[readonly] { background: #f4f6f9; color: var(--cats-muted); }
