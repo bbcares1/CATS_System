@@ -1,3 +1,4 @@
+// We check monthly attendance, report scope and exported totals.
 package group6.project;
 
 import static org.junit.jupiter.api.Assertions.*;

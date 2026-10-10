@@ -1,3 +1,4 @@
+// We store a fee claim, its evidence, review and payment record.
 package group6.project.model;
 
 import jakarta.persistence.Column;

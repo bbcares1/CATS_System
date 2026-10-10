@@ -1,3 +1,4 @@
+// We handle the separate Employee and Admin login pages and shared logout.
 package group6.project.controller;
 
 import group6.project.model.Admin;
@@ -21,7 +22,6 @@ import java.util.UUID;
 public class UserController {
     private final UserService users;
 
-    // Keep authentication in the service, and page navigation here.
     public UserController(UserService users) {
         this.users = users;
     }

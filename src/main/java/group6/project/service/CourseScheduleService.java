@@ -1,3 +1,4 @@
+// We calculate an end date from the start date and training days, skipping non-working days.
 package group6.project.service;
 
 import group6.project.model.CourseCategoryType;
@@ -16,7 +17,6 @@ import java.util.stream.Collectors;
 public class CourseScheduleService {
     private final ExcludedDaysRepo holidays;
 
-    // The preview reads the same holidays used when saving applications and batches.
     public CourseScheduleService(ExcludedDaysRepo holidays) {
         this.holidays = holidays;
     }

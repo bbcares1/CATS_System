@@ -1,3 +1,4 @@
+// We check when the first deployment Admin is created or left unchanged.
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -1,3 +1,4 @@
+// We check Manager pages and the decisions they send to the application service.
 package group6.project.controller;
 
 import static org.hamcrest.Matchers.containsString;

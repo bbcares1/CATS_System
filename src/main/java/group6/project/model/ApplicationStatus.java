@@ -1,3 +1,4 @@
+// We use these stored values for application and claim states.
 package group6.project.model;
 
 public enum ApplicationStatus {

@@ -1,3 +1,4 @@
+// We check working-day counts and the allowed half-day cases.
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.*;

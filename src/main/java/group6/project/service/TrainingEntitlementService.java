@@ -1,3 +1,4 @@
+// We calculate yearly reserved, used and remaining allowances for every workspace.
 package group6.project.service;
 
 import group6.project.model.ApplicationStatus;
@@ -27,7 +28,6 @@ public class TrainingEntitlementService {
     private final StaffRepo employees;
     private final CourseApplicationRepo applications;
 
-    // Both Staff and Manager use this same annual calculation.
     public TrainingEntitlementService(
             TrainingEntitlementRepo entitlements,
             StaffRepo employees,

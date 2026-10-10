@@ -1,3 +1,4 @@
+// We store one employee's training-day and budget limits for one year.
 package group6.project.model;
 
 import jakarta.persistence.Column;
@@ -43,7 +44,6 @@ public class TrainingEntitlement {
     @Column(precision = 12, scale = 2, nullable = false)
     private BigDecimal budget = BigDecimal.ZERO;
 
-    // Use one allowance record per employee and calendar year.
     public TrainingEntitlement(Integer year) {
         this.year = year;
     }

@@ -1,3 +1,4 @@
+// We check the small deployment health endpoint.
 package group6.project.controller;
 
 import static org.mockito.Mockito.*;

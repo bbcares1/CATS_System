@@ -1,3 +1,4 @@
+// We show employees the available courses and their details.
 package group6.project.controller;
 
 import group6.project.model.CourseCategoryType;
@@ -14,7 +15,6 @@ public class CourseCatalogueController {
     private final CourseCatalogueService catalogue;
     private final CourseProviderService providers;
 
-    // Staff and Manager use the same catalogue in their personal workspace.
     public CourseCatalogueController(
             CourseCatalogueService catalogue, CourseProviderService providers) {
         this.catalogue = catalogue;

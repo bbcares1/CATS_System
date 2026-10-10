@@ -1,4 +1,4 @@
-// Only presentation changes happen here; the service validates every submitted value.
+// We show the date and fee fields that apply to the selected course.
 (function () {
   const category =
     document.getElementById("courseCategory") ||

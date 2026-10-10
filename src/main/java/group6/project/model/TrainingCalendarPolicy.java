@@ -1,3 +1,4 @@
+// We lock this single row while changing holidays or saving dates to keep their checks consistent.
 package group6.project.model;
 
 import jakarta.persistence.*;

@@ -1,3 +1,4 @@
+// We add a valid form token to test requests unless the test supplies its own.
 package group6.project;
 
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;

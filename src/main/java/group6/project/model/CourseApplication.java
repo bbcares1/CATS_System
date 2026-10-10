@@ -1,3 +1,4 @@
+// We store one employee application, including its course snapshot and decision.
 package group6.project.model;
 
 import jakarta.persistence.Column;

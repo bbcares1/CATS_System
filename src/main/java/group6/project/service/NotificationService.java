@@ -1,3 +1,4 @@
+// We prepare workflow emails and report delivery problems without undoing saved decisions.
 package group6.project.service;
 
 import group6.project.form.AdminEmailForm;
@@ -16,7 +17,6 @@ public class NotificationService {
     private final AdminEmailService mail;
     private final String loginUrl;
 
-    // Reuse Owen's configurable sender for the automatic messages too.
     public NotificationService(
             AdminEmailService mail, @Value("${cats.public-url:http://localhost:8081}") String url) {
         this.mail = mail;

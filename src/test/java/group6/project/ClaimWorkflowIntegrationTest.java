@@ -1,3 +1,4 @@
+// We check evidence, review and reimbursement through the claim workflow.
 package group6.project;
 
 import static org.junit.jupiter.api.Assertions.*;

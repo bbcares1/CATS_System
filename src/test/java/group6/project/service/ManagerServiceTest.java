@@ -1,3 +1,4 @@
+// We check Manager lookups, pending requests and access to team applications.
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

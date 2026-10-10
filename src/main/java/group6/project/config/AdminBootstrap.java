@@ -1,3 +1,4 @@
+// We create the first deployment Admin only when no active Admin exists.
 package group6.project.config;
 
 import group6.project.model.*;
@@ -17,7 +18,6 @@ public class AdminBootstrap implements ApplicationRunner {
     private final UserRepo users;
     private final String userName, password, name, staffId, email;
 
-    // First-install credentials come from the environment, never from development seeds.
     public AdminBootstrap(
             UserRepo users,
             @Value("${CATS_ADMIN_USER:}") String userName,

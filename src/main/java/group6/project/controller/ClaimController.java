@@ -1,3 +1,4 @@
+// We handle claim submission, Manager review, evidence downloads and Admin payments.
 package group6.project.controller;
 
 import group6.project.form.ClaimForm;
@@ -27,7 +28,6 @@ public class ClaimController {
     private final TrainingEntitlementService entitlements;
     private final ApprovalRoutingService routing;
 
-    // Every claim page uses this controller and one service for eligibility, review and payment.
     public ClaimController(
             CourseFeeApplicationService claims,
             TrainingEntitlementService entitlements,

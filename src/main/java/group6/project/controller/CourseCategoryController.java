@@ -1,3 +1,4 @@
+// We handle the course-category maintenance forms.
 package group6.project.controller;
 
 import group6.project.form.CourseCategoryForm;
@@ -18,7 +19,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class CourseCategoryController {
     private final CourseCategoryService service;
 
-    // Keep HTTP forms here and catalogue rules in the service.
     public CourseCategoryController(CourseCategoryService service) {
         this.service = service;
     }
@@ -35,13 +35,13 @@ public class CourseCategoryController {
         return "course-category-list";
     }
 
-    // A new form has no database ID supplied by the browser.
+    // Open an empty form.
     @GetMapping("/new")
     public String create(Model model) {
         return render(null, new CourseCategoryForm(), model);
     }
 
-    // Load editable values and the version that was shown to the user.
+    // Load the saved values for editing.
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable Integer id, Model model) {
         return render(id, service.form(id), model);
@@ -67,7 +67,7 @@ public class CourseCategoryController {
         return "redirect:/admin/categories";
     }
 
-    // The service decides whether references require archiving or prevent deletion.
+    // Remove unused records while keeping existing history.
     @PostMapping("/{id}/delete")
     public String remove(
             @PathVariable Integer id, @RequestParam Long version, RedirectAttributes redirect) {
@@ -81,7 +81,7 @@ public class CourseCategoryController {
         return "redirect:/admin/categories";
     }
 
-    // GET and invalid POST requests use the same choices and form action.
+    // Reuse the form choices after a validation error.
     private String render(Integer id, CourseCategoryForm form, Model model) {
         model.addAttribute("form", form);
         model.addAttribute("editId", id);

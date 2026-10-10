@@ -1,3 +1,4 @@
+// We maintain public holidays and check their effect on saved training dates.
 package group6.project.service;
 
 import group6.project.model.ApplicationStatus;
@@ -25,7 +26,6 @@ public class ExcludedDaysService {
     private final CourseApplicationRepo applications;
     private final CourseBatchRepo batches;
 
-    // Holiday edits share the calendar lock with schedule and application validation.
     public ExcludedDaysService(
             ExcludedDaysRepo excludedDaysRepo,
             TrainingCalendarPolicyRepo calendar,

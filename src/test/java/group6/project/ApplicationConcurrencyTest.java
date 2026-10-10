@@ -1,3 +1,4 @@
+// We check that simultaneous requests cannot spend the same allowance twice.
 package group6.project;
 
 import static org.junit.jupiter.api.Assertions.*;

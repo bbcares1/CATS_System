@@ -1,3 +1,4 @@
+// We check outgoing messages and missing SMTP settings without sending real email.
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;

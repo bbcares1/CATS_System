@@ -1,3 +1,4 @@
+// We provide a small health check for the deployment container.
 package group6.project.controller;
 
 import org.springframework.dao.DataAccessException;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class HealthController {
     private final JdbcTemplate database;
 
-    // The container checks both HTTP readiness and its configured database.
     public HealthController(JdbcTemplate database) {
         this.database = database;
     }

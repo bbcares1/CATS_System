@@ -1,3 +1,4 @@
+// We show approved employee attendance for the selected month.
 package group6.project.controller;
 
 import group6.project.model.Admin;
@@ -22,7 +23,6 @@ public class TrainingCalendarController {
     private final TrainingCalendarService calendar;
     private final UserService users;
 
-    // Calendar is a shared signed-in page, including the Admin workspace.
     public TrainingCalendarController(TrainingCalendarService calendar, UserService users) {
         this.calendar = calendar;
         this.users = users;

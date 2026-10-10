@@ -1,3 +1,4 @@
+// We query claims for employees, reviewers and payment recording.
 package group6.project.repo;
 
 import group6.project.model.ApplicationStatus;

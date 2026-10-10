@@ -1,3 +1,4 @@
+// We validate and save applications, decisions and completion using one set of course rules.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.*;
@@ -41,7 +42,6 @@ public class CourseApplicationService {
     private final CourseBatchRepo batches;
     private final ApprovalRoutingService routing;
 
-    // All application changes, including Manager decisions, are saved here.
     public CourseApplicationService(
             CourseApplicationRepo applications,
             TrainingEntitlementService entitlements,

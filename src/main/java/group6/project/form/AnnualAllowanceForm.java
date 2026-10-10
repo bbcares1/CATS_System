@@ -1,3 +1,4 @@
+// We collect one employee's training-day and budget limits for a selected year.
 package group6.project.form;
 
 import jakarta.validation.constraints.DecimalMin;

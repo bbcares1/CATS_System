@@ -1,3 +1,4 @@
+// We check login credentials and reload the signed-in account when its details change.
 package group6.project.service;
 
 import group6.project.model.Admin;
@@ -18,7 +19,6 @@ import java.util.Objects;
 public class UserService {
     private final UserRepo userRepo;
 
-    // Both login pages use the same saved accounts.
     public UserService(UserRepo userRepo) {
         this.userRepo = userRepo;
     }

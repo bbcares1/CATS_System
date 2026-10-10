@@ -1,3 +1,4 @@
+// We find available courses and date options for employees browsing the catalogue.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -28,7 +29,6 @@ public class CourseCatalogueService {
                     ApplicationStatus.APPROVED,
                     ApplicationStatus.COMPLETED);
 
-    // This service only reads offers; CourseApplicationService will own all submissions.
     public CourseCatalogueService(
             CourseDetailRepo courses, CourseBatchRepo batches, CourseApplicationRepo applications) {
         this.courses = courses;

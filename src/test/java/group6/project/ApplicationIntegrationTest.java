@@ -1,3 +1,4 @@
+// We check application rules with real saved accounts and courses.
 package group6.project;
 
 import static group6.project.TestRequests.post;

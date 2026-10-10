@@ -1,3 +1,4 @@
+// We collect the selected training and payment records for reports and CSV export.
 package group6.project.service;
 
 import group6.project.model.*;
@@ -21,7 +22,6 @@ public class TrainingReportService {
     private final CourseFeeApplicationRepo claims;
     private final TrainingEntitlementService policy;
 
-    // Report totals reuse saved applications and the shared annual allowance policy.
     public TrainingReportService(
             UserRepo users,
             CourseApplicationRepo applications,

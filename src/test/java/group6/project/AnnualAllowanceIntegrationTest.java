@@ -1,3 +1,4 @@
+// We check yearly limits and usage across the application states.
 package group6.project;
 
 import static org.junit.jupiter.api.Assertions.*;

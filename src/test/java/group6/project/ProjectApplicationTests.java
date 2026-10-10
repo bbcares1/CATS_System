@@ -1,3 +1,4 @@
+// We check that the full Spring application context starts for tests.
 package group6.project;
 
 import org.junit.jupiter.api.Test;

@@ -1,3 +1,4 @@
+// We check invalid account input before it can change saved accounts.
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.*;

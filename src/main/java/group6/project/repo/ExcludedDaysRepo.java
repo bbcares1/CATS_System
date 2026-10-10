@@ -1,3 +1,4 @@
+// We read and save the public holidays used by training calculations.
 package group6.project.repo;
 
 import group6.project.model.ExcludedDays;

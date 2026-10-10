@@ -1,3 +1,4 @@
+// We store shared account details and reporting links, keeping the same ID after a role change.
 package group6.project.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

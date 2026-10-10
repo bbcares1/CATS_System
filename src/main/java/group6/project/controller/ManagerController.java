@@ -1,3 +1,4 @@
+// We show pending requests and team history, then pass decisions to the application service.
 package group6.project.controller;
 
 import group6.project.form.DecisionForm;
@@ -32,7 +33,6 @@ public class ManagerController {
     private final CourseApplicationService applications;
     private final TrainingEntitlementService entitlements;
 
-    // Manager pages query through ManagerService; decisions use the application service.
     public ManagerController(
             ManagerService managers,
             CourseApplicationService applications,

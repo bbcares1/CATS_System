@@ -1,3 +1,4 @@
+// We read and save training providers.
 package group6.project.repo;
 
 import group6.project.model.CourseProvider;

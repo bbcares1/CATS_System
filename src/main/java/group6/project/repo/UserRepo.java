@@ -1,3 +1,4 @@
+// We query account identities and update roles without replacing their saved history.
 package group6.project.repo;
 
 import group6.project.model.Roles;

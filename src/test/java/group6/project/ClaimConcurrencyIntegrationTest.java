@@ -1,3 +1,4 @@
+// We check that simultaneous claim actions cannot duplicate approval or payment.
 package group6.project;
 
 import static org.junit.jupiter.api.Assertions.*;

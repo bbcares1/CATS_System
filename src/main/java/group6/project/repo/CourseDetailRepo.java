@@ -1,3 +1,4 @@
+// We read, save and lock catalogue course records.
 package group6.project.repo;
 
 import group6.project.model.CourseDetail;

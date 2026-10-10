@@ -1,3 +1,4 @@
+// We check workflow email content and delivery failures without sending real email.
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.*;

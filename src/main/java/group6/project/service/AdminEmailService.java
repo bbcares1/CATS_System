@@ -1,3 +1,4 @@
+// We send the Admin's email through configured SMTP. Local startup does not require SMTP.
 package group6.project.service;
 
 import group6.project.form.AdminEmailForm;
@@ -15,7 +16,6 @@ public class AdminEmailService {
     private final JavaMailSender mailSender;
     private final String senderAddress;
 
-    // SMTP is optional at startup; sending still requires a configured sender.
     public AdminEmailService(
             Optional<JavaMailSender> mailSender,
             @Value("${cats.mail.from:}") String senderAddress,

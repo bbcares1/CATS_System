@@ -1,3 +1,4 @@
+// We maintain category labels without changing the rules of courses already using them.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.*;
@@ -21,7 +22,6 @@ public class CourseCategoryService {
     private final CourseCategoryRepository categories;
     private final CourseDetailRepo courses;
 
-    // Categories group the catalogue while kind selects the course's business rules.
     public CourseCategoryService(CourseCategoryRepository categories, CourseDetailRepo courses) {
         this.categories = categories;
         this.courses = courses;

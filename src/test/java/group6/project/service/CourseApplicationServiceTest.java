@@ -1,3 +1,4 @@
+// We check application decisions and invalid state changes.
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.*;

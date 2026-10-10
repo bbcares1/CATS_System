@@ -1,3 +1,4 @@
+// We check credentials and changes to the signed-in account.
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.*;

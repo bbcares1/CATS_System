@@ -1,3 +1,4 @@
+// We handle the training-provider maintenance forms.
 package group6.project.controller;
 
 import group6.project.form.CourseProviderForm;
@@ -17,7 +18,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class CourseProviderController {
     private final CourseProviderService service;
 
-    // Keep HTTP forms here and catalogue rules in the service.
     public CourseProviderController(CourseProviderService service) {
         this.service = service;
     }
@@ -34,13 +34,13 @@ public class CourseProviderController {
         return "course-provider-list";
     }
 
-    // A new form has no database ID supplied by the browser.
+    // Open an empty form.
     @GetMapping("/new")
     public String create(Model model) {
         return render(null, new CourseProviderForm(), model);
     }
 
-    // Load editable values and the version that was shown to the user.
+    // Load the saved values for editing.
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable Integer id, Model model) {
         return render(id, service.form(id), model);
@@ -66,7 +66,7 @@ public class CourseProviderController {
         return "redirect:/admin/providers";
     }
 
-    // The service decides whether references require archiving or prevent deletion.
+    // Remove unused records while keeping existing history.
     @PostMapping("/{id}/delete")
     public String remove(
             @PathVariable Integer id, @RequestParam Long version, RedirectAttributes redirect) {
@@ -80,7 +80,7 @@ public class CourseProviderController {
         return "redirect:/admin/providers";
     }
 
-    // GET and invalid POST requests use the same choices and form action.
+    // Reuse the form choices after a validation error.
     private String render(Integer id, CourseProviderForm form, Model model) {
         model.addAttribute("form", form);
         model.addAttribute("editId", id);

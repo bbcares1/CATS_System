@@ -1,3 +1,4 @@
+// We register the login and form-token checks for our MVC routes.
 package group6.project.config;
 
 import org.springframework.context.annotation.Configuration;
@@ -9,13 +10,12 @@ public class WebConfig implements WebMvcConfigurer {
     private final AuthInterceptor authentication;
     private final CsrfInterceptor csrf;
 
-    // Register one role gate instead of repeating it in each controller.
     public WebConfig(AuthInterceptor authentication, CsrfInterceptor csrf) {
         this.authentication = authentication;
         this.csrf = csrf;
     }
 
-    // Include old bookmarked URLs until their replacements are in place.
+    // Apply the same checks to each protected workspace.
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authentication)

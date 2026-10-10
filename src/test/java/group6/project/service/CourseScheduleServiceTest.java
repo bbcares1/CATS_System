@@ -1,3 +1,4 @@
+// We check calculated course dates, holidays and half-day rules.
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.*;

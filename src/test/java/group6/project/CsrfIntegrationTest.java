@@ -1,3 +1,4 @@
+// We check that form submissions need the token from their own session.
 package group6.project;
 
 import static org.junit.jupiter.api.Assertions.*;

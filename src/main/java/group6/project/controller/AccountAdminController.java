@@ -1,3 +1,4 @@
+// We handle account forms and reporting-manager choices here.
 package group6.project.controller;
 
 import group6.project.form.AccountForm;
@@ -24,7 +25,6 @@ public class AccountAdminController {
     private final AccountAdminService accounts;
     private final UserService users;
 
-    // The service rechecks Admin identity inside every write transaction.
     public AccountAdminController(AccountAdminService accounts, UserService users) {
         this.accounts = accounts;
         this.users = users;

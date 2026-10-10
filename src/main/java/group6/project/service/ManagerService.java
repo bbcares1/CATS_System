@@ -1,3 +1,4 @@
+// We prepare pending requests, team history and overlapping absences for Manager pages.
 package group6.project.service;
 
 import group6.project.model.ApplicationStatus;
@@ -27,7 +28,6 @@ public class ManagerService {
     private final CourseApplicationRepo courseApplicationRepo;
     private final StaffRepo employees;
 
-    // Prepare team queries without owning application state changes.
     public ManagerService(
             ManagerRepo managerRepo,
             CourseApplicationRepo courseApplicationRepo,

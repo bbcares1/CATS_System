@@ -1,3 +1,4 @@
+// We show training reports and export the same selected records to CSV.
 package group6.project.controller;
 
 import group6.project.model.*;
@@ -18,7 +19,6 @@ public class TrainingReportController {
     private final TrainingReportService reports;
     private final UserService users;
 
-    // Admin and Manager share the report page while the service enforces employee scope.
     public TrainingReportController(TrainingReportService reports, UserService users) {
         this.reports = reports;
         this.users = users;

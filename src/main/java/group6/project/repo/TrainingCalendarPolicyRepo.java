@@ -1,3 +1,4 @@
+// We share the calendar lock for date checks and take an exclusive lock for holiday changes.
 package group6.project.repo;
 
 import group6.project.model.TrainingCalendarPolicy;

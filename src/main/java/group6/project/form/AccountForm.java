@@ -1,3 +1,4 @@
+// We accept editable account details here, leaving saved passwords out of edit pages.
 package group6.project.form;
 
 import group6.project.model.Roles;

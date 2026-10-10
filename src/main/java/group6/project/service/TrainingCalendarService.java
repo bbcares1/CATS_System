@@ -1,3 +1,4 @@
+// We group approved employee attendance by day for the monthly calendar.
 package group6.project.service;
 
 import group6.project.model.*;
@@ -14,8 +15,6 @@ public class TrainingCalendarService {
     private final CourseApplicationRepo applications;
     private final ExcludedDaysRepo holidays;
 
-    // Month grouping follows the calendar contribution, using approved applications as the source
-    // of truth.
     public TrainingCalendarService(CourseApplicationRepo applications, ExcludedDaysRepo holidays) {
         this.applications = applications;
         this.holidays = holidays;

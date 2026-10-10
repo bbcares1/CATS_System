@@ -1,3 +1,4 @@
+// We collect the recipient, subject and message for a manual Admin email.
 package group6.project.form;
 
 import jakarta.validation.constraints.Email;

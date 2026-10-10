@@ -1,3 +1,4 @@
+// We validate account changes, reporting lines and role changes while keeping existing history.
 package group6.project.service;
 
 import group6.project.form.AccountForm;
@@ -18,8 +19,6 @@ public class AccountAdminService {
     private final CourseFeeApplicationRepo claims;
     private final TrainingEntitlementRepo entitlements;
 
-    // Account forms are separate from entities; annual limits stay in their existing yearly
-    // workflow.
     public AccountAdminService(
             UserRepo users,
             CourseApplicationRepo applications,

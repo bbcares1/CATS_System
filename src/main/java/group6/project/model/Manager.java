@@ -1,3 +1,4 @@
+// We give Managers the Staff capabilities as well as their approval role.
 package group6.project.model;
 
 import jakarta.persistence.DiscriminatorValue;

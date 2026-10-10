@@ -1,3 +1,4 @@
+// We choose the reporting Manager, or a peer Manager when the applicant has no superior.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -17,7 +18,6 @@ import java.util.List;
 public class ApprovalRoutingService {
     private final ManagerRepo managers;
 
-    // Applications and claims use the same reporting-manager rule.
     public ApprovalRoutingService(ManagerRepo managers) {
         this.managers = managers;
     }

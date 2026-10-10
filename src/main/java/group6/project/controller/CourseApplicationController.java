@@ -1,3 +1,4 @@
+// We handle application forms and personal history. CourseApplicationService saves the changes.
 package group6.project.controller;
 
 import group6.project.form.CatalogueApplicationForm;
@@ -30,7 +31,6 @@ public class CourseApplicationController {
     private final TrainingEntitlementService entitlements;
     private final ApprovalRoutingService routing;
 
-    // Both catalogue and other-course forms enter the same application service.
     public CourseApplicationController(
             CourseApplicationService applications,
             CourseCatalogueService catalogue,

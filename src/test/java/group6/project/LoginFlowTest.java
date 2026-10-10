@@ -1,3 +1,4 @@
+// We check login, role access and logout using saved accounts.
 package group6.project;
 
 import static group6.project.TestRequests.post;

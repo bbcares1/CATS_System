@@ -1,4 +1,4 @@
-// Let the user check a password without changing the form value.
+// We let users show or hide the password they are typing.
 document.querySelectorAll("[data-password-toggle]").forEach((button) => {
   button.addEventListener("click", () => {
     const input = document.getElementById(button.dataset.passwordToggle);

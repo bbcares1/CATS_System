@@ -1,3 +1,4 @@
+// We maintain training providers and keep referenced records available in history.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.*;
@@ -21,7 +22,6 @@ public class CourseProviderService {
     private final CourseProviderRepo providers;
     private final CourseDetailRepo courses;
 
-    // Provider details belong in one place, not repeated on each course form.
     public CourseProviderService(CourseProviderRepo providers, CourseDetailRepo courses) {
         this.providers = providers;
         this.courses = courses;

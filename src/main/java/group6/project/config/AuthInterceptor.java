@@ -1,3 +1,4 @@
+// We check the signed-in account and its role before opening protected pages.
 package group6.project.config;
 
 import group6.project.model.Admin;
@@ -16,7 +17,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class AuthInterceptor implements HandlerInterceptor {
     private final UserService users;
 
-    // Keep the same session check for all protected pages.
     public AuthInterceptor(UserService users) {
         this.users = users;
     }

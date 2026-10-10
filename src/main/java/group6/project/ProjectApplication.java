@@ -1,3 +1,4 @@
+// We start the CATS application here.
 package group6.project;
 
 import org.springframework.boot.SpringApplication;

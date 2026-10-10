@@ -1,3 +1,4 @@
+// We collect the completed application, payment confirmation and two evidence files.
 package group6.project.form;
 
 import jakarta.validation.constraints.NotNull;
