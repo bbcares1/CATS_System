@@ -6,6 +6,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
@@ -16,7 +18,7 @@ class AdminEmailServiceTest {
     @Test
     void sendsConfiguredMessageToSubmittedRecipient() {
         JavaMailSender mailSender = org.mockito.Mockito.mock(JavaMailSender.class);
-        AdminEmailService service = new AdminEmailService(mailSender, "admin@qq.com");
+        AdminEmailService service = new AdminEmailService(providerFor(mailSender), "admin@qq.com");
         AdminEmailForm form = new AdminEmailForm();
         form.setRecipientEmail("  recipient@example.com ");
         form.setSubject("  Course update  ");
@@ -39,9 +41,24 @@ class AdminEmailServiceTest {
     @Test
     void rejectsSendingWhenSenderAddressIsNotConfigured() {
         JavaMailSender mailSender = org.mockito.Mockito.mock(JavaMailSender.class);
-        AdminEmailService service = new AdminEmailService(mailSender, " ");
+        AdminEmailService service = new AdminEmailService(providerFor(mailSender), " ");
 
         assertThrows(IllegalStateException.class, () -> service.send(new AdminEmailForm()));
         verifyNoInteractions(mailSender);
+    }
+
+    @Test
+    void rejectsSendingWhenMailSenderIsNotConfigured() {
+        StaticListableBeanFactory beanFactory = new StaticListableBeanFactory();
+        AdminEmailService service = new AdminEmailService(
+                beanFactory.getBeanProvider(JavaMailSender.class), "admin@qq.com");
+
+        assertThrows(IllegalStateException.class, () -> service.send(new AdminEmailForm()));
+    }
+
+    private ObjectProvider<JavaMailSender> providerFor(JavaMailSender mailSender) {
+        StaticListableBeanFactory beanFactory = new StaticListableBeanFactory();
+        beanFactory.addBean("mailSender", mailSender);
+        return beanFactory.getBeanProvider(JavaMailSender.class);
     }
 }
