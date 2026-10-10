@@ -1,5 +1,13 @@
 package group6.project.controller;
 
+import static org.mockito.ArgumentMatchers.nullable;
+
+import org.springframework.web.context.WebApplicationContext;
+
+import jakarta.servlet.http.HttpSession;
+
+import group6.project.service.UserService;
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
@@ -51,6 +59,22 @@ class AdminManagementTemplateTest {
     private MockMvc mockMvc;
 
     @MockitoBean
+    private UserService users;
+
+    // These page tests isolate the service; LoginFlowTest checks saved identities.
+    @BeforeEach
+    void prepareIdentity() {
+        when(users.currentUser(
+                nullable(HttpSession.class)))
+                .thenAnswer(call -> {
+                    HttpSession session = call.getArgument(0);
+                    Object value = session == null ? null : session.getAttribute("user");
+                    return value instanceof User user && user.getUserId() != null
+                            ? user : null;
+                });
+    }
+
+    @MockitoBean
     private AdminService adminService;
 
     @MockitoBean
@@ -74,6 +98,9 @@ class AdminManagementTemplateTest {
     @MockitoBean
     private CourseBatchService courseBatchService;
 
+    @Autowired
+    private WebApplicationContext context;
+
     private Staff staff;
     private CourseCategory category;
     private CourseDetail course;
@@ -83,6 +110,12 @@ class AdminManagementTemplateTest {
 
     @BeforeEach
     void setUp() {
+        Admin admin = new Admin();
+        admin.setUserId(99);
+        admin.setName("Admin");
+        admin.setUserName("admin");
+        mockMvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup(context)
+                .defaultRequest(get("/").sessionAttr("user", admin)).build();
         staff = new Staff();
         staff.setUserId(11);
         staff.setName("Avery Staff");
@@ -174,6 +207,7 @@ class AdminManagementTemplateTest {
     @Test
     void adminDashboardLinksToEveryAdministrationFeature() throws Exception {
         Admin admin = new Admin();
+        admin.setUserId(99);
         admin.setName("Admin User");
         admin.setRole(Roles.ADMIN);
 
@@ -267,13 +301,15 @@ class AdminManagementTemplateTest {
         manager.setEmail("morgan@example.com");
         manager.setRole(Roles.MANAGER);
         Admin admin = new Admin();
+        admin.setUserId(99);
         admin.setName("Admin User");
         admin.setUserName("admin");
         admin.setEmail("admin@example.com");
         admin.setRole(Roles.ADMIN);
         when(adminService.viewList()).thenReturn(List.of(staff, manager, admin));
 
-        mockMvc.perform(get("/admin/emails"))
+        org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup(context).build()
+                .perform(get("/admin/emails"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
                         .redirectedUrl("/admin/login"));
@@ -290,6 +326,7 @@ class AdminManagementTemplateTest {
     @Test
     void emailComposerPrefillsRecipientAndSubmitsEditedAddress() throws Exception {
         Admin admin = new Admin();
+        admin.setUserId(99);
         admin.setRole(Roles.ADMIN);
         mockMvc.perform(get("/admin/emails")
                         .param("compose", "true")
@@ -323,6 +360,7 @@ class AdminManagementTemplateTest {
     @Test
     void emailSendFailureShowsConfigurationHintAndKeepsFormValues() throws Exception {
         Admin admin = new Admin();
+        admin.setUserId(99);
         admin.setRole(Roles.ADMIN);
         doThrow(new org.springframework.mail.MailAuthenticationException("SMTP auth failure"))
                 .when(adminEmailService).send(org.mockito.ArgumentMatchers.any(AdminEmailForm.class));

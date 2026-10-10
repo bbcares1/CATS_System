@@ -1,5 +1,11 @@
 package group6.project.controller;
 
+import static org.mockito.ArgumentMatchers.nullable;
+
+import jakarta.servlet.http.HttpSession;
+
+import group6.project.service.UserService;
+
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.verify;
@@ -18,6 +24,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -34,6 +41,7 @@ import group6.project.model.ApplicationStatus;
 import group6.project.model.CourseCategoryType;
 import group6.project.model.Manager;
 import group6.project.model.Staff;
+import group6.project.model.User;
 import group6.project.service.ManagerService;
 import group6.project.service.ManagerService.ApplicationGroup;
 import group6.project.service.ManagerService.ApplicationView;
@@ -43,6 +51,22 @@ class ManagerControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private UserService users;
+
+    // These page tests isolate the service; LoginFlowTest checks saved identities.
+    @BeforeEach
+    void prepareIdentity() {
+        when(users.currentUser(
+                nullable(HttpSession.class)))
+                .thenAnswer(call -> {
+                    HttpSession session = call.getArgument(0);
+                    Object value = session == null ? null : session.getAttribute("user");
+                    return value instanceof User user && user.getUserId() != null
+                            ? user : null;
+                });
+    }
 
     @MockitoBean
     private ManagerService managerService;

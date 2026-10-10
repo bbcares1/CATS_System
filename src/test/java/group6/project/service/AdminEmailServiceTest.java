@@ -16,7 +16,7 @@ class AdminEmailServiceTest {
     @Test
     void sendsConfiguredMessageToSubmittedRecipient() {
         JavaMailSender mailSender = org.mockito.Mockito.mock(JavaMailSender.class);
-        AdminEmailService service = new AdminEmailService(mailSender, "admin@qq.com");
+        AdminEmailService service = new AdminEmailService(java.util.Optional.of(mailSender), "admin@qq.com");
         AdminEmailForm form = new AdminEmailForm();
         form.setRecipientEmail("  recipient@example.com ");
         form.setSubject("  Course update  ");
@@ -39,7 +39,7 @@ class AdminEmailServiceTest {
     @Test
     void rejectsSendingWhenSenderAddressIsNotConfigured() {
         JavaMailSender mailSender = org.mockito.Mockito.mock(JavaMailSender.class);
-        AdminEmailService service = new AdminEmailService(mailSender, " ");
+        AdminEmailService service = new AdminEmailService(java.util.Optional.of(mailSender), " ");
 
         assertThrows(IllegalStateException.class, () -> service.send(new AdminEmailForm()));
         verifyNoInteractions(mailSender);

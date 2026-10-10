@@ -342,6 +342,8 @@ class StaffWorkflowTest {
         second.setStaffId("S004");
         second.setRole(Roles.STAFF);
         second.setManager(manager);
+        second.setTrainingDays(10);
+        second.setTrainingBudget(2000d);
         staffRepo.saveAndFlush(second);
 
         // Staff directory: Include the other group members without assigning a manager.
@@ -352,6 +354,8 @@ class StaffWorkflowTest {
         hongfan.setStaffId("S006");
         hongfan.setPassword("test-password");
         hongfan.setRole(Roles.STAFF);
+        hongfan.setTrainingDays(10);
+        hongfan.setTrainingBudget(2000d);
         staffRepo.saveAndFlush(hongfan);
 
         Staff jialu = new Staff();
@@ -361,6 +365,8 @@ class StaffWorkflowTest {
         jialu.setStaffId("S007");
         jialu.setPassword("test-password");
         jialu.setRole(Roles.STAFF);
+        jialu.setTrainingDays(10);
+        jialu.setTrainingBudget(2000d);
         staffRepo.saveAndFlush(jialu);
 
         Staff imran = new Staff();
@@ -370,6 +376,8 @@ class StaffWorkflowTest {
         imran.setStaffId("S008");
         imran.setPassword("test-password");
         imran.setRole(Roles.STAFF);
+        imran.setTrainingDays(10);
+        imran.setTrainingBudget(2000d);
         staffRepo.saveAndFlush(imran);
 
         Integer staffId = staff.getUserId();
@@ -402,6 +410,8 @@ class StaffWorkflowTest {
         second.setUserName("martin"); second.setPassword("test-password");
         second.setName("Martin"); second.setEmail("martin@example.test"); second.setRole(Roles.STAFF);
         second.setStaffId("S005");
+        second.setTrainingDays(10);
+        second.setTrainingBudget(2000d);
         staffRepo.saveAndFlush(second);
         CourseApplication otherCourse = form(); otherCourse.setApplicant(second);
         applicationRepo.saveAndFlush(otherCourse);
