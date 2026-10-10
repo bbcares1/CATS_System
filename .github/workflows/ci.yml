@@ -38,6 +38,11 @@ jobs:
       - name: Run all tests with H2
         run: ./mvnw -B -ntp test
 
+      - name: Check fresh demo initialization and repeatable reset
+        run: |
+          bash scripts/reset-demo.sh --yes
+          bash scripts/reset-demo.sh --yes
+
       - name: Start isolated MySQL tests database
         run: docker compose -f compose.test.yml up -d --wait
 
@@ -47,3 +52,7 @@ jobs:
       - name: Stop tests database
         if: always()
         run: docker compose -f compose.test.yml down
+
+      - name: Stop demo database
+        if: always()
+        run: docker compose down

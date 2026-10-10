@@ -25,12 +25,8 @@ CREATE TABLE training_entitlement (
 CREATE TABLE excluded_days (
     id INT AUTO_INCREMENT PRIMARY KEY,
     date DATE NOT NULL UNIQUE,
-    description VARCHAR(255) NOT NULL
-);
-CREATE TABLE approvalhierarchy (
-    hierarchy_id INT AUTO_INCREMENT PRIMARY KEY,
-    `level` INT,
-    approval_role VARCHAR(20)
+    description VARCHAR(255) NOT NULL,
+    version BIGINT NOT NULL DEFAULT 0
 );
 CREATE TABLE course_category (
     category_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -112,7 +108,6 @@ CREATE TABLE course_fee_application (
     amount DECIMAL(12,2) NOT NULL DEFAULT 0,
     payment_reference VARCHAR(255),
     staff_id INT,
-    batch_id BIGINT,
     course_application_id INT UNIQUE,
     application_status VARCHAR(20) NOT NULL,
     receipt MEDIUMBLOB,
@@ -129,9 +124,12 @@ CREATE TABLE course_fee_application (
     CONSTRAINT fk_claim_reviewer FOREIGN KEY (reviewer_id) REFERENCES users(user_id),
     CONSTRAINT fk_claim_payer FOREIGN KEY (reimbursed_by_id) REFERENCES users(user_id),
     CONSTRAINT fk_claim_staff FOREIGN KEY (staff_id) REFERENCES users(user_id),
-    CONSTRAINT fk_claim_batch FOREIGN KEY (batch_id) REFERENCES course_batch(batch_id),
     CONSTRAINT fk_claim_application FOREIGN KEY (course_application_id) REFERENCES course_application(course_id)
 );
+
+-- Shared row used when validating course dates and public holidays.
+CREATE TABLE training_calendar_policy (id INT PRIMARY KEY);
+INSERT INTO training_calendar_policy(id) VALUES (1);
 
 -- Reference categories are present in every environment; these are not demo users.
 INSERT INTO course_category(category_id, category_name, kind) VALUES

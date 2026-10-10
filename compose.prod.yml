@@ -11,6 +11,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${CATS_PROD_ROOT_PASSWORD:?Set CATS_PROD_ROOT_PASSWORD in .env.prod}
     volumes:
       - production-data:/var/lib/mysql
+      - ./src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
       interval: 5s

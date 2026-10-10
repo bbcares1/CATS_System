@@ -12,6 +12,8 @@ services:
       - "127.0.0.1:${CATS_DEV_DB_PORT:-3307}:3306"
     volumes:
       - dev-data:/var/lib/mysql
+      - ./src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./src/main/resources/db/demo-data.sql:/docker-entrypoint-initdb.d/02-demo-data.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
       interval: 5s

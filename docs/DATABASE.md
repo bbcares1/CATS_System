@@ -2,10 +2,25 @@
 
 ## One schema source
 
-`db/migration` contains schema changes and reference data for every environment.
-`db/dev` contains fictitious sample data and is enabled only by the development profile.
-Do not edit a migration after it has run on a saved database. Add the next numbered migration instead.
-Do not reintroduce `data.sql`, `ddl-auto=create-drop` or manual startup patch scripts.
+`src/main/resources/db/schema.sql` defines the final tables, indexes, constraints and required reference data. `demo-data.sql` contains the complete, fictitious October 2026 rehearsal data. There is no development migration history to apply or repair.
+
+| Environment | Schema initialization | Demo data | Storage |
+|---|---|---|---|
+| `cats-dev` | MySQL first initialization | Yes | Persistent named volume |
+| `cats-tests` | MySQL first initialization | No | Disposable tmpfs |
+| H2 tests | Spring initializes a fresh database per context | No | Isolated in memory |
+| `cats-prod` | MySQL first initialization | No | Own persistent named volume |
+
+Compose mounts SQL files into MySQL's `/docker-entrypoint-initdb.d` in schema/data order. They run only when the data directory is empty. Changing a SQL file does not alter an existing database on restart.
+Spring Boot uses `ddl-auto=validate`; normal MySQL profiles disable Spring SQL initialization. Do not use `create-drop` or reload demo rows on every application start.
+
+## Development restart and reset
+
+Ordinary restarts and `docker compose down` / `up` preserve the named volume. Reset before a new rehearsal if you want the original states again.
+Stop Spring Boot, then run `powershell -ExecutionPolicy Bypass -File .\scripts\reset-demo.ps1` on Windows, or `bash scripts/reset-demo.sh` on macOS/Linux. Confirm with `RESET`, then restart Spring Boot.
+The script pins `compose.yml` and the `cats-dev` project, verifies volume ownership, exports a private backup, removes only that development volume, initializes the two SQL files and checks the starting data. `-Yes` / `--yes` skips the prompt for automated verification; it still performs the checks and backup.
+
+This reset is for the classroom development database. Never use it to change a saved production database. Back up a production database and plan its schema changes separately. There is no old-schema import step for the final development baseline.
 
 ## Deploy on the server
 

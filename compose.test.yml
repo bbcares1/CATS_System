@@ -10,6 +10,8 @@ services:
       MYSQL_ROOT_PASSWORD: cats-tests_root_password
     ports:
       - "127.0.0.1:3308:3306"
+    volumes:
+      - ./src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     tmpfs:
       - /var/lib/mysql
     healthcheck:
