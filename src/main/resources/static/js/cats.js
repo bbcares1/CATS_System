@@ -1,6 +1,4 @@
-/* Sidebar behaviour for the shared layout (fragments/layout.html).
-   Desktop: the Collapse button switches between full width and the icon rail and remembers the choice.
-   Phone: the menu button opens the sidebar as a drawer; the backdrop or Escape closes it. */
+// We handle the shared sidebar, confirmations and small form controls here.
 (function () {
   var layout = document.getElementById("layout");
   if (!layout) return;
@@ -119,4 +117,23 @@
       pendingForm.requestSubmit(pendingButton);
       modal.hide();
     });
+})();
+
+// Keep the course form focused on the selected category and date option.
+(function () {
+  var category = document.getElementById("categoryId");
+  var dates = document.getElementById("course-dates");
+  if (!category || !dates) return;
+  var fee = document.getElementById("courseFee");
+  var session = document.getElementById("halfDayPeriod");
+  function updateCourseFields() {
+    var internal =
+      category.selectedOptions[0].dataset.kind === "INTERNAL_TRAINING";
+    fee.readOnly = internal;
+    if (internal) fee.value = "0.00";
+    session.disabled = !internal;
+    if (!internal) session.value = "";
+  }
+  category.addEventListener("change", updateCourseFields);
+  updateCourseFields();
 })();

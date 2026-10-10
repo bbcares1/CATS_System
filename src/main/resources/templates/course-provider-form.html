@@ -2,7 +2,7 @@
 <html
   lang="en"
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{fragments/layout :: layout('Provider details', 'Admin', 'providers', ~{::#content})}"
+  th:replace="~{fragments/layout :: layout('Provider details', 'Admin', 'courses', ~{::#content})}"
 >
   <body>
     <section id="content" class="cats-stack">
@@ -12,10 +12,6 @@
           <h1 th:text="${editId == null} ? 'Add provider' : 'Edit provider'">
             Provider
           </h1>
-          <p class="cats-sub">
-            Inactive providers and their courses are hidden from new
-            applications.
-          </p>
         </div>
       </div>
       <div class="card card-body">

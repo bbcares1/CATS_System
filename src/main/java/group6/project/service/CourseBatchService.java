@@ -1,3 +1,4 @@
+// We validate course dates and capacity, keeping used schedules available in history.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.*;
@@ -6,7 +7,6 @@ import group6.project.form.CourseBatchForm;
 import group6.project.model.*;
 import group6.project.repo.*;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +33,6 @@ public class CourseBatchService {
                     ApplicationStatus.APPROVED,
                     ApplicationStatus.COMPLETED);
 
-    // A batch is a fixed schedule for one catalogue course.
     public CourseBatchService(
             CourseBatchRepo batches,
             CourseDetailRepo courses,
@@ -47,9 +46,9 @@ public class CourseBatchService {
         this.calendar = calendar;
     }
 
-    // Show all schedules, including archived ones, in date order.
-    public List<CourseBatch> getAllBatches() {
-        return batches.findAll(Sort.by("courseStartDate"));
+    // Keep existing schedules with the course being edited.
+    public List<CourseBatch> forCourse(Integer courseId) {
+        return batches.findByCourseDetail_CourseIdOrderByCourseStartDateAsc(courseId);
     }
 
     // Fail clearly if a batch link no longer exists.

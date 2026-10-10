@@ -2,10 +2,11 @@
 <html
   lang="en"
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{fragments/layout :: layout('Training providers', 'Admin', 'providers', ~{::#content})}"
+  th:replace="~{fragments/layout :: layout('Training providers', 'Admin', 'courses', ~{::#content})}"
 >
   <body>
     <section id="content" class="cats-stack">
+      <nav th:replace="~{fragments/ui :: courseTabs('providers')}"></nav>
       <div class="cats-page-header">
         <h1>Training providers</h1>
         <div class="cats-page-actions">

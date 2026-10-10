@@ -101,5 +101,60 @@
         </div>
       </div>
     </div>
+
+    <nav
+      th:fragment="accountTabs(activeTab)"
+      class="nav nav-underline mb-3"
+      aria-label="Account sections"
+    >
+      <a
+        class="nav-link"
+        th:classappend="${activeTab == 'accounts'} ? 'active'"
+        th:href="@{/admin/accounts}"
+        >Accounts</a
+      >
+      <a
+        class="nav-link"
+        th:classappend="${activeTab == 'hierarchy'} ? 'active'"
+        th:href="@{/admin/hierarchy}"
+        >Reporting managers</a
+      >
+      <a
+        class="nav-link"
+        th:classappend="${activeTab == 'allowances'} ? 'active'"
+        th:href="@{/admin/entitlements}"
+        >Annual allowances</a
+      >
+      <a
+        class="nav-link"
+        th:classappend="${activeTab == 'email'} ? 'active'"
+        th:href="@{/admin/emails}"
+        >Email</a
+      >
+    </nav>
+    <nav
+      th:fragment="courseTabs(activeTab)"
+      class="nav nav-underline mb-3"
+      aria-label="Course sections"
+    >
+      <a
+        class="nav-link"
+        th:classappend="${activeTab == 'courses'} ? 'active'"
+        th:href="@{/admin/courses}"
+        >Courses</a
+      >
+      <a
+        class="nav-link"
+        th:classappend="${activeTab == 'providers'} ? 'active'"
+        th:href="@{/admin/providers}"
+        >Providers</a
+      >
+      <a
+        class="nav-link"
+        th:classappend="${activeTab == 'categories'} ? 'active'"
+        th:href="@{/admin/categories}"
+        >Categories</a
+      >
+    </nav>
   </body>
 </html>

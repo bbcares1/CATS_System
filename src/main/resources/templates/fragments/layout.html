@@ -79,28 +79,10 @@
               th:replace="~{fragments/ui :: navlink(@{/admin/home}, 'dashboard', 'Dashboard', 'grid', ${active})}"
             ></a>
             <a
-              th:replace="~{fragments/ui :: navlink(@{/admin/accounts}, 'accounts', 'Accounts and managers', 'card', ${active})}"
+              th:replace="~{fragments/ui :: navlink(@{/admin/accounts}, 'accounts', 'Accounts and managers', 'users', ${active})}"
             ></a>
             <a
-              th:replace="~{fragments/ui :: navlink(@{/admin/hierarchy}, 'hierarchy', 'Reporting managers', 'sitemap', ${active})}"
-            ></a>
-            <a
-              th:replace="~{fragments/ui :: navlink(@{/admin/categories}, 'categories', 'Course categories', 'tag', ${active})}"
-            ></a>
-            <a
-              th:replace="~{fragments/ui :: navlink(@{/admin/providers}, 'providers', 'Training providers', 'briefcase', ${active})}"
-            ></a>
-            <a
-              th:replace="~{fragments/ui :: navlink(@{/admin/courses}, 'courses', 'Course catalogue', 'book', ${active})}"
-            ></a>
-            <a
-              th:replace="~{fragments/ui :: navlink(@{/admin/batches}, 'batches', 'Course batches', 'book', ${active})}"
-            ></a>
-            <a
-              th:replace="~{fragments/ui :: navlink(@{/admin/schedule}, 'schedule', 'Schedule calculator', 'calendar', ${active})}"
-            ></a>
-            <a
-              th:replace="~{fragments/ui :: navlink(@{/admin/emails}, 'emails', 'Email', 'inbox', ${active})}"
+              th:replace="~{fragments/ui :: navlink(@{/admin/courses}, 'courses', 'Courses', 'book', ${active})}"
             ></a>
             <a
               th:replace="~{fragments/ui :: navlink(@{/excluded-days}, 'holidays', 'Public holidays', 'calendar', ${active})}"
@@ -118,9 +100,6 @@
             ></a>
           </th:block>
           <th:block th:if="${role == 'Admin'}">
-            <a
-              th:replace="~{fragments/ui :: navlink(@{/admin/entitlements}, 'entitlements', 'Annual allowances', 'card', ${active})}"
-            ></a>
             <a
               th:replace="~{fragments/ui :: navlink(@{/admin/payments}, 'payments', 'Reimbursements', 'receipt', ${active})}"
             ></a>

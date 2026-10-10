@@ -2,17 +2,14 @@
 <html
   lang="en"
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{fragments/layout :: layout('Annual allowances', 'Admin', 'entitlement', ~{::#content})}"
+  th:replace="~{fragments/layout :: layout('Annual allowances', 'Admin', 'accounts', ~{::#content})}"
 >
   <body>
     <section id="content">
+      <nav th:replace="~{fragments/ui :: accountTabs('allowances')}"></nav>
       <div class="cats-page-header">
         <div>
           <h1>Annual allowances</h1>
-          <p class="cats-sub">
-            Allocate training days by designation and a budget for each calendar
-            year.
-          </p>
         </div>
       </div>
       <form

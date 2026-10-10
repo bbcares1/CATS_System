@@ -2,17 +2,14 @@
 <html
   lang="en"
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{fragments/layout :: layout('Reporting managers', 'Admin', 'hierarchy', ~{::#content})}"
+  th:replace="~{fragments/layout :: layout('Reporting managers', 'Admin', 'accounts', ~{::#content})}"
 >
   <body>
     <section id="content" class="cats-stack">
+      <nav th:replace="~{fragments/ui :: accountTabs('hierarchy')}"></nav>
       <div class="cats-page-header">
         <div>
           <h1>Reporting managers</h1>
-          <p class="cats-sub">
-            Each employee reports to one Manager. A Manager with no reporting
-            manager chooses another Manager when applying.
-          </p>
         </div>
         <a class="btn btn-primary" th:href="@{/admin/accounts}"
           >Manage accounts</a

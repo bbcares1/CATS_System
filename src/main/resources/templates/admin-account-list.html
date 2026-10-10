@@ -6,13 +6,10 @@
 >
   <body>
     <section id="content" class="cats-stack">
+      <nav th:replace="~{fragments/ui :: accountTabs('accounts')}"></nav>
       <div class="cats-page-header">
         <div>
           <h1>Accounts and reporting managers</h1>
-          <p class="cats-sub">
-            Manage access and direct reports. Annual limits are allocated
-            separately.
-          </p>
         </div>
         <a class="btn btn-primary" th:href="@{/admin/accounts/new}">
           Add account
@@ -56,10 +53,16 @@
                   <a
                     th:if="${u instanceof T(group6.project.model.Staff)}"
                     class="btn btn-sm btn-quiet"
-                    th:href="@{/admin/budgets/edit/{id}(id=${u.userId})}"
+                    th:href="@{/admin/entitlements/{id}(id=${u.userId})}"
                   >
                     Allowance
                   </a>
+                  <a
+                    th:if="${u instanceof T(group6.project.model.Staff) and u.email != null}"
+                    class="btn btn-sm btn-quiet"
+                    th:href="@{/admin/emails(compose=true,recipientEmail=${u.email})}"
+                    >Email</a
+                  >
                 </td>
               </tr>
             </tbody>

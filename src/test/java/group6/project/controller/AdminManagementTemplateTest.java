@@ -1,3 +1,4 @@
+// We check that Admin pages render and their forms keep useful validation feedback.
 package group6.project.controller;
 
 import static group6.project.TestRequests.post;
@@ -22,7 +23,6 @@ import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.repo.CourseCategoryRepository;
 import group6.project.service.AdminEmailService;
-import group6.project.service.AdminService;
 import group6.project.service.CourseApplicationService;
 import group6.project.service.CourseBatchService;
 import group6.project.service.CourseCategoryService;
@@ -47,7 +47,6 @@ import java.util.List;
         controllers = {
             AdminController.class,
             AccountAdminController.class,
-            LegacyAccountController.class,
             ExcludedDaysController.class
         })
 class AdminManagementTemplateTest {
@@ -72,8 +71,6 @@ class AdminManagementTemplateTest {
     }
 
     @MockitoBean private group6.project.service.AccountAdminService accounts;
-
-    @MockitoBean private AdminService adminService;
 
     @MockitoBean private AdminEmailService adminEmailService;
 
@@ -149,7 +146,7 @@ class AdminManagementTemplateTest {
         account.setVersion(0L);
         account.setEmail("avery@example.test");
         when(accounts.form(staff)).thenReturn(account);
-        when(adminService.viewList()).thenReturn(List.of(staff));
+        when(accounts.all()).thenReturn(List.of(staff));
         when(courseCategoryService.getAllCategories()).thenReturn(List.of(category));
         when(excludedDaysService.getAllExcludedDays()).thenReturn(List.of(holiday));
         when(excludedDaysService.getExcludedDayById(2)).thenReturn(holiday);
@@ -172,7 +169,6 @@ class AdminManagementTemplateTest {
                         List.of(
                                 new group6.project.service.TrainingEntitlementService.AllowanceRow(
                                         staff, total)));
-        when(courseBatchService.getAllBatches()).thenReturn(List.of(batch));
     }
 
     @Test
@@ -192,87 +188,36 @@ class AdminManagementTemplateTest {
     }
 
     @Test
-    void adminDashboardLinksToEveryAdministrationFeature() throws Exception {
-        Admin admin = new Admin();
-        admin.setUserId(99);
-        admin.setName("Admin User");
-        admin.setRole(Roles.ADMIN);
-
-        mockMvc.perform(get("/admin/home").sessionAttr("user", admin))
+    void dashboardGroupsActionsWithoutSeparateScheduleTools() throws Exception {
+        mockMvc.perform(get("/admin/home"))
                 .andExpect(status().isOk())
                 .andExpect(
                         content()
-                                .string(org.hamcrest.Matchers.containsString("Staff and accounts")))
+                                .string(
+                                        org.hamcrest.Matchers.containsString(
+                                                "Accounts and reporting managers")))
                 .andExpect(
                         content()
                                 .string(
                                         org.hamcrest.Matchers.containsString(
-                                                "Training entitlement")))
+                                                "/admin/entitlements")))
                 .andExpect(
                         content()
-                                .string(org.hamcrest.Matchers.containsString("Reporting managers")))
+                                .string(org.hamcrest.Matchers.containsString("/admin/courses/new")))
                 .andExpect(
-                        content().string(org.hamcrest.Matchers.containsString("Course categories")))
-                .andExpect(
-                        content().string(org.hamcrest.Matchers.containsString("Course catalogue")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Course batches")))
+                        content().string(org.hamcrest.Matchers.containsString("/admin/payments")))
                 .andExpect(
                         content()
                                 .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "Schedule calculator")))
+                                        org.hamcrest.Matchers.not(
+                                                org.hamcrest.Matchers.containsString(
+                                                        "/admin/schedule"))))
                 .andExpect(
                         content()
                                 .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "Email staff and managers")))
-                .andExpect(
-                        content().string(org.hamcrest.Matchers.containsString("Public holidays")))
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "href=\"/admin/accounts\"")))
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "href=\"/admin/budgets\"")))
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "href=\"/admin/hierarchy\"")))
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "href=\"/admin/categories\"")))
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "href=\"/admin/courses\"")))
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "href=\"/admin/batches\"")))
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "href=\"/admin/schedule\"")))
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "href=\"/admin/emails\"")))
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "href=\"/excluded-days\"")));
+                                        org.hamcrest.Matchers.not(
+                                                org.hamcrest.Matchers.containsString(
+                                                        "Course batches"))));
     }
 
     @Test
@@ -307,7 +252,7 @@ class AdminManagementTemplateTest {
         admin.setUserName("admin");
         admin.setEmail("admin@example.com");
         admin.setRole(Roles.ADMIN);
-        when(adminService.viewList()).thenReturn(List.of(staff, manager, admin));
+        when(accounts.all()).thenReturn(List.of(staff, manager, admin));
 
         org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup(context)
                 .build()

@@ -50,11 +50,13 @@ Sidebar keys:
 
 | Role | Keys |
 | --- | --- |
-| Staff | `dashboard`, `apply`, `history`, `fees` |
-| Manager | `dashboard`, `staff` |
-| Admin | `dashboard`, `entitlement`, `hierarchy`, `categories`, `courses`, `batches`, `calendar`, `holidays` |
+| Staff | `dashboard`, `apply`, `history`, `fees`, `calendar` |
+| Manager | `dashboard`, `approvals`, `history`, `staff`, `calendar`, `claims`, `reports` |
+| Admin | `dashboard`, `accounts`, `courses`, `calendar`, `payments`, `reports`, `holidays` |
 
 When you add a page, add its link in `fragments/layout.html` and its key to this table.
+
+Group Admin pages by task. Accounts contains reporting managers, annual allowances and email. Courses contains providers, categories and saved course dates. Use the secondary navigation in `fragments/ui.html`; these do not need separate sidebar entries. Date calculation belongs inside the course form, not in a separate tool page. Training calendar shows approved employee attendance, not catalogue course dates.
 
 ## 4. Page header
 
@@ -66,7 +68,6 @@ Every page starts with a page header. One `h1` per page.
     <!-- back link only on detail and form pages -->
     <a th:href="@{/staff/course-applications}" class="cats-back"><svg th:replace="~{fragments/icons :: icon('arrow-left')}"></svg>Course history</a>
     <h1>Apply for a course</h1>
-    <p class="cats-sub">Training days are counted on working days only.</p>
   </div>
   <div class="cats-page-actions">
     <a class="btn btn-primary" th:href="@{/admin/courses/new}"><svg th:replace="~{fragments/icons :: icon('plus')}"></svg>Add course</a>
@@ -75,6 +76,8 @@ Every page starts with a page header. One `h1` per page.
 ```
 
 Titles are short noun phrases in sentence case: "Course catalogue", not "Manage Course Catalogue Page". A status pill may follow the title on detail pages.
+
+Do not add an explanatory paragraph below every heading. Keep names, dates and other useful record details there. Put a short rule beside the field it affects, and keep validation messages specific.
 
 ## 5. Spacing and grid
 

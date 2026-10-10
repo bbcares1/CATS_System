@@ -8,123 +8,239 @@
     <section id="content" class="cats-stack">
       <div class="cats-page-header">
         <div>
-          <a class="cats-back" th:href="@{/admin/courses}">Back to list</a>
+          <a class="cats-back" th:href="@{/admin/courses}">Courses</a>
           <h1 th:text="${editId == null} ? 'Add course' : 'Edit course'">
             Course
           </h1>
-          <p class="cats-sub">
-            Category controls the rules. Internal Training is free. Changes
-            apply to new applications only.
-          </p>
         </div>
       </div>
-      <div class="card card-body">
-        <form
-          method="post"
-          th:action="@{${formAction}}"
-          th:object="${form}"
-          class="cats-stack"
-          novalidate
+      <form
+        class="card card-body cats-stack"
+        method="post"
+        th:action="@{${formAction}}"
+        th:object="${form}"
+        novalidate
+      >
+        <input th:replace="~{fragments/csrf :: token}" />
+        <input type="hidden" th:field="*{version}" />
+        <div
+          th:if="${#fields.hasErrors('*')}"
+          class="alert alert-danger"
+          role="alert"
         >
-          <input th:replace="~{fragments/csrf :: token}" />
-          <input type="hidden" th:field="*{version}" />
-          <div
-            th:if="${#fields.hasErrors('*')}"
-            class="alert alert-danger"
-            role="alert"
-          >
-            <ul class="mb-0">
-              <li
-                th:each="error : ${#fields.allErrors()}"
-                th:text="${error}"
-              ></li>
-            </ul>
+          <ul class="mb-0">
+            <li
+              th:each="error : ${#fields.allErrors()}"
+              th:text="${error}"
+            ></li>
+          </ul>
+        </div>
+        <h2 class="cats-card-title">Course details</h2>
+        <div class="cats-grid cats-grid-2">
+          <div>
+            <label class="form-label cats-req" for="title">Course title</label>
+            <input
+              class="form-control"
+              th:field="*{title}"
+              maxlength="255"
+              required
+            />
+            <div class="text-danger" th:errors="*{title}"></div>
           </div>
-          <div class="cats-grid cats-grid-2">
+          <div>
+            <label class="form-label cats-req" for="categoryId">Category</label>
+            <select class="form-select" th:field="*{categoryId}">
+              <option value="">Choose one</option>
+              <option
+                th:each="item : ${categories}"
+                th:value="${item.categoryId}"
+                th:text="${item.categoryName}"
+                th:attr="data-kind=${item.kind}"
+              ></option>
+            </select>
+            <div class="text-danger" th:errors="*{categoryId}"></div>
+          </div>
+          <div>
+            <label class="form-label cats-req" for="providerId"
+              >Training provider</label
+            >
+            <select class="form-select" th:field="*{providerId}">
+              <option value="">Choose one</option>
+              <option
+                th:each="item : ${providers}"
+                th:value="${item.providerId}"
+                th:text="${item.name}"
+              ></option>
+            </select>
+            <div class="text-danger" th:errors="*{providerId}"></div>
+          </div>
+          <div>
+            <label class="form-label cats-req" for="courseFee"
+              >Course fee ($)</label
+            >
+            <input
+              class="form-control"
+              type="number"
+              th:field="*{courseFee}"
+              min="0"
+              step="0.01"
+              required
+            />
+            <div class="text-danger" th:errors="*{courseFee}"></div>
+          </div>
+        </div>
+        <div>
+          <label class="form-label" for="courseDescription">Description</label>
+          <textarea
+            class="form-control"
+            th:field="*{courseDescription}"
+            maxlength="2000"
+            rows="3"
+          ></textarea>
+        </div>
+        <label class="form-check"
+          ><input
+            class="form-check-input"
+            type="checkbox"
+            th:field="*{customDatesAllowed}"
+          />
+          <span class="form-check-label"
+            >Employees may choose their own dates</span
+          ></label
+        >
+        <details
+          th:open="${editId == null or form.startDate != null}"
+          id="course-dates"
+        >
+          <summary
+            class="cats-card-title"
+            th:text="${#lists.isEmpty(schedules)} ? 'Course dates' : 'Add another date option'"
+          >
+            Course dates
+          </summary>
+          <div class="cats-grid cats-grid-2 mt-3">
             <div>
-              <label class="form-label" for="title">Course title</label
+              <label class="form-label" for="startDate">Start date</label
               ><input
                 class="form-control"
-                type="text"
-                th:field="*{title}"
-                required
-                maxlength="255"
+                type="date"
+                th:field="*{startDate}"
               />
-              <div class="text-danger" th:errors="*{title}"></div>
             </div>
             <div>
-              <label class="form-label" for="categoryId">Category</label
-              ><select class="form-select" th:field="*{categoryId}">
-                <option value="">Choose one</option>
-                <option
-                  th:each="item : ${categories}"
-                  th:value="${item.categoryId}"
-                  th:text="${item.categoryName}"
-                ></option>
-              </select>
-              <div class="text-danger" th:errors="*{categoryId}"></div>
+              <label class="form-label" for="endDate">End date</label
+              ><input class="form-control" type="date" th:field="*{endDate}" />
             </div>
             <div>
-              <label class="form-label" for="providerId"
-                >Training provider</label
-              ><select class="form-select" th:field="*{providerId}">
-                <option value="">Choose one</option>
-                <option
-                  th:each="item : ${providers}"
-                  th:value="${item.providerId}"
-                  th:text="${item.name}"
-                ></option>
-              </select>
-              <div class="text-danger" th:errors="*{providerId}"></div>
-            </div>
-            <div>
-              <label class="form-label" for="courseFee">Course fee ($)</label
+              <label class="form-label" for="capacity">Places</label
               ><input
                 class="form-control"
                 type="number"
-                th:field="*{courseFee}"
-                min="0"
-                step="0.01"
-                required
+                th:field="*{capacity}"
+                min="1"
+                max="10000"
               />
-              <div class="text-danger" th:errors="*{courseFee}"></div>
             </div>
             <div>
-              <label class="form-label" for="courseDescription"
-                >Description</label
-              ><textarea
-                class="form-control"
-                th:field="*{courseDescription}"
-                maxlength="2000"
-                rows="4"
-              ></textarea>
+              <label class="form-label" for="halfDayPeriod">Session</label
+              ><select class="form-select" th:field="*{halfDayPeriod}">
+                <option value="">Full day</option>
+                <option value="AM">AM (Internal Training)</option>
+                <option value="PM">PM (Internal Training)</option>
+              </select>
             </div>
-            <label class="form-check"
+            <div>
+              <label class="form-label" for="days">Training days</label
               ><input
-                class="form-check-input"
-                type="checkbox"
-                th:field="*{customDatesAllowed}"
-              /><span class="form-check-label"
-                >Employees may choose their own dates</span
-              ></label
-            ><label class="form-check"
-              ><input
-                class="form-check-input"
-                type="checkbox"
-                th:field="*{active}"
-              /><span class="form-check-label"
-                >Published in the catalogue</span
-              ></label
-            >
+                class="form-control"
+                type="number"
+                th:field="*{days}"
+                min="0.5"
+                max="260"
+                step="0.5"
+              />
+            </div>
+            <div class="cats-page-actions">
+              <button
+                type="submit"
+                class="btn btn-outline-secondary"
+                th:formaction="@{${formAction + '/calculate'}}"
+              >
+                Calculate end date
+              </button>
+            </div>
           </div>
-          <div class="cats-page-actions">
-            <button class="btn btn-primary">Save</button
-            ><a class="btn btn-outline-secondary" th:href="@{/admin/courses}"
-              >Cancel</a
-            >
-          </div>
-        </form>
-      </div>
+        </details>
+        <label class="form-check"
+          ><input
+            class="form-check-input"
+            type="checkbox"
+            th:field="*{active}"
+          />
+          <span class="form-check-label"
+            >Available in the catalogue</span
+          ></label
+        >
+        <div class="cats-page-actions">
+          <button class="btn btn-primary">Save course</button>
+          <a class="btn btn-outline-secondary" th:href="@{/admin/courses}"
+            >Cancel</a
+          >
+        </div>
+      </form>
+      <section class="card card-body" th:unless="${#lists.isEmpty(schedules)}">
+        <h2 class="cats-card-title">Saved course dates</h2>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Dates</th>
+                <th>Training days</th>
+                <th>Places</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="row : ${schedules}">
+                <td>
+                  <span
+                    th:text="${#temporals.format(row.courseStartDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)} + ' – ' + ${#temporals.format(row.courseEndDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
+                  ></span>
+                  <span th:text="${row.halfDayPeriod}"></span>
+                </td>
+                <td th:text="${row.trainingDays}"></td>
+                <td th:text="${row.capacity}"></td>
+                <td th:text="${row.active} ? 'Active' : 'Archived'"></td>
+                <td>
+                  <div class="cats-page-actions">
+                    <a
+                      class="btn btn-sm btn-quiet"
+                      th:href="@{/admin/batches/{id}/edit(id=${row.batchId})}"
+                      >Edit dates</a
+                    >
+                    <form
+                      method="post"
+                      th:action="@{/admin/batches/{id}/delete(id=${row.batchId})}"
+                      data-confirm-title="Remove these dates?"
+                      data-confirm-message="Dates already used by applications will be archived."
+                    >
+                      <input th:replace="~{fragments/csrf :: token}" /><input
+                        type="hidden"
+                        name="version"
+                        th:value="${row.version}"
+                      />
+                      <button class="btn btn-sm btn-quiet-danger">
+                        Remove
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </body>
 </html>

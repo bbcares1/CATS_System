@@ -2,7 +2,7 @@
 <html
   lang="en"
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{fragments/layout :: layout('Category details', 'Admin', 'categories', ~{::#content})}"
+  th:replace="~{fragments/layout :: layout('Category details', 'Admin', 'courses', ~{::#content})}"
 >
   <body>
     <section id="content" class="cats-stack">
@@ -12,10 +12,6 @@
           <h1 th:text="${editId == null} ? 'Add category' : 'Edit category'">
             Category
           </h1>
-          <p class="cats-sub">
-            Labels help people browse. The rule type determines half-day and
-            budget rules.
-          </p>
         </div>
       </div>
       <div class="card card-body">

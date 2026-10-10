@@ -1,7 +1,9 @@
+// We save course details and dates together, keeping existing application snapshots unchanged.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.*;
 
+import group6.project.form.CourseBatchForm;
 import group6.project.form.CourseForm;
 import group6.project.model.*;
 import group6.project.repo.*;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -23,19 +26,21 @@ public class CourseDetailService {
     private final CourseProviderRepo providers;
     private final CourseBatchRepo batches;
     private final CourseApplicationRepo applications;
+    private final CourseBatchService schedules;
 
-    // Course maintenance does not change snapshots in employees' applications.
     public CourseDetailService(
             CourseDetailRepo courses,
             CourseCategoryRepository categories,
             CourseProviderRepo providers,
             CourseBatchRepo batches,
-            CourseApplicationRepo applications) {
+            CourseApplicationRepo applications,
+            CourseBatchService schedules) {
         this.courses = courses;
         this.categories = categories;
         this.providers = providers;
         this.batches = batches;
         this.applications = applications;
+        this.schedules = schedules;
     }
 
     // Keep the Admin list in a predictable order, including archived courses.
@@ -69,6 +74,26 @@ public class CourseDetailService {
     // Check selected records on the server; a posted ID is not proof it is valid.
     @Transactional
     public CourseDetail save(Integer id, CourseForm form) {
+        boolean addSchedule =
+                form.getStartDate() != null
+                        || form.getEndDate() != null
+                        || form.getCapacity() != null;
+        if (addSchedule
+                && (form.getStartDate() == null
+                        || form.getEndDate() == null
+                        || form.getCapacity() == null
+                        || form.getCapacity() < 1
+                        || form.getCapacity() > 10000)) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST, "Enter the schedule dates and 1–10,000 places.");
+        }
+        if (form.isActive()
+                && !form.isCustomDatesAllowed()
+                && !addSchedule
+                && !hasUpcomingSchedule(id)) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST, "Add course dates or allow employees to choose their own dates.");
+        }
         CourseDetail course =
                 id == null
                         ? new CourseDetail()
@@ -117,7 +142,27 @@ public class CourseDetailService {
                         : form.getCourseFee());
         course.setCustomDatesAllowed(form.isCustomDatesAllowed());
         course.setActive(form.isActive());
-        return courses.save(course);
+        course = courses.save(course);
+        if (addSchedule) {
+            CourseBatchForm schedule = new CourseBatchForm();
+            schedule.setCourseId(course.getCourseId());
+            schedule.setStartDate(form.getStartDate());
+            schedule.setEndDate(form.getEndDate());
+            schedule.setHalfDayPeriod(form.getHalfDayPeriod());
+            schedule.setCapacity(form.getCapacity());
+            schedules.save(null, schedule);
+        }
+        return course;
+    }
+
+    // A fixed-date course needs an upcoming schedule before employees can apply.
+    private boolean hasUpcomingSchedule(Integer id) {
+        if (id == null) return false;
+        return batches.findByCourseDetail_CourseIdOrderByCourseStartDateAsc(id).stream()
+                .anyMatch(
+                        batch ->
+                                batch.isActive()
+                                        && batch.getCourseStartDate().isAfter(LocalDate.now()));
     }
 
     // Referenced courses are archived so schedules and application history remain readable.

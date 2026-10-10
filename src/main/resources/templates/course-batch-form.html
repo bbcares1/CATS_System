@@ -2,20 +2,18 @@
 <html
   lang="en"
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{fragments/layout :: layout('Schedule details', 'Admin', 'batches', ~{::#content})}"
+  th:replace="~{fragments/layout :: layout('Schedule details', 'Admin', 'courses', ~{::#content})}"
 >
   <body>
     <section id="content" class="cats-stack">
       <div class="cats-page-header">
         <div>
-          <a class="cats-back" th:href="@{/admin/batches}">Back to list</a>
-          <h1 th:text="${editId == null} ? 'Add schedule' : 'Edit schedule'">
-            Schedule
-          </h1>
-          <p class="cats-sub">
-            Use working days within one year. Training days are calculated
-            automatically. Used schedules keep their original dates.
-          </p>
+          <a
+            class="cats-back"
+            th:href="@{/admin/courses/{id}/edit(id=${course.courseId})}"
+            >Back to course</a
+          >
+          <h1>Edit course dates</h1>
         </div>
       </div>
       <div class="card card-body">
@@ -42,16 +40,8 @@
           </div>
           <div class="cats-grid cats-grid-2">
             <div>
-              <label class="form-label" for="courseId">Course</label
-              ><select class="form-select" th:field="*{courseId}">
-                <option value="">Choose one</option>
-                <option
-                  th:each="item : ${courses}"
-                  th:value="${item.courseId}"
-                  th:text="${item.title}"
-                ></option>
-              </select>
-              <div class="text-danger" th:errors="*{courseId}"></div>
+              <h2 class="cats-card-title" th:text="${course.title}"></h2>
+              <input type="hidden" th:field="*{courseId}" />
             </div>
             <div>
               <label class="form-label" for="startDate">Start date</label
@@ -95,6 +85,24 @@
               />
               <div class="text-danger" th:errors="*{capacity}"></div>
             </div>
+            <div>
+              <label class="form-label" for="days">Training days</label>
+              <input
+                class="form-control"
+                type="number"
+                th:field="*{days}"
+                min="0.5"
+                max="260"
+                step="0.5"
+              />
+              <button
+                class="btn btn-outline-secondary mt-2"
+                type="submit"
+                th:formaction="@{${formAction + '/calculate'}}"
+              >
+                Calculate end date
+              </button>
+            </div>
             <label class="form-check"
               ><input
                 class="form-check-input"
@@ -107,7 +115,9 @@
           </div>
           <div class="cats-page-actions">
             <button class="btn btn-primary">Save</button
-            ><a class="btn btn-outline-secondary" th:href="@{/admin/batches}"
+            ><a
+              class="btn btn-outline-secondary"
+              th:href="@{/admin/courses/{id}/edit(id=${course.courseId})}"
               >Cancel</a
             >
           </div>

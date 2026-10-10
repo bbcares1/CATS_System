@@ -1,3 +1,4 @@
+// We handle the Admin home, annual allowances, reporting list and manual email.
 package group6.project.controller;
 
 import group6.project.form.AdminEmailForm;
@@ -6,8 +7,8 @@ import group6.project.model.Admin;
 import group6.project.model.Roles;
 import group6.project.model.Staff;
 import group6.project.model.User;
+import group6.project.service.AccountAdminService;
 import group6.project.service.AdminEmailService;
-import group6.project.service.AdminService;
 import group6.project.service.TrainingEntitlementService;
 
 import jakarta.servlet.http.HttpSession;
@@ -39,16 +40,15 @@ public class AdminController {
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     private final TrainingEntitlementService entitlements;
-    private final AdminService adminService;
+    private final AccountAdminService accounts;
     private final AdminEmailService adminEmailService;
 
-    // Admin home, annual allowances and manual email share the same workspace.
     public AdminController(
-            AdminService adminService,
+            AccountAdminService accounts,
             AdminEmailService adminEmailService,
             TrainingEntitlementService entitlements) {
         this.entitlements = entitlements;
-        this.adminService = adminService;
+        this.accounts = accounts;
         this.adminEmailService = adminEmailService;
     }
 
@@ -82,7 +82,7 @@ public class AdminController {
             model.addAttribute("emailForm", form);
         } else {
             List<User> recipients =
-                    adminService.viewList().stream()
+                    accounts.all().stream()
                             .filter(
                                     user ->
                                             user.getRole() == Roles.MANAGER
@@ -207,7 +207,7 @@ public class AdminController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Model model) {
-        var employees = adminService.viewList().stream().filter(u -> u instanceof Staff).toList();
+        var employees = accounts.all().stream().filter(u -> u instanceof Staff).toList();
         var result = PageSupport.page(employees, page, size);
         model.addAttribute("employees", result.getContent());
         model.addAttribute("pageData", result);

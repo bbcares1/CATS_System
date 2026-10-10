@@ -1,3 +1,4 @@
+// We check catalogue maintenance and the course choices offered to employees.
 package group6.project;
 
 import static group6.project.TestRequests.post;
@@ -80,16 +81,13 @@ class CatalogueIntegrationTest {
                     "/admin/courses",
                     "/admin/courses/new",
                     "/admin/courses/" + course.getCourseId() + "/edit",
-                    "/admin/batches",
-                    "/admin/batches/new",
                     "/admin/batches/" + batch.getBatchId() + "/edit",
                     "/admin/providers",
                     "/admin/providers/new",
                     "/admin/providers/" + provider.getProviderId() + "/edit",
                     "/admin/categories",
                     "/admin/categories/new",
-                    "/admin/categories/2/edit",
-                    "/admin/schedule"
+                    "/admin/categories/2/edit"
                 }) {
             mvc.perform(get(path).sessionAttr("user", admin)).andExpect(status().isOk());
         }
@@ -104,7 +102,7 @@ class CatalogueIntegrationTest {
     @Test
     void formsRejectMissingValuesAndDoNotWrite() throws Exception {
         long before = courseRepo.count();
-        for (String route : new String[] {"courses", "categories", "providers", "batches"}) {
+        for (String route : new String[] {"courses", "categories", "providers"}) {
             mvc.perform(post("/admin/" + route + "/new").sessionAttr("user", admin))
                     .andExpect(status().isOk())
                     .andExpect(content().string(containsString("alert-danger")));
@@ -246,14 +244,93 @@ class CatalogueIntegrationTest {
     void calculatorPostNeverPersistsSchedule() throws Exception {
         long count = batchRepo.count();
         mvc.perform(
-                        post("/admin/schedule")
+                        post("/admin/courses/new/calculate")
                                 .sessionAttr("user", admin)
-                                .param("category", "EXTERNAL_COURSE")
+                                .param("categoryId", "2")
                                 .param("startDate", monday.toString())
                                 .param("days", "2"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Suggested dates")));
+                .andExpect(content().string(containsString(monday.plusDays(1).toString())));
         assertEquals(count, batchRepo.count());
+    }
+
+    @Test
+    void oneSubmissionCreatesTheCourseAndItsFirstDates() throws Exception {
+        long before = courseRepo.count();
+        mvc.perform(
+                        post("/admin/courses/new")
+                                .sessionAttr("user", admin)
+                                .param("title", "One form course")
+                                .param("categoryId", "2")
+                                .param("providerId", provider.getProviderId().toString())
+                                .param("courseFee", "125.00")
+                                .param("active", "true")
+                                .param("startDate", monday.toString())
+                                .param("endDate", monday.plusDays(1).toString())
+                                .param("capacity", "12"))
+                .andExpect(redirectedUrl("/admin/courses"));
+        assertEquals(before + 1, courseRepo.count());
+        var saved =
+                courseRepo.findAll().stream()
+                        .filter(c -> c.getTitle().equals("One form course"))
+                        .findFirst()
+                        .orElseThrow();
+        var dates = batches.forCourse(saved.getCourseId());
+        assertEquals(1, dates.size());
+        assertEquals(2, dates.getFirst().getTrainingDays());
+        assertEquals(12, dates.getFirst().getCapacity());
+        mvc.perform(
+                        get("/admin/courses/" + saved.getCourseId() + "/edit")
+                                .sessionAttr("user", admin))
+                .andExpect(content().string(containsString("Edit dates")));
+    }
+
+    @Test
+    void fixedDateCourseNeedsDatesButCustomDateCourseDoesNot() throws Exception {
+        long before = courseRepo.count();
+        mvc.perform(
+                        post("/admin/courses/new")
+                                .sessionAttr("user", admin)
+                                .param("title", "Missing dates")
+                                .param("categoryId", "2")
+                                .param("providerId", provider.getProviderId().toString())
+                                .param("courseFee", "125.00")
+                                .param("active", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Add course dates")))
+                .andExpect(content().string(containsString("Missing dates")));
+        assertEquals(before, courseRepo.count());
+        mvc.perform(
+                        post("/admin/courses/new")
+                                .sessionAttr("user", admin)
+                                .param("title", "Flexible course")
+                                .param("categoryId", "2")
+                                .param("providerId", provider.getProviderId().toString())
+                                .param("courseFee", "125.00")
+                                .param("active", "true")
+                                .param("customDatesAllowed", "true"))
+                .andExpect(redirectedUrl("/admin/courses"));
+        assertEquals(before + 1, courseRepo.count());
+    }
+
+    @Test
+    void editingDatesCannotMoveThemToAnotherCourse() throws Exception {
+        var batch = batches.save(null, batchForm());
+        batchRepo.flush();
+        var other = courses.save(null, courseForm(2));
+        mvc.perform(
+                        post("/admin/batches/" + batch.getBatchId() + "/edit")
+                                .sessionAttr("user", admin)
+                                .param("version", batch.getVersion().toString())
+                                .param("courseId", other.getCourseId().toString())
+                                .param("startDate", monday.toString())
+                                .param("endDate", monday.toString())
+                                .param("capacity", "12")
+                                .param("active", "true"))
+                .andExpect(redirectedUrl("/admin/courses/" + course.getCourseId() + "/edit"));
+        assertEquals(
+                course.getCourseId(),
+                batches.get(batch.getBatchId()).getCourseDetail().getCourseId());
     }
 
     // Admin chooses a catalogue definition; employees later submit only dates and a reason.

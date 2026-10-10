@@ -1,3 +1,4 @@
+// We check account forms, role changes and the reporting relationships saved in the database.
 package group6.project;
 
 import static group6.project.TestRequests.post;
@@ -221,12 +222,6 @@ class AccountAdministrationIntegrationTest {
         mvc.perform(post("/admin/accounts/save").session(session(actor)).param("userName", ""))
                 .andExpect(status().isOk())
                 .andExpect(model().hasErrors());
-        mvc.perform(get("/admin/staffs").session(session(actor)))
-                .andExpect(redirectedUrl("/admin/accounts"));
-        mvc.perform(get("/admin/staffs/add").session(session(actor)))
-                .andExpect(redirectedUrl("/admin/accounts/new"));
-        mvc.perform(get("/admin/staffs/update/" + employee.getUserId()).session(session(actor)))
-                .andExpect(redirectedUrl("/admin/accounts/" + employee.getUserId() + "/edit"));
     }
 
     // Open employee work must be resolved before removing its owner's employee access.

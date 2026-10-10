@@ -1,3 +1,4 @@
+// We check the employee application, history and claim pages together.
 package group6.project;
 
 import static group6.project.TestRequests.multipart;
@@ -35,7 +36,7 @@ class StaffWorkflowTest {
     @Autowired CourseApplicationRepo applicationRepo;
     @Autowired ExcludedDaysRepo excludedDaysRepo;
     @Autowired CourseFeeApplicationRepo claimRepo;
-    @Autowired StaffService staffService;
+    @Autowired TrainingEntitlementService allowances;
     @Autowired CourseApplicationService applications;
     @Autowired CourseFeeApplicationService claimService;
     MockMvc mvc;
@@ -248,13 +249,13 @@ class StaffWorkflowTest {
                                         "Learned to build Java web applications"))
                 .andExpect(redirectedUrl("/staff/applications/" + ended.getCourseId()));
         assertEquals(ApplicationStatus.COMPLETED, ended.getStatus());
-        assertEquals(1, staffService.summary(staff, LocalDate.now().getYear()).usedDays());
+        assertEquals(1, allowances.summary(staff, LocalDate.now().getYear(), null).usedDays());
         assertEquals(
                 0,
                 new java.math.BigDecimal("300")
                         .compareTo(
-                                staffService
-                                        .summary(staff, LocalDate.now().getYear())
+                                allowances
+                                        .summary(staff, LocalDate.now().getYear(), null)
                                         .usedBudget()));
         saved(ApplicationStatus.COMPLETED, LocalDate.now().minusYears(1));
         for (CourseApplication row :

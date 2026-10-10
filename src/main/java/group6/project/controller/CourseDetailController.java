@@ -1,3 +1,4 @@
+// We handle course details and dates in one form, including the date calculator.
 package group6.project.controller;
 
 import group6.project.form.CourseForm;
@@ -18,15 +19,20 @@ public class CourseDetailController {
     private final CourseDetailService service;
     private final CourseCategoryService categories;
     private final CourseProviderService providers;
+    private final CourseBatchService batches;
+    private final CourseScheduleService schedules;
 
-    // Keep HTTP forms here and catalogue rules in the service.
     public CourseDetailController(
             CourseDetailService service,
             CourseCategoryService categories,
-            CourseProviderService providers) {
+            CourseProviderService providers,
+            CourseBatchService batches,
+            CourseScheduleService schedules) {
         this.service = service;
         this.categories = categories;
         this.providers = providers;
+        this.batches = batches;
+        this.schedules = schedules;
     }
 
     // Admin can include archived rows when reviewing catalogue data.
@@ -41,13 +47,13 @@ public class CourseDetailController {
         return "admin-course-list";
     }
 
-    // A new form has no database ID supplied by the browser.
+    // Open an empty form.
     @GetMapping("/new")
     public String create(Model model) {
         return render(null, new CourseForm(), model);
     }
 
-    // Load editable values and the version that was shown to the user.
+    // Load the saved values for editing.
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable Integer id, Model model) {
         return render(id, service.form(id), model);
@@ -73,7 +79,35 @@ public class CourseDetailController {
         return "redirect:/admin/courses";
     }
 
-    // The service decides whether references require archiving or prevent deletion.
+    // Calculate within the current form, keeping all entered course details without saving.
+    @PostMapping({"/new/calculate", "/{id}/edit/calculate"})
+    public String calculate(
+            @PathVariable(required = false) Integer id,
+            @ModelAttribute("form") CourseForm form,
+            BindingResult binding,
+            Model model) {
+        if (!binding.hasErrors()) {
+            try {
+                if (form.getCategoryId() == null || form.getDays() == null) {
+                    throw new IllegalArgumentException(
+                            "Choose a category and enter the training days.");
+                }
+                var result =
+                        schedules.calculate(
+                                categories.get(form.getCategoryId()).getKind(),
+                                form.getStartDate(),
+                                form.getDays(),
+                                form.getHalfDayPeriod());
+                form.setStartDate(result.start());
+                form.setEndDate(result.end());
+            } catch (IllegalArgumentException error) {
+                binding.reject("schedule", error.getMessage());
+            }
+        }
+        return render(id, form, model);
+    }
+
+    // Remove unused records while keeping existing history.
     @PostMapping("/{id}/delete")
     public String remove(
             @PathVariable Integer id, @RequestParam Long version, RedirectAttributes redirect) {
@@ -87,7 +121,7 @@ public class CourseDetailController {
         return "redirect:/admin/courses";
     }
 
-    // GET and invalid POST requests use the same choices and form action.
+    // Reuse the form choices after a validation error.
     private String render(Integer id, CourseForm form, Model model) {
         model.addAttribute("form", form);
         model.addAttribute("editId", id);
@@ -95,6 +129,7 @@ public class CourseDetailController {
                 "formAction", id == null ? "/admin/courses/new" : "/admin/courses/" + id + "/edit");
         model.addAttribute("categories", categories.getAllCategories());
         model.addAttribute("providers", providers.all());
+        model.addAttribute("schedules", id == null ? java.util.List.of() : batches.forCourse(id));
         return "admin-course-form";
     }
 }

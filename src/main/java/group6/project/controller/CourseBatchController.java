@@ -1,3 +1,4 @@
+// We edit saved course dates here and return to the course they belong to.
 package group6.project.controller;
 
 import group6.project.form.CourseBatchForm;
@@ -16,46 +17,28 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/admin/batches")
 public class CourseBatchController {
     private final CourseBatchService service;
-    private final CourseDetailService courses;
+    private final CourseScheduleService schedules;
 
-    // Keep HTTP forms here and catalogue rules in the service.
-    public CourseBatchController(CourseBatchService service, CourseDetailService courses) {
+    public CourseBatchController(CourseBatchService service, CourseScheduleService schedules) {
         this.service = service;
-        this.courses = courses;
+        this.schedules = schedules;
     }
 
-    // Admin can include archived rows when reviewing catalogue data.
-    @GetMapping
-    public String list(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Model model) {
-        var result = PageSupport.page(service.getAllBatches(), page, size);
-        model.addAttribute("rows", result.getContent());
-        model.addAttribute("pageData", result);
-        return "course-batch-list";
-    }
-
-    // A new form has no database ID supplied by the browser.
-    @GetMapping("/new")
-    public String create(Model model) {
-        return render(null, new CourseBatchForm(), model);
-    }
-
-    // Load editable values and the version that was shown to the user.
+    // Load the saved values for editing.
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable Long id, Model model) {
         return render(id, service.form(id), model);
     }
 
     // Keep the submitted values when validation or a business rule rejects the form.
-    @PostMapping({"/new", "/{id}/edit"})
+    @PostMapping("/{id}/edit")
     public String save(
-            @PathVariable(required = false) Long id,
+            @PathVariable Long id,
             @Valid @ModelAttribute("form") CourseBatchForm form,
             BindingResult binding,
             Model model,
             RedirectAttributes redirect) {
+        form.setCourseId(service.get(id).getCourseDetail().getCourseId());
         if (binding.hasErrors()) return render(id, form, model);
         try {
             service.save(id, form);
@@ -65,13 +48,42 @@ public class CourseBatchController {
             return render(id, form, model);
         }
         redirect.addFlashAttribute("success", "Schedule saved.");
-        return "redirect:/admin/batches";
+        return "redirect:/admin/courses/" + form.getCourseId() + "/edit";
     }
 
-    // The service decides whether references require archiving or prevent deletion.
+    // The calculator uses this course's category and does not save any changes.
+    @PostMapping("/{id}/edit/calculate")
+    public String calculate(
+            @PathVariable Long id,
+            @ModelAttribute("form") CourseBatchForm form,
+            BindingResult binding,
+            Model model) {
+        var batch = service.get(id);
+        form.setCourseId(batch.getCourseDetail().getCourseId());
+        if (!binding.hasErrors()) {
+            try {
+                if (form.getDays() == null)
+                    throw new IllegalArgumentException("Enter the training days.");
+                var result =
+                        schedules.calculate(
+                                batch.getCourseDetail().getCourseCategory().getKind(),
+                                form.getStartDate(),
+                                form.getDays(),
+                                form.getHalfDayPeriod());
+                form.setStartDate(result.start());
+                form.setEndDate(result.end());
+            } catch (IllegalArgumentException error) {
+                binding.reject("schedule", error.getMessage());
+            }
+        }
+        return render(id, form, model);
+    }
+
+    // Remove unused records while keeping existing history.
     @PostMapping("/{id}/delete")
     public String remove(
             @PathVariable Long id, @RequestParam Long version, RedirectAttributes redirect) {
+        Integer courseId = service.get(id).getCourseDetail().getCourseId();
         try {
             service.remove(id, version);
             redirect.addFlashAttribute("success", "Schedule removed from active use.");
@@ -79,16 +91,15 @@ public class CourseBatchController {
             if (error.getStatusCode().value() != 400) throw error;
             redirect.addFlashAttribute("error", error.getReason());
         }
-        return "redirect:/admin/batches";
+        return "redirect:/admin/courses/" + courseId + "/edit";
     }
 
-    // GET and invalid POST requests use the same choices and form action.
+    // Reuse the form choices after a validation error.
     private String render(Long id, CourseBatchForm form, Model model) {
         model.addAttribute("form", form);
         model.addAttribute("editId", id);
-        model.addAttribute(
-                "formAction", id == null ? "/admin/batches/new" : "/admin/batches/" + id + "/edit");
-        model.addAttribute("courses", courses.all());
+        model.addAttribute("formAction", "/admin/batches/" + id + "/edit");
+        model.addAttribute("course", service.get(id).getCourseDetail());
         return "course-batch-form";
     }
 }

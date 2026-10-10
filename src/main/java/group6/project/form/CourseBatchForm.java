@@ -1,3 +1,4 @@
+// We collect editable dates and capacity for a saved course schedule.
 package group6.project.form;
 
 import jakarta.validation.constraints.*;
@@ -30,4 +31,7 @@ public class CourseBatchForm {
     private Integer capacity;
 
     private boolean active = true;
+
+    // Used only by the date calculator; saved training days are calculated again.
+    private Double days;
 }

@@ -1,9 +1,12 @@
+// We collect course details and an optional date option in one submission.
 package group6.project.form;
 
 import jakarta.validation.constraints.*;
 
 import lombok.Getter;
 import lombok.Setter;
+
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Getter
 @Setter
@@ -26,4 +29,20 @@ public class CourseForm {
     @NotNull private Integer providerId;
     private boolean customDatesAllowed;
     private boolean active = true;
+
+    // A new fixed-date course can save its first schedule in the same form.
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private java.time.LocalDate startDate;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private java.time.LocalDate endDate;
+
+    @Pattern(regexp = "|AM|PM")
+    private String halfDayPeriod;
+
+    @Min(1)
+    @Max(10000)
+    private Integer capacity;
+
+    private Double days;
 }

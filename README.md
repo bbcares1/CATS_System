@@ -89,7 +89,7 @@ This is a local JDK/Windows path workaround. It does not change database or appl
 2. Log in as `manager`: open **Approvals**, check annual usage and overlapping approved absences, then approve or reject with a reason. Use **My staff workspace** for personal applications.
 3. Open **Claim approvals** as `manager` to review Sam's demo claim. As `admin`, open **Reimbursements** and record a payment reference after payment.
 4. Open **Training calendar** in any workspace. Manager and Admin **Reports** filter by date, employee and category and export CSV, including annual allowances.
-5. As `admin`, maintain accounts/reporting managers, annual allowances, categories, providers, courses, batches and holidays. An unused record can be deleted; referenced records retain history.
+5. As `admin`, use **Accounts and managers** for accounts, reporting managers, annual allowances and email. Use **Courses** for courses, providers and categories. Add course dates in the same form, or let employees choose their own dates. The end-date calculator is part of that form; saved dates can be edited from the course. Public holidays remain a separate menu. An unused record can be deleted; referenced records retain history.
 
 Pending applications reserve days and fees. Approved and Completed applications use them; Deleted, Cancelled and Rejected requests release them. Actual reimbursements are shown separately and never spend the course budget twice.
 Applications stay within one calendar year. A half-day is a single-day Internal Training session; multi-day courses use full working days. Missing annual allowances must be set by Admin before applying.

@@ -2,16 +2,14 @@
 <html
   lang="en"
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{fragments/layout :: layout('Email', 'Admin', 'emails', ~{::#content})}"
+  th:replace="~{fragments/layout :: layout('Email', 'Admin', 'accounts', ~{::#content})}"
 >
   <body>
     <section id="content">
+      <nav th:replace="~{fragments/ui :: accountTabs('email')}"></nav>
       <div class="cats-page-header" th:unless="${composeMode}">
         <div>
           <h1>Email</h1>
-          <p class="cats-sub">
-            Choose a staff member or manager as the recipient of an Admin email.
-          </p>
         </div>
       </div>
 
@@ -22,7 +20,6 @@
               >Back to recipients</a
             >
             <h1>Compose email</h1>
-            <p class="cats-sub">Review the recipient and write your message.</p>
           </div>
         </div>
 
