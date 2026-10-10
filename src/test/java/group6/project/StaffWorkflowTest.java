@@ -31,6 +31,7 @@ class StaffWorkflowTest {
     @Autowired ExcludedDaysRepo excludedDaysRepo;
     @Autowired CourseFeeApplicationRepo claimRepo;
     @Autowired StaffService staffService;
+    @Autowired CourseApplicationService applications;
     @Autowired CourseFeeApplicationService claimService;
     MockMvc mvc;
     Staff staff;
@@ -40,7 +41,10 @@ class StaffWorkflowTest {
     @BeforeEach
     void prepare() {
         mvc = MockMvcBuilders.webAppContextSetup(context).build();
+        Manager reviewer = new Manager(); reviewer.setUserName("reviewer"); reviewer.setName("Reviewer"); reviewer.setPassword("demo123");
+        reviewer = userRepo.saveAndFlush(reviewer);
         staff = new Staff();
+        staff.setManager(reviewer);
         staff.setUserName("ryan");
         staff.setPassword("test-password");
         staff.setName("Ryan");
@@ -92,7 +96,7 @@ class StaffWorkflowTest {
         mvc.perform(post("/employee/login").param("userName", "ryan")
                 .param("password", "wrong").param("designation", "Staff"))
                 .andExpect(view().name("employee-login")).andExpect(model().attributeExists("error"));
-        for (String path : List.of("/staff/home", "/staff/personal", "/staff/apply", "/staff/fee")) {
+        for (String path : List.of("/staff/home", "/staff/personal", "/staff/apply/other", "/staff/fee")) {
             mvc.perform(get(path).session(session)).andExpect(status().isOk());
             mvc.perform(get(path)).andExpect(redirectedUrl("/employee/login"));
         }
@@ -128,70 +132,69 @@ class StaffWorkflowTest {
     // Form binding: Check that submitted fields cannot replace the employee or status.
     @Test
     void formBindingDoesNotAllowIdentityOrStatusChanges() throws Exception {
-        mvc.perform(post("/staff/applications/save").session(session)
+        mvc.perform(post("/staff/apply/other").session(session)
                 .param("courseTitle", "Design 1").param("courseCategory", "EXTERNAL_COURSE")
                 .param("courseStartDate", futureDay().toString()).param("courseEndDate", futureDay().toString())
-                .param("courseFee", "100").param("justification", "Improve software design skills")
+                .param("trainingProvider", "Demo provider").param("courseFee", "100").param("justification", "Improve software design skills")
                 .param("courseId", "999999").param("status", "APPROVED").param("applicant.userId", "999999"))
                 .andExpect(status().is3xxRedirection());
-        CourseApplication course = staffService.getCourseHistory(staff, futureDay().getYear()).getFirst();
+        CourseApplication course = applications.findForStaffAndYear(staff, futureDay().getYear()).getFirst();
         assertEquals(ApplicationStatus.APPLIED, course.getStatus());
         assertEquals(staff.getUserId(), course.getApplicant().getUserId());
         assertNotEquals(999999, course.getCourseId());
-        mvc.perform(post("/staff/applications/save").session(session).param("courseFee", "abc"))
-                .andExpect(view().name("staff-application-form")).andExpect(model().attributeExists("error"));
+        mvc.perform(post("/staff/apply/other").session(session).param("courseFee", "abc"))
+                .andExpect(status().isBadRequest()).andExpect(view().name("staff-application-form")).andExpect(model().attributeHasErrors("form"));
     }
 
     // Application validation: Show an error without saving an invalid form.
     @Test
     void invalidFormShowsAnErrorWithoutSaving() throws Exception {
         long before = applicationRepo.count();
-        mvc.perform(post("/staff/applications/save").session(session)
+        mvc.perform(post("/staff/apply/other").session(session)
                 .param("courseFee", "not-a-number"))
-                .andExpect(status().isOk())
+                .andExpect(status().isBadRequest())
                 .andExpect(view().name("staff-application-form"))
-                .andExpect(model().attributeHasFieldErrors("course", "courseFee"));
+                .andExpect(model().attributeHasFieldErrors("form", "courseFee"));
 
-        mvc.perform(post("/staff/applications/save").session(session)
+        mvc.perform(post("/staff/apply/other").session(session)
                 .param("courseTitle", " ").param("courseFee", "100"))
-                .andExpect(status().isOk())
+                .andExpect(status().isBadRequest())
                 .andExpect(view().name("staff-application-form"))
-                .andExpect(model().attribute("error", "Course title, category, dates and justification are required."))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Course title, category, dates and justification are required.")));
+                .andExpect(model().attributeHasFieldErrors("form", "courseTitle"));
         assertEquals(before, applicationRepo.count());
     }
 
     // Course history: Check application status changes and personal history.
     @Test
     void lifecycleAndOwnCurrentYearHistory() throws Exception {
-        CourseApplication course = staffService.saveApplication(null, form(), staff);
+        CourseApplication course = saveApplication(null, form(), staff);
         assertEquals(ApplicationStatus.APPLIED, course.getStatus());
         CourseApplication edit = form(); edit.setCourseTitle("Java EE 2");
-        staffService.saveApplication(course.getCourseId(), edit, staff);
+        saveApplication(course.getCourseId(), edit, staff);
         assertEquals(ApplicationStatus.UPDATED, course.getStatus());
-        mvc.perform(post("/staff/applications/" + course.getCourseId() + "/delete").session(session))
+        mvc.perform(post("/staff/applications/" + course.getCourseId() + "/delete").session(session).param("version", version(course.getCourseId()).toString()))
                 .andExpect(redirectedUrl("/staff/applications/" + course.getCourseId()));
         assertEquals(ApplicationStatus.DELETED, course.getStatus());
-        assertThrows(IllegalStateException.class, () -> staffService.saveApplication(course.getCourseId(), form(), staff));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(course.getCourseId(), form(), staff));
         CourseApplication approved = saved(ApplicationStatus.APPROVED, futureDay());
-        assertThrows(IllegalStateException.class, () -> staffService.completeApplication(approved.getCourseId(), "Learned to build Java web applications", staff));
-        mvc.perform(post("/staff/applications/" + approved.getCourseId() + "/cancel").session(session))
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> completeApplication(approved.getCourseId(), "Learned to build Java web applications", staff));
+        mvc.perform(post("/staff/applications/" + approved.getCourseId() + "/cancel").session(session).param("version", version(approved.getCourseId()).toString()))
                 .andExpect(redirectedUrl("/staff/applications/" + approved.getCourseId()));
         assertEquals(ApplicationStatus.CANCELLED, approved.getStatus());
         CourseApplication ended = saved(ApplicationStatus.APPROVED, LocalDate.now().minusDays(2));
-        assertThrows(IllegalArgumentException.class, () -> staffService.completeApplication(ended.getCourseId(), " ", staff));
-        mvc.perform(post("/staff/applications/" + ended.getCourseId() + "/complete").session(session)
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> completeApplication(ended.getCourseId(), " ", staff));
+        mvc.perform(post("/staff/applications/" + ended.getCourseId() + "/complete").session(session).param("version", version(ended.getCourseId()).toString())
                 .param("experienceComments", "Learned to build Java web applications"))
                 .andExpect(redirectedUrl("/staff/applications/" + ended.getCourseId()));
         assertEquals(ApplicationStatus.COMPLETED, ended.getStatus());
-        assertEquals(1, staffService.summary(new CourseApplication(), staff, null).usedDays());
-        assertEquals(0, new java.math.BigDecimal("300").compareTo(staffService.summary(new CourseApplication(), staff, null).usedBudget()));
+        assertEquals(1, staffService.summary(staff, LocalDate.now().getYear()).usedDays());
+        assertEquals(0, new java.math.BigDecimal("300").compareTo(staffService.summary(staff, LocalDate.now().getYear()).usedBudget()));
         saved(ApplicationStatus.COMPLETED, LocalDate.now().minusYears(1));
-        for (CourseApplication row : staffService.getCourseHistory(staff, LocalDate.now().getYear())) {
+        for (CourseApplication row : applications.findForStaffAndYear(staff, LocalDate.now().getYear())) {
             assertEquals(LocalDate.now().getYear(), row.getCourseStartDate().getYear());
         }
         Staff another = new Staff(); another.setUserId(staff.getUserId() + 1);
-        assertThrows(IllegalArgumentException.class, () -> staffService.getCourseApplication(ended.getCourseId(), another));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> applications.getOwned(ended.getCourseId(), another));
     }
 
     // Application rules: Check dates, holidays, budget and overlapping courses.
@@ -199,23 +202,23 @@ class StaffWorkflowTest {
     void datesHolidaysBudgetAndOverlapsAreValidated() {
         CourseApplication course = form();
         course.setCourseStartDate(LocalDate.now()); course.setCourseEndDate(LocalDate.now());
-        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, course, staff));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(null, course, staff));
         course.setCourseStartDate(futureDay()); course.setCourseEndDate(futureDay().minusDays(1));
-        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, course, staff));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(null, course, staff));
         course.setCourseEndDate(futureDay()); course.setCourseFee(new java.math.BigDecimal("2001"));
-        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, course, staff));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(null, course, staff));
         course.setCourseFee(null);
-        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, course, staff));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(null, course, staff));
         course.setCourseFee(new java.math.BigDecimal("300")); course.setHalfDayPeriod("AM");
-        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, course, staff));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(null, course, staff));
         course.setHalfDayPeriod("");
         ExcludedDays holiday = new ExcludedDays(); holiday.setDate(futureDay()); holiday.setDescription("Company Holiday");
         excludedDaysRepo.saveAndFlush(holiday);
-        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, course, staff));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(null, course, staff));
         excludedDaysRepo.delete(holiday); excludedDaysRepo.flush();
         saved(ApplicationStatus.APPLIED, futureDay());
         course.setCourseCategory(CourseCategoryType.INTERNAL_TRAINING); course.setHalfDayPeriod("AM");
-        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, course, staff));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(null, course, staff));
     }
 
     // Training days: Check working days and separate AM and PM sessions.
@@ -226,33 +229,36 @@ class StaffWorkflowTest {
         ExcludedDays holiday = new ExcludedDays(); holiday.setDate(monday.plusDays(2)); holiday.setDescription("Company Holiday");
         excludedDaysRepo.saveAndFlush(holiday);
         CourseApplication period = form(); period.setCourseStartDate(monday); period.setCourseEndDate(monday.plusDays(7));
-        assertEquals(5d, staffService.saveApplication(null, period, staff).getTrainingDays());
-        staffService.deleteApplication(period.getCourseId(), staff);
+        period = saveApplication(null, period, staff);
+        assertEquals(5d, period.getTrainingDays());
+        deleteApplication(period.getCourseId(), staff);
         CourseApplication morning = form(); morning.setCourseCategory(CourseCategoryType.INTERNAL_TRAINING);
         morning.setCourseStartDate(monday); morning.setCourseEndDate(monday); morning.setHalfDayPeriod("AM");
-        assertEquals(0.5, staffService.saveApplication(null, morning, staff).getTrainingDays());
+        morning = saveApplication(null, morning, staff);
+        assertEquals(0.5, morning.getTrainingDays());
         assertEquals(0, morning.getCourseFee().signum());
         CourseApplication afternoon = form(); afternoon.setCourseCategory(CourseCategoryType.INTERNAL_TRAINING);
         afternoon.setCourseStartDate(monday); afternoon.setCourseEndDate(monday); afternoon.setHalfDayPeriod("PM");
-        assertEquals(0.5, staffService.saveApplication(null, afternoon, staff).getTrainingDays());
+        afternoon = saveApplication(null, afternoon, staff);
+        assertEquals(0.5, afternoon.getTrainingDays());
         CourseApplication fullDay = form(); fullDay.setCourseStartDate(monday); fullDay.setCourseEndDate(monday);
-        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, fullDay, staff));
-        staffService.deleteApplication(morning.getCourseId(), staff);
-        staffService.deleteApplication(afternoon.getCourseId(), staff);
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(null, fullDay, staff));
+        deleteApplication(morning.getCourseId(), staff);
+        deleteApplication(afternoon.getCourseId(), staff);
         CourseApplication training = form();
         training.setCourseCategory(CourseCategoryType.INTERNAL_TRAINING);
         training.setCourseStartDate(monday);
         training.setCourseEndDate(monday.plusDays(1));
         training.setHalfDayPeriod("AM");
-        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, training, staff));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(null, training, staff));
         training.setHalfDayPeriod(null);
-        assertEquals(2d, staffService.saveApplication(null, training, staff).getTrainingDays());
+        assertEquals(2d, saveApplication(null, training, staff).getTrainingDays());
         CourseApplication overlapping = form();
         overlapping.setCourseCategory(CourseCategoryType.INTERNAL_TRAINING);
         overlapping.setCourseStartDate(monday);
         overlapping.setCourseEndDate(monday);
         overlapping.setHalfDayPeriod("PM");
-        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, overlapping, staff));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(null, overlapping, staff));
     }
 
     // Fee claims: Check course completion, documents and the manager decision.
@@ -291,9 +297,9 @@ class StaffWorkflowTest {
     void paginationRenders() throws Exception {
         for (int i = 0; i < 31; i++) saved(ApplicationStatus.DELETED, LocalDate.now());
         mvc.perform(get("/staff/personal").session(session).param("page", "1").param("size", "20"))
-                .andExpect(status().isOk()).andExpect(model().attribute("lastPage", 1))
+                .andExpect(status().isOk()).andExpect(model().attributeExists("pageData"))
                 .andExpect(model().attribute("applications", org.hamcrest.Matchers.hasSize(11)));
-        assertEquals(31, staffService.getCourseHistory(staff, LocalDate.now().getYear()).size());
+        assertEquals(31, applications.findForStaffAndYear(staff, LocalDate.now().getYear()).size());
     }
 
     // Allowance and claims: Check completed course totals and invalid claim input.
@@ -301,13 +307,13 @@ class StaffWorkflowTest {
     void completedCoursesConsumeAllowanceAndClaimValidationRejectsInvalidInput() {
         saved(ApplicationStatus.COMPLETED, LocalDate.now().minusDays(2));
         allocate(staff, 1, 2000);
-        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, form(), staff));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(null, form(), staff));
         allocate(staff, 10, 500);
-        assertThrows(IllegalArgumentException.class, () -> staffService.saveApplication(null, form(), staff));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(null, form(), staff));
         CourseApplication pending = saved(ApplicationStatus.APPLIED, futureDay());
         MockMultipartFile bad = new MockMultipartFile("receipt", "empty.pdf", "application/pdf", new byte[0]);
         assertThrows(IllegalArgumentException.class, () -> staffService.submitClaim(pending.getCourseId(), true, bad, bad, staff));
-        CourseApplication completed = staffService.getCourseHistory(staff, LocalDate.now().getYear()).getFirst();
+        CourseApplication completed = applications.findForStaffAndYear(staff, LocalDate.now().getYear()).getFirst();
         assertThrows(IllegalArgumentException.class, () -> staffService.submitClaim(completed.getCourseId(), true, bad, bad, staff));
         assertTrue(staffService.getClaims(staff).isEmpty());
     }
@@ -317,7 +323,7 @@ class StaffWorkflowTest {
     void externalCourseCanHaveZeroFee() {
         CourseApplication course = form();
         course.setCourseFee(new java.math.BigDecimal("0"));
-        assertEquals(0, staffService.saveApplication(null, course, staff).getCourseFee().signum());
+        assertEquals(0, saveApplication(null, course, staff).getCourseFee().signum());
     }
 
     // Reporting manager: Save the relationship and find the correct staff.
@@ -392,9 +398,9 @@ class StaffWorkflowTest {
         for (ApplicationStatus state : List.of(ApplicationStatus.REJECTED, ApplicationStatus.CANCELLED,
                 ApplicationStatus.DELETED, ApplicationStatus.COMPLETED)) {
             CourseApplication course = saved(state, LocalDate.now().minusDays(3));
-            assertThrows(IllegalStateException.class, () -> staffService.saveApplication(course.getCourseId(), form(), staff));
-            assertThrows(IllegalStateException.class, () -> staffService.deleteApplication(course.getCourseId(), staff));
-            assertThrows(IllegalStateException.class, () -> staffService.cancelApplication(course.getCourseId(), staff));
+            assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> saveApplication(course.getCourseId(), form(), staff));
+            assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> deleteApplication(course.getCourseId(), staff));
+            assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> cancelApplication(course.getCourseId(), staff));
             mvc.perform(get("/staff/applications/" + course.getCourseId()).session(session))
                     .andExpect(status().isOk());
         }
@@ -405,13 +411,13 @@ class StaffWorkflowTest {
         staffRepo.saveAndFlush(second);
         CourseApplication otherCourse = form(); otherCourse.setApplicant(second);
         applicationRepo.saveAndFlush(otherCourse);
-        for (CourseApplication row : staffService.getCourseHistory(staff, LocalDate.now().getYear())) {
+        for (CourseApplication row : applications.findForStaffAndYear(staff, LocalDate.now().getYear())) {
             assertEquals(staff.getUserId(), row.getApplicant().getUserId());
         }
         mvc.perform(get("/staff/applications/" + otherCourse.getCourseId()).session(session))
-                .andExpect(redirectedUrl("/staff/home")).andExpect(flash().attributeExists("error"));
+                .andExpect(status().isNotFound());
         mvc.perform(get("/staff/applications/" + otherCourse.getCourseId() + "/edit").session(session))
-                .andExpect(redirectedUrl("/staff/home")).andExpect(flash().attributeExists("error"));
+                .andExpect(status().isNotFound());
         CourseFeeApplication otherClaim = new CourseFeeApplication();
         otherClaim.setApplicant(second);
         otherClaim.setApplicationStatus(ApplicationStatus.APPLIED);
@@ -437,4 +443,20 @@ class StaffWorkflowTest {
         allowance.setBudget(java.math.BigDecimal.valueOf(budget));
         entitlements.saveAndFlush(allowance);
     }
+    // Keep existing workflow scenarios while submitting the new, restricted form type.
+    private CourseApplication saveApplication(Integer id, CourseApplication source, Staff employee) {
+        var form = new group6.project.form.CourseApplicationForm();
+        form.setCourseTitle(source.getCourseTitle()); form.setCourseCategory(source.getCourseCategory());
+        form.setTrainingProvider(source.getTrainingProvider()); form.setCourseFee(source.getCourseFee());
+        form.setCourseStartDate(source.getCourseStartDate()); form.setCourseEndDate(source.getCourseEndDate());
+        form.setHalfDayPeriod(source.getHalfDayPeriod()); form.setJustification(source.getJustification());
+        form.setWorkDissemination(source.getWorkDissemination());
+        if (id != null) form.setVersion(version(id));
+        return id == null ? applications.createOther(form, employee) : applications.updateOther(id, form, employee);
+    }
+
+    private Long version(Integer id) { applicationRepo.flush(); return applicationRepo.findById(id).orElseThrow().getVersion(); }
+    private void deleteApplication(Integer id, Staff employee) { applications.delete(id, version(id), employee); }
+    private void cancelApplication(Integer id, Staff employee) { applications.cancel(id, version(id), employee); }
+    private void completeApplication(Integer id, String comments, Staff employee) { applications.complete(id, version(id), comments, employee); }
 }

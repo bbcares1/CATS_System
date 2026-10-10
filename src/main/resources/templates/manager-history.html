@@ -1,0 +1,59 @@
+<!doctype html>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Team course history', 'Manager', 'history', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>Team course history</h1>
+          <p
+            class="cats-sub"
+            th:text="'All application states for ' + ${year}"
+          ></p>
+        </div>
+      </div>
+      <form class="cats-toolbar" method="get" th:action="@{/manager/history}">
+        <label for="employeeId">Team member</label
+        ><select class="form-select" id="employeeId" name="employeeId">
+          <option value="">Choose a team member</option>
+          <option
+            th:each="employee : ${team}"
+            th:value="${employee.userId}"
+            th:selected="${employee.userId == employeeId}"
+            th:text="${employee.name} + ' (' + ${employee.staffId} + ')'"
+          ></option></select
+        ><label for="size">Results per page</label
+        ><select class="form-select" id="size" name="size">
+          <option
+            th:each="count : ${ {10,20,25} }"
+            th:value="${count}"
+            th:selected="${count == pageData.size}"
+            th:text="${count}"
+          ></option></select
+        ><button class="btn btn-outline-secondary">Show history</button>
+      </form>
+      <div
+        th:replace="~{fragments/application :: table(${applications}, '/manager/applications')}"
+      ></div>
+      <nav class="cats-toolbar" aria-label="History pages">
+        <a
+          class="btn btn-outline-secondary"
+          th:if="${pageData.hasPrevious()}"
+          th:href="@{/manager/history(employeeId=${employeeId},page=${pageData.number - 1},size=${pageData.size})}"
+          >Previous</a
+        ><span
+          th:text="'Page ' + ${pageData.number + 1} + ' of ' + ${pageData.totalPages == 0 ? 1 : pageData.totalPages}"
+        ></span
+        ><a
+          class="btn btn-outline-secondary"
+          th:if="${pageData.hasNext()}"
+          th:href="@{/manager/history(employeeId=${employeeId},page=${pageData.number + 1},size=${pageData.size})}"
+          >Next</a
+        >
+      </nav>
+    </section>
+  </body>
+</html>

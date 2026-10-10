@@ -300,3 +300,5 @@ h1, h2, h3 { text-wrap: balance; }
 .cats-login-brand .cats-brand-text small { color: var(--cats-muted); }
 .cats-login h1 { font-size: 1.2rem; font-weight: 600; margin: 0 0 16px; }
 .cats-login-foot { text-align: center; font-size: .8rem; color: var(--cats-muted); }
+
+.cats-pre-wrap { white-space: pre-wrap; overflow-wrap: anywhere; }

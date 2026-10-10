@@ -29,17 +29,17 @@
         <h2 class="cats-card-title">Approvals</h2>
       </div>
       <div class="card-body">
-        <p class="text-secondary">Course applications from your team that are waiting for your decision.</p>
+        <p class="text-secondary"><span th:text="${pendingCount}"></span> applications waiting for your decision.</p>
         <a class="btn btn-primary" th:href="@{/manager/approvals}">View course applications</a>
       </div>
     </div>
     <div class="card">
       <div class="card-header">
         <h2 class="cats-card-title">Team course history</h2>
-        <span th:replace="~{fragments/ui :: tag('Coming soon')}"></span>
+
       </div>
       <div class="card-body">
-        <p class="mb-0 text-secondary">What your team members applied for this year.</p>
+        <p class="mb-0 text-secondary">What your team members applied for this year.</p><a class="btn btn-outline-secondary" th:href="@{/manager/history}">View team history</a>
       </div>
     </div>
   </div>

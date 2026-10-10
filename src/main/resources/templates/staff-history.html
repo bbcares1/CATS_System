@@ -1,70 +1,60 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Personal Course History</title>
-        <link rel="stylesheet" th:href="@{/css/category.css}">
-        <link rel="stylesheet" th:href="@{/css/staff.css}">
-    </head>
-    <body>
-        <main class="container">
-            <!-- Navigation: Links to staff pages. -->
-            <nav>
-                <a th:href="@{/staff/home}">Dashboard</a>
-                <a class="active" th:href="@{/staff/personal}">Personal Course History</a>
-                <a th:href="@{/staff/apply}">Apply for Course</a>
-                <a th:href="@{/logout}">Logout</a>
-            </nav>
-            <h1>Personal Course History - <span th:text="${year}"></span></h1>
-            <p class="success" th:if="${success}" th:text="${success}"></p>
-            <p class="error" th:if="${error}" th:text="${error}"></p>
-            <div class="summary">Remaining training days: <strong th:text="${summary.remainingDays}"></strong> | Remaining budget: $<strong th:text="${summary.remainingBudget}"></strong>
-            </div>
-            <!-- Pagination: Number of results per page selectable by the reader. -->
-            <form th:action="@{/staff/personal}" method="get">
-                <label for="size">Results per page</label>
-                <select name="size" id="size">
-                    <option value="10" th:selected="${size == 10}">10</option>
-                    <option value="20" th:selected="${size == 20}">20</option>
-                    <option value="25" th:selected="${size == 25}">25</option>
-                </select>
-                <button class="btn btn-secondary" type="submit">Show</button>
-            </form>
-            <div class="table-scroll">
-                <!-- Personal course history: Show the employee applications for the current year. -->
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Course title</th>
-                            <th>Category</th>
-                            <th>Start</th>
-                            <th>End</th>
-                            <th>Fee ($)</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="course : ${applications}">
-                            <td th:text="${course.courseId}"></td>
-                            <td>
-                                <a th:href="@{/staff/applications/{id}(id=${course.courseId})}" th:text="${course.courseTitle}"></a></td>
-                            <td th:text="${course.courseCategory.displayName}"></td>
-                            <td th:text="${course.courseStartDate}"></td>
-                            <td th:text="${course.courseEndDate}"></td>
-                            <td th:text="${course.courseFee}"></td>
-                            <td th:text="${course.status}"></td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(applications)}">
-                            <td colspan="7">No applications for the current year.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <p>Page <span th:text="${page + 1}"></span> of <span th:text="${lastPage + 1}"></span></p>
-            <a class="btn btn-secondary" th:if="${page > 0}" th:href="@{/staff/personal(page=${page - 1},size=${size})}">Previous</a>
-            <a class="btn btn-secondary" th:if="${page < lastPage}" th:href="@{/staff/personal(page=${page + 1},size=${size})}">Next</a>
-        </main>
-    </body>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Course history', 'Staff', 'history', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>Personal course history</h1>
+          <p class="cats-sub" th:text="${year}"></p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/staff/courses}"
+          >Apply for a course</a
+        >
+      </div>
+      <div th:replace="~{fragments/application :: allowance(${summary})}"></div>
+      <form class="cats-toolbar" method="get" th:action="@{/staff/personal}">
+        <label for="year">Year</label
+        ><input
+          class="form-control"
+          type="number"
+          id="year"
+          name="year"
+          min="2000"
+          max="2100"
+          th:value="${year}"
+        /><label for="size">Results per page</label
+        ><select class="form-select" id="size" name="size">
+          <option
+            th:each="count : ${ {10,20,25} }"
+            th:value="${count}"
+            th:selected="${count == pageData.size}"
+            th:text="${count}"
+          ></option></select
+        ><button class="btn btn-outline-secondary">Show</button>
+      </form>
+      <div
+        th:replace="~{fragments/application :: table(${applications}, '/staff/applications')}"
+      ></div>
+      <nav aria-label="History pages" class="cats-toolbar">
+        <a
+          class="btn btn-outline-secondary"
+          th:if="${pageData.hasPrevious()}"
+          th:href="@{/staff/personal(year=${year},page=${pageData.number - 1},size=${pageData.size})}"
+          >Previous</a
+        ><span
+          th:text="'Page ' + ${pageData.number + 1} + ' of ' + ${pageData.totalPages == 0 ? 1 : pageData.totalPages}"
+        ></span
+        ><a
+          class="btn btn-outline-secondary"
+          th:if="${pageData.hasNext()}"
+          th:href="@{/staff/personal(year=${year},page=${pageData.number + 1},size=${pageData.size})}"
+          >Next</a
+        >
+      </nav>
+    </section>
+  </body>
 </html>

@@ -39,6 +39,8 @@ class ManagerServiceTest {
     @Mock
     private CourseApplicationRepo courseApplicationRepo;
 
+    @Mock private group6.project.repo.StaffRepo employees;
+
     @InjectMocks
     private ManagerService managerService;
 
@@ -99,7 +101,7 @@ class ManagerServiceTest {
         assertEquals(2, groups.getFirst().employeeId());
         assertEquals("S002", groups.getFirst().staffId());
         assertEquals(List.of(10, 11), groups.getFirst().applications().stream()
-                .map(ManagerService.ApplicationView::applicationId).toList());
+                .map(CourseApplication::getCourseId).toList());
         assertEquals(3, groups.get(1).employeeId());
         assertEquals("S003", groups.get(1).staffId());
         assertEquals("Alex", groups.getFirst().employeeName());
@@ -139,21 +141,21 @@ class ManagerServiceTest {
 
         var detail = managerService.getApplicationForManager(1, 10);
 
-        assertEquals("Alex", detail.applicantName());
-        assertEquals("S002", detail.staffId());
-        assertEquals("Java architecture", detail.title());
-        assertEquals(CourseCategoryType.EXTERNAL_COURSE, detail.category());
-        assertEquals("NUS-ISS", detail.provider());
-        assertEquals(LocalDate.of(2026, 11, 12), detail.startDate());
-        assertEquals(LocalDate.of(2026, 11, 13), detail.endDate());
-        assertEquals(2.0, detail.trainingDays());
-        assertEquals(new java.math.BigDecimal("1800.0"), detail.fee());
-        assertEquals("Improve our system design.", detail.justification());
-        assertEquals("Share the learning with the team.", detail.workDissemination());
-        assertEquals(ApplicationStatus.REJECTED, detail.status());
-        assertEquals(application.getReviewedAt(), detail.reviewedAt());
-        assertEquals(application.getDecisionReason(), detail.decisionReason());
-        assertEquals(application.getExperienceComments(), detail.experienceComments());
+        assertEquals("Alex", detail.getApplicant().getName());
+        assertEquals("S002", detail.getApplicant().getStaffId());
+        assertEquals("Java architecture", detail.getCourseTitle());
+        assertEquals(CourseCategoryType.EXTERNAL_COURSE, detail.getCourseCategory());
+        assertEquals("NUS-ISS", detail.getTrainingProvider());
+        assertEquals(LocalDate.of(2026, 11, 12), detail.getCourseStartDate());
+        assertEquals(LocalDate.of(2026, 11, 13), detail.getCourseEndDate());
+        assertEquals(2.0, detail.getTrainingDays());
+        assertEquals(new java.math.BigDecimal("1800.0"), detail.getCourseFee());
+        assertEquals("Improve our system design.", detail.getJustification());
+        assertEquals("Share the learning with the team.", detail.getWorkDissemination());
+        assertEquals(ApplicationStatus.REJECTED, detail.getStatus());
+        assertEquals(application.getReviewedAt(), detail.getReviewedAt());
+        assertEquals(application.getDecisionReason(), detail.getDecisionReason());
+        assertEquals(application.getExperienceComments(), detail.getExperienceComments());
         verify(courseApplicationRepo, never()).save(any());
     }
 

@@ -44,7 +44,7 @@ import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.service.ManagerService;
 import group6.project.service.ManagerService.ApplicationGroup;
-import group6.project.service.ManagerService.ApplicationView;
+import group6.project.model.CourseApplication;
 
 @WebMvcTest(ManagerController.class)
 class ManagerControllerTest {
@@ -68,8 +68,9 @@ class ManagerControllerTest {
                 });
     }
 
-    @MockitoBean
-    private ManagerService managerService;
+    @MockitoBean private group6.project.service.CourseApplicationService applications;
+    @MockitoBean private group6.project.service.TrainingEntitlementService entitlements;
+    @MockitoBean private ManagerService managerService;
 
     @Test
     void anonymousVisitorIsRedirectedToEmployeeLogin() throws Exception {
@@ -171,11 +172,14 @@ class ManagerControllerTest {
     void detailsRenderApplicationAndDecisionFieldsAsReadOnly() throws Exception {
         var application = application(ApplicationStatus.REJECTED);
         when(managerService.getApplicationForManager(1, 10)).thenReturn(application);
+        when(entitlements.summary(application.getApplicant(), 2026, null)).thenReturn(
+            new group6.project.service.TrainingEntitlementService.AnnualSummary(10, new java.math.BigDecimal("2000"),
+            0, java.math.BigDecimal.ZERO, 0, java.math.BigDecimal.ZERO));
 
         mockMvc.perform(get("/manager/applications/10").sessionAttr("user", manager()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("manager-application-detail"))
-                .andExpect(model().attribute("courseApplication", application))
+                .andExpect(model().attribute("course", application))
                 .andExpect(content().string(containsString("Alex &amp; Team")))
                 .andExpect(content().string(containsString("NUS-ISS")))
                 .andExpect(content().string(containsString("Improve our system design.")))
@@ -202,13 +206,16 @@ class ManagerControllerTest {
         return manager;
     }
 
-    private ApplicationView application(ApplicationStatus status) {
-        return new ApplicationView(10, 2, "Alex & Team", "S002",
-                "Java <script>alert(1)</script>", CourseCategoryType.EXTERNAL_COURSE, "NUS-ISS",
-                LocalDate.of(2026, 11, 12), LocalDate.of(2026, 11, 13), 2.0, null, new java.math.BigDecimal("1800.0"),
-                "Improve our system design.", "Share the learning with the team.", status,
-                LocalDateTime.of(2026, 10, 9, 10, 0), null,
-                status == ApplicationStatus.REJECTED ? LocalDateTime.of(2026, 10, 9, 11, 0) : null,
-                status == ApplicationStatus.REJECTED ? "Conflicts with a project deadline." : null, null);
+    private CourseApplication application(ApplicationStatus status) {
+        Staff applicant = new Staff(); applicant.setUserId(2); applicant.setName("Alex & Team"); applicant.setStaffId("S002");
+        CourseApplication course = new CourseApplication(); course.setCourseId(10); course.setVersion(0L);
+        course.setApplicant(applicant); course.setApprovalManager(manager());
+        course.setCourseTitle("Java <script>alert(1)</script>"); course.setCourseCategory(CourseCategoryType.EXTERNAL_COURSE);
+        course.setTrainingProvider("NUS-ISS"); course.setCourseStartDate(LocalDate.of(2026,11,12));
+        course.setCourseEndDate(LocalDate.of(2026,11,13)); course.setTrainingDays(2d); course.setCourseFee(new java.math.BigDecimal("1800.0"));
+        course.setJustification("Improve our system design."); course.setWorkDissemination("Share the learning with the team.");
+        course.setStatus(status); course.setSubmittedAt(LocalDateTime.of(2026,10,9,10,0));
+        if (status == ApplicationStatus.REJECTED) { course.setReviewedAt(LocalDateTime.of(2026,10,9,11,0)); course.setDecisionReason("Conflicts with a project deadline."); }
+        return course;
     }
 }

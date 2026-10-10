@@ -1,0 +1,204 @@
+<!doctype html>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Course application', 'Staff', 'apply', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1
+            th:text="${editId == null ? 'Apply for a course' : 'Edit application'}"
+          ></h1>
+          <p class="cats-sub">
+            Future working dates within one calendar year. Pending applications
+            reserve your allowance.
+          </p>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/staff/courses}"
+          >Back to courses</a
+        >
+      </div>
+      <div th:replace="~{fragments/application :: allowance(${summary})}"></div>
+      <div class="card card-body">
+        <h2
+          class="cats-card-title"
+          th:text="${existing == null ? offer.title : existing.courseTitle}"
+        ></h2>
+        <p
+          th:text="${existing == null ? offer.provider.name : existing.trainingProvider}"
+        ></p>
+        <p>
+          <span
+            th:text="${existing == null ? offer.courseCategory.kind.displayName : existing.courseCategory.displayName}"
+          ></span>
+          &middot;
+          <span
+            th:text="'$' + ${#numbers.formatDecimal(existing == null ? offer.courseFee : existing.courseFee,1,'COMMA',2,'POINT')}"
+          ></span>
+        </p>
+      </div>
+      <div class="card card-body">
+        <form
+          class="cats-stack"
+          id="application-form"
+          th:action="@{${formAction}}"
+          th:object="${form}"
+          method="post"
+          novalidate
+        >
+          <input type="hidden" th:field="*{version}" />
+          <div
+            class="cats-error-summary"
+            role="alert"
+            th:if="${#fields.hasErrors('*')}"
+          >
+            <div>
+              <h2 class="cats-card-title">Please check your application</h2>
+              <ul>
+                <li
+                  th:each="error : ${#fields.allErrors()}"
+                  th:text="${error}"
+                ></li>
+              </ul>
+            </div>
+          </div>
+          <input type="hidden" th:field="*{courseVersion}" /><input
+            type="hidden"
+            th:field="*{batchVersion}"
+          /><input
+            type="hidden"
+            id="catalogue-category"
+            th:value="${existing == null ? offer.courseCategory.kind : existing.courseCategory}"
+          />
+          <div class="cats-field" th:if="${existing == null}">
+            <label class="form-label cats-req" for="batchId">Schedule</label
+            ><select class="form-select" th:field="*{batchId}">
+              <option
+                value=""
+                th:text="${offer.customDatesAllowed ? 'Choose my own dates' : 'Choose a schedule'}"
+              ></option>
+              <option
+                th:each="choice : ${schedules}"
+                th:value="${choice.batch.batchId}"
+                th:attr="data-version=${choice.batch.version}"
+                th:disabled="${choice.places == 0}"
+                th:text="${#temporals.format(choice.batch.courseStartDate,'d MMM yyyy')} + ' – ' + ${#temporals.format(choice.batch.courseEndDate,'d MMM yyyy')} + ' ' + ${choice.batch.halfDayPeriod ?: ''} + ' (' + ${choice.places} + ' places)'"
+              ></option>
+            </select>
+          </div>
+          <p th:if="${existing != null and existing.catalogueBatch != null}">
+            Fixed schedule:
+            <span
+              th:text="${#temporals.format(existing.courseStartDate,'d MMM yyyy')} + ' – ' + ${#temporals.format(existing.courseEndDate,'d MMM yyyy')}"
+            ></span>
+            <span th:text="${existing.halfDayPeriod}"></span>
+          </p>
+          <div
+            class="cats-stack"
+            id="date-options"
+            th:if="${existing == null ? offer.customDatesAllowed : existing.catalogueBatch == null}"
+          >
+            <div id="custom-dates" class="cats-grid cats-grid-2">
+              <div class="cats-field">
+                <label class="form-label cats-req" for="courseStartDate"
+                  >Start date</label
+                ><input
+                  class="form-control"
+                  type="date"
+                  th:field="*{courseStartDate}"
+                  th:errorclass="is-invalid"
+                  th:min="${today}"
+                />
+                <div
+                  class="cats-field-msg"
+                  th:errors="*{courseStartDate}"
+                ></div>
+              </div>
+              <div class="cats-field">
+                <label class="form-label cats-req" for="courseEndDate"
+                  >End date</label
+                ><input
+                  class="form-control"
+                  type="date"
+                  th:field="*{courseEndDate}"
+                  th:errorclass="is-invalid"
+                  th:min="${today}"
+                />
+                <div class="cats-field-msg" th:errors="*{courseEndDate}"></div>
+              </div>
+            </div>
+            <div class="cats-field" id="half-day-field">
+              <label class="form-label" for="halfDayPeriod">Session</label
+              ><select class="form-select" th:field="*{halfDayPeriod}">
+                <option value="">Full working days</option>
+                <option value="AM">Morning (AM)</option>
+                <option value="PM">Afternoon (PM)</option>
+              </select>
+              <div class="form-text">
+                Half-day sessions are for one-day Internal Training only.
+              </div>
+              <div class="cats-field-msg" th:errors="*{halfDayPeriod}"></div>
+            </div>
+          </div>
+          <div class="cats-field">
+            <label class="form-label cats-req" for="justification"
+              >Why do you need this course?</label
+            ><textarea
+              rows="3"
+              maxlength="2000"
+              class="form-control"
+              th:field="*{justification}"
+              th:errorclass="is-invalid"
+            ></textarea>
+            <div class="cats-field-msg" th:errors="*{justification}"></div>
+          </div>
+          <div class="cats-field">
+            <label class="form-label" for="workDissemination"
+              >Work arrangements during the course</label
+            ><textarea
+              rows="3"
+              maxlength="2000"
+              class="form-control"
+              th:field="*{workDissemination}"
+              th:errorclass="is-invalid"
+            ></textarea>
+            <div class="cats-field-msg" th:errors="*{workDissemination}"></div>
+          </div>
+          <div
+            class="cats-field"
+            th:if="${editId == null and !#lists.isEmpty(reviewers)}"
+          >
+            <label class="form-label cats-req" for="reviewerId"
+              >Approving Manager</label
+            ><select class="form-select" th:field="*{reviewerId}">
+              <option value="">Choose a Manager</option>
+              <option
+                th:each="manager : ${reviewers}"
+                th:value="${manager.userId}"
+                th:text="${manager.name} + ' (' + ${manager.staffId} + ')'"
+              ></option>
+            </select>
+          </div>
+          <p
+            class="text-secondary"
+            th:if="${editId == null and employee.manager != null}"
+          >
+            Approving Manager: <span th:text="${employee.manager.name}"></span>
+          </p>
+          <div class="cats-form-footer">
+            <a class="btn btn-outline-secondary" th:href="@{/staff/personal}"
+              >Cancel</a
+            ><button
+              class="btn btn-primary"
+              type="submit"
+              th:text="${editId == null ? 'Submit application' : 'Save changes'}"
+            ></button>
+          </div>
+        </form>
+      </div>
+      <script defer th:src="@{/js/application-form.js}"></script>
+    </section>
+  </body>
+</html>

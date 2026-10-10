@@ -20,13 +20,15 @@ import group6.project.repo.StaffRepo;
 public class StaffService {
     private final StaffRepo staffRepo;
     private final CourseApplicationService courseApplicationService;
+    private final TrainingEntitlementService entitlements;
     private final CourseApplicationRepo courseApplicationRepo;
     private final CourseFeeApplicationService courseFeeApplicationService;
     private final CourseFeeApplicationRepo courseFeeApplicationRepo;
 
     public StaffService(StaffRepo staffRepo, CourseApplicationService courseApplicationService,
             CourseApplicationRepo courseApplicationRepo, CourseFeeApplicationService courseFeeApplicationService,
-            CourseFeeApplicationRepo courseFeeApplicationRepo) {
+            CourseFeeApplicationRepo courseFeeApplicationRepo, TrainingEntitlementService entitlements) {
+        this.entitlements = entitlements;
         this.staffRepo = staffRepo;
         this.courseApplicationService = courseApplicationService;
         this.courseApplicationRepo = courseApplicationRepo;
@@ -47,54 +49,9 @@ public class StaffService {
         return staffRepo.findById(id).orElse(null);
     }
 
-    // Course applications - Prepare and retrieve application details.
-    public List<CourseApplication> getCourseHistory(Staff staff, int year) {
-        // Personal course history - Find this employee's applications for the selected year
-        return courseApplicationService.findForStaffAndYear(staff, year);
-    }
-
-    public CourseApplication getCourseApplication(Integer id, Staff staff) {
-        return courseApplicationService.getOwned(id, staff);
-    }
-
-    // Edit application - Allow changes only before approval or rejection
-    public boolean isPending(CourseApplication application) {
-        return application.getStatus() == ApplicationStatus.APPLIED
-                || application.getStatus() == ApplicationStatus.UPDATED;
-    }
-
-    // The application service supplies the same yearly totals on every employee page.
-    public CourseApplicationService.Summary summary(CourseApplication form, Staff staff, Integer id) {
-        return courseApplicationService.summary(form, staff, id);
-    }
-
-    @Transactional
-    public CourseApplication saveApplication(Integer id, CourseApplication form, Staff staff) {
-        if (id == null) {
-            form.setCourseId(null);
-            return courseApplicationService.create(form, staff);
-        }
-        return courseApplicationService.update(id, form, staff);
-    }
-
-    public void deleteApplication(Integer id, Staff staff) {
-        // Delete application when pending
-        courseApplicationService.delete(id, staff);
-    }
-
-    public void cancelApplication(Integer id, Staff staff) {
-        // Cancel application after approved
-        courseApplicationService.cancel(id, staff);
-    }
-
-    // Discussion: CourseApplicationService.complete() allows completion on the end date
-    public void completeApplication(Integer id, String comments, Staff staff) {
-        CourseApplication course = getCourseApplication(id, staff);
-        // Complete course: Check the end date; the shared service checks status and comments.
-        if (course.getCourseEndDate() == null || !course.getCourseEndDate().isBefore(LocalDate.now())) {
-            throw new IllegalStateException("A course can only be marked completed after it ends.");
-        }
-        courseApplicationService.complete(id, comments, staff);
+    // The dashboard uses the same annual calculation as application and Manager pages.
+    public TrainingEntitlementService.AnnualSummary summary(Staff staff, int year) {
+        return entitlements.summary(staff, year, null);
     }
 
     // Fee claims: Retrieve claims and eligible courses.
@@ -130,7 +87,7 @@ public class StaffService {
     // Discussion: Move eligibility checks to CourseFeeApplicationService.submitApplication()
     public void submitClaim(Integer courseId, boolean paidPersonally, MultipartFile receipt,
             MultipartFile certificate, Staff staff) {
-        CourseApplication course = getCourseApplication(courseId, staff);
+        CourseApplication course = courseApplicationService.getOwned(courseId, staff);
         // Fee claim eligibility - Check personal payment and course completion.
         if (!paidPersonally) {
             throw new IllegalArgumentException("Only personally paid course fees can be claimed.");

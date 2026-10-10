@@ -43,17 +43,17 @@
         <tbody>
         <tr th:each="a : ${group.applications}">
           <td class="cats-col-main">
-            <a class="cats-row-link" th:href="@{/manager/applications/{id}(id=${a.applicationId})}" th:text="${a.title}">Course title</a>
-            <div class="cats-cell-sub" th:if="${a.category != null}"
-                 th:text="${#strings.capitalize(#strings.toLowerCase(a.category.displayName))}">External course</div>
+            <a class="cats-row-link" th:href="@{/manager/applications/{id}(id=${a.courseId})}" th:text="${a.courseTitle}">Course title</a>
+            <div class="cats-cell-sub" th:if="${a.courseCategory != null}"
+                 th:text="${#strings.capitalize(#strings.toLowerCase(a.courseCategory.displayName))}">External course</div>
           </td>
           <td class="text-nowrap">
-            <span th:text="${a.startDate != null ? #temporals.format(a.startDate, 'd MMM yyyy') : '—'}">12 Nov 2026</span>
+            <span th:text="${a.courseStartDate != null ? #temporals.format(a.courseStartDate, 'd MMM yyyy') : '—'}">12 Nov 2026</span>
             &ndash;
-            <span th:text="${a.endDate != null ? #temporals.format(a.endDate, 'd MMM yyyy') : '—'}">14 Nov 2026</span>
+            <span th:text="${a.courseEndDate != null ? #temporals.format(a.courseEndDate, 'd MMM yyyy') : '—'}">14 Nov 2026</span>
           </td>
           <td class="cats-num" th:text="${a.trainingDays ?: '—'}">3</td>
-          <td class="cats-num" th:text="'$' + ${#numbers.formatDecimal(a.fee, 1, 'COMMA', 2, 'POINT')}">$1,800.00</td>
+          <td class="cats-num" th:text="'$' + ${#numbers.formatDecimal(a.courseFee, 1, 'COMMA', 2, 'POINT')}">$1,800.00</td>
           <td><span th:replace="~{fragments/ui :: status(${a.status})}"></span></td>
         </tr>
         </tbody>

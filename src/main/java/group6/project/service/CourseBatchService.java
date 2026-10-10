@@ -20,16 +20,18 @@ public class CourseBatchService {
     private final CourseDetailRepo courses;
     private final CourseApplicationRepo applications;
     private final ExcludedDaysRepo holidays;
+    private final TrainingCalendarPolicyRepo calendar;
     private static final List<ApplicationStatus> SEAT_STATUSES = List.of(ApplicationStatus.APPLIED,
             ApplicationStatus.UPDATED, ApplicationStatus.APPROVED, ApplicationStatus.COMPLETED);
 
     // A batch is a fixed schedule for one catalogue course.
     public CourseBatchService(CourseBatchRepo batches, CourseDetailRepo courses,
-            CourseApplicationRepo applications, ExcludedDaysRepo holidays) {
+            CourseApplicationRepo applications, ExcludedDaysRepo holidays, TrainingCalendarPolicyRepo calendar) {
         this.batches = batches;
         this.courses = courses;
         this.applications = applications;
         this.holidays = holidays;
+        this.calendar = calendar;
     }
 
     // Show all schedules, including archived ones, in date order.
@@ -59,6 +61,7 @@ public class CourseBatchService {
     // Used schedules keep their dates; capacity cannot drop below reserved places.
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public CourseBatch save(Long id, CourseBatchForm form) {
+        calendar.readCalendar().orElseThrow();
         CourseDetail course = courses.lockById(form.getCourseId())
                 .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Choose a course."));
         CourseBatch batch = id == null ? new CourseBatch() : batches.lockById(id)
