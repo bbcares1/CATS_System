@@ -1,4 +1,3 @@
-// We check the session token before accepting a form submission.
 package group6.project.config;
 
 import jakarta.servlet.http.HttpServletRequest;

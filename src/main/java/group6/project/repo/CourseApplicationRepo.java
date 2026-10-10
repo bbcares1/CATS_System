@@ -1,4 +1,3 @@
-// We query applications for personal history, Manager review, overlaps and annual usage.
 package group6.project.repo;
 
 import group6.project.model.ApplicationStatus;

@@ -1,4 +1,3 @@
-// We split small result lists into the page sizes used by our screens.
 package group6.project.controller;
 
 import org.springframework.data.domain.*;

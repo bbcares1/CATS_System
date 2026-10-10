@@ -1,4 +1,3 @@
-// We store one employee's training-day and budget limits for one year.
 package group6.project.model;
 
 import jakarta.persistence.Column;

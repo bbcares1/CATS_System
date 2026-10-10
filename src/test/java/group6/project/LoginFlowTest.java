@@ -57,11 +57,11 @@ class LoginFlowTest {
         assertNotEquals(original, session.getId());
         mvc.perform(get("/manager/home").session(session))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("data-label=\"My staff workspace\"")));
+                .andExpect(content().string(containsString("data-label=\"My courses\"")));
         for (String path : new String[] {"/staff/home", "/staff/personal", "/staff/courses", "/staff/fee"}) {
             mvc.perform(get(path).session(session))
                     .andExpect(status().isOk())
-                    .andExpect(content().string(containsString("data-label=\"Manager workspace\"")));
+                    .andExpect(content().string(containsString("data-label=\"Manager dashboard\"")));
         }
     }
 

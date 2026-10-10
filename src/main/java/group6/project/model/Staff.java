@@ -1,4 +1,3 @@
-// We use this User subtype for employees who can apply for training.
 package group6.project.model;
 
 import jakarta.persistence.DiscriminatorValue;

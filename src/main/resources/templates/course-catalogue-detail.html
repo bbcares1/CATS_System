@@ -40,7 +40,7 @@
         <h2 class="cats-card-title">Available schedules</h2>
         <p
           th:if="${#lists.isEmpty(schedules)}"
-          th:text="${course.customDatesAllowed} ? 'Choose your own dates in the application.' : 'No upcoming schedules. Please check again later.'"
+          th:text="${course.customDatesAllowed} ? 'Choose your own dates in the application.' : 'No upcoming dates.'"
         ></p>
         <div th:each="choice : ${schedules}" class="border-bottom py-3">
           <b
@@ -49,7 +49,9 @@
           <span th:text="${choice.batch.halfDayPeriod}"></span>
           <p class="mb-0">
             <span th:text="${choice.batch.trainingDays}"></span> training days
-            &middot; <span th:text="${choice.places} + ' places left'"></span>
+          </p>
+          <p class="mb-0">
+            <span th:text="${choice.places} + ' places left'"></span>
           </p>
         </div>
       </div>

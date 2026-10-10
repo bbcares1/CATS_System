@@ -1,4 +1,3 @@
-// We handle the course-category maintenance forms.
 package group6.project.controller;
 
 import group6.project.form.CourseCategoryForm;
@@ -35,13 +34,11 @@ public class CourseCategoryController {
         return "course-category-list";
     }
 
-    // Open an empty form.
     @GetMapping("/new")
     public String create(Model model) {
         return render(null, new CourseCategoryForm(), model);
     }
 
-    // Load the saved values for editing.
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable Integer id, Model model) {
         return render(id, service.form(id), model);

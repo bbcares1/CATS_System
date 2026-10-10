@@ -1,4 +1,3 @@
-// We maintain training providers and keep referenced records available in history.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.*;

@@ -1,4 +1,3 @@
-// We validate evidence, review claims and record payments without spending the budget twice.
 package group6.project.service;
 
 import group6.project.model.*;

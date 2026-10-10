@@ -1,4 +1,3 @@
-// We count working training days and apply the single-day Internal Training half-day rule.
 package group6.project.service;
 
 import group6.project.model.CourseCategoryType;
@@ -8,7 +7,6 @@ import java.time.LocalDate;
 import java.util.Set;
 
 public final class TrainingDayCalculator {
-    // This calculation needs dates and holidays only, not a repository or a session.
     private TrainingDayCalculator() {}
 
     // All categories use whole working days; only single-day Internal Training can use AM or PM.
@@ -51,7 +49,6 @@ public final class TrainingDayCalculator {
         return days;
     }
 
-    // The start, end and counted days follow the same working calendar.
     public static boolean isWorkingDay(LocalDate day, Set<LocalDate> holidays) {
         return day.getDayOfWeek() != DayOfWeek.SATURDAY
                 && day.getDayOfWeek() != DayOfWeek.SUNDAY

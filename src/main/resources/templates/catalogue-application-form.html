@@ -26,10 +26,13 @@
           th:text="${existing == null ? offer.provider.name : existing.trainingProvider}"
         ></p>
         <p>
+          Category:
           <span
             th:text="${existing == null ? offer.courseCategory.kind.displayName : existing.courseCategory.displayName}"
           ></span>
-          &middot;
+        </p>
+        <p>
+          Fee:
           <span
             th:text="'$' + ${#numbers.formatDecimal(existing == null ? offer.courseFee : existing.courseFee,1,'COMMA',2,'POINT')}"
           ></span>

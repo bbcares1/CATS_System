@@ -1,4 +1,3 @@
-// We collect the Manager's decision and required reason.
 package group6.project.form;
 
 import jakarta.validation.constraints.*;

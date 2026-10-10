@@ -1,4 +1,3 @@
-// We handle application forms and personal history. CourseApplicationService saves the changes.
 package group6.project.controller;
 
 import group6.project.form.CatalogueApplicationForm;

@@ -1,4 +1,3 @@
-// We validate course dates and capacity, keeping used schedules available in history.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.*;
@@ -46,12 +45,10 @@ public class CourseBatchService {
         this.calendar = calendar;
     }
 
-    // Keep existing schedules with the course being edited.
     public List<CourseBatch> forCourse(Integer courseId) {
         return batches.findByCourseDetail_CourseIdOrderByCourseStartDateAsc(courseId);
     }
 
-    // Fail clearly if a batch link no longer exists.
     public CourseBatch get(Long id) {
         return batches.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Schedule not found."));

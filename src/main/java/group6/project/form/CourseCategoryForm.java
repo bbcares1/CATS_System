@@ -1,4 +1,3 @@
-// We collect the category label and its training-rule type.
 package group6.project.form;
 
 import group6.project.model.CourseCategoryType;

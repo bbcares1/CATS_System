@@ -44,8 +44,8 @@
     <!-- Empty state inside a card. action: a fragment such as ~{::#apply-btn}, or ~{} for none. -->
     <div th:fragment="empty(iconName, title, text, action)" class="cats-empty">
       <svg th:replace="~{fragments/icons :: icon(${iconName})}"></svg>
-      <strong th:text="${title}">Nothing here yet</strong>
-      <span th:text="${text}">Add the first item to get started.</span>
+      <strong th:text="${title}">No records.</strong>
+      <span th:text="${text}"></span>
       <br /><th:block th:replace="${action}"></th:block>
     </div>
 

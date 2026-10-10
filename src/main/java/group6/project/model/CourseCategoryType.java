@@ -1,4 +1,3 @@
-// We keep the three course types and their display names together.
 package group6.project.model;
 
 public enum CourseCategoryType {

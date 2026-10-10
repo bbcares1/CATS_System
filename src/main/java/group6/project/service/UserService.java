@@ -1,4 +1,3 @@
-// We check login credentials and reload the signed-in account when its details change.
 package group6.project.service;
 
 import group6.project.model.Admin;
@@ -46,7 +45,6 @@ public class UserService {
         return current;
     }
 
-    // Administration uses its own login and workspace.
     public boolean isAdmin(User user) {
         return user instanceof Admin;
     }

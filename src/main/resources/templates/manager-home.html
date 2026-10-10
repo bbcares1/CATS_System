@@ -1,5 +1,4 @@
 <!doctype html>
-<!-- Example of a page built on the shared layout. See DESIGN.md. -->
 <html
   lang="en"
   xmlns:th="http://www.thymeleaf.org"
@@ -9,17 +8,11 @@
     <section id="content">
       <div class="cats-page-header">
         <div>
-          <h1>
-            Welcome back, <span th:text="${currentUser.name}">Manager</span>
-          </h1>
-          <p class="cats-sub">
-            <span th:text="${currentUser.staffId}">M0001</span> &middot; Manager
-          </p>
+          <h1>Dashboard</h1>
         </div>
         <div class="cats-page-actions">
           <a class="btn btn-outline-secondary" th:href="@{/staff/home}">
-            <svg th:replace="~{fragments/icons :: icon('briefcase')}"></svg>My
-            staff workspace
+            <svg th:replace="~{fragments/icons :: icon('briefcase')}"></svg>My courses
           </a>
           <a class="btn btn-outline-secondary" th:href="@{/staff/apply}">
             <svg th:replace="~{fragments/icons :: icon('file-plus')}"></svg
@@ -52,9 +45,6 @@
             <h2 class="cats-card-title">Team course history</h2>
           </div>
           <div class="card-body">
-            <p class="mb-0 text-secondary">
-              What your team members applied for this year.
-            </p>
             <a class="btn btn-outline-secondary" th:href="@{/manager/history}"
               >View team history</a
             >

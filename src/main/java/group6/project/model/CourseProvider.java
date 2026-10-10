@@ -1,4 +1,3 @@
-// We store the organisations that provide catalogue courses.
 package group6.project.model;
 
 import jakarta.persistence.*;

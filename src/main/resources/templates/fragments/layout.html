@@ -1,11 +1,4 @@
 <!doctype html>
-<!-- Shared page shell: sidebar + header + flash messages. Every signed-in page uses it, see DESIGN.md.
-     Page template:
-       <html lang="en" xmlns:th="http://www.thymeleaf.org"
-             th:replace="~{fragments/layout :: layout('Page title', 'Staff', 'dashboard', ~{::#content})}">
-       <body><section id="content"> ... </section></body></html>
-     role: current workspace ('Staff' | 'Manager' | 'Admin'), not necessarily the account role.
-     active: key of the sidebar link to highlight -->
 <html
   lang="en"
   xmlns:th="http://www.thymeleaf.org"
@@ -38,13 +31,13 @@
           <a class="cats-brand" th:href="@{/}">
             <span class="cats-brand-mark">C</span>
             <span class="cats-brand-text"
-              ><b>CATS</b><small>Course Application Tracking</small></span
+              ><b>CATS</b></span
             >
           </a>
         </div>
 
-        <div class="cats-nav-section" th:text="${role} + ' workspace'">
-          Staff workspace
+        <div class="cats-nav-section" th:text="${role}">
+          Staff
         </div>
         <nav class="cats-nav" aria-label="Main">
           <th:block th:if="${role == 'Staff'}">
@@ -62,7 +55,7 @@
             ></a>
             <th:block th:if="${u instanceof T(group6.project.model.Manager)}">
               <a
-                th:replace="~{fragments/ui :: navlink(@{/manager/home}, 'manager', 'Manager workspace', 'users', ${active})}"
+                th:replace="~{fragments/ui :: navlink(@{/manager/home}, 'manager', 'Manager dashboard', 'users', ${active})}"
               ></a>
             </th:block>
           </th:block>
@@ -77,7 +70,7 @@
               th:replace="~{fragments/ui :: navlink(@{/manager/history}, 'history', 'Team course history', 'users', ${active})}"
             ></a>
             <a
-              th:replace="~{fragments/ui :: navlink(@{/staff/home}, 'staff', 'My staff workspace', 'briefcase', ${active})}"
+              th:replace="~{fragments/ui :: navlink(@{/staff/home}, 'staff', 'My courses', 'briefcase', ${active})}"
             ></a>
           </th:block>
           <th:block th:if="${role == 'Admin'}">
@@ -155,7 +148,7 @@
             <svg th:replace="~{fragments/icons :: icon('menu')}"></svg>
           </button>
           <span class="cats-crumb"
-            ><span th:text="${role} + ' workspace'">Staff workspace</span
+            ><span th:text="${role}">Staff</span
             ><span class="sep">/</span><b th:text="${title}">Dashboard</b></span
           >
 
@@ -173,10 +166,7 @@
               >
               <span class="cats-user-text">
                 <span th:text="${u?.name}">Name</span>
-                <small
-                  ><span th:text="${role}">Staff</span> &middot;
-                  <span th:text="${uid}">S0001</span></small
-                >
+                <small th:text="${uid}">S0001</small>
               </span>
               <svg
                 th:replace="~{fragments/icons :: icon('chevron-down')}"
@@ -194,7 +184,7 @@
                   ><svg
                     th:replace="~{fragments/icons :: icon('briefcase')}"
                   ></svg
-                  >My staff workspace</a
+                  >My courses</a
                 >
               </li>
               <li th:if="${role == 'Staff' and u instanceof T(group6.project.model.Manager)}">
@@ -202,7 +192,7 @@
                   ><svg
                     th:replace="~{fragments/icons :: icon('users')}"
                   ></svg
-                  >Manager workspace</a
+                  >Manager dashboard</a
                 >
               </li>
               <li>

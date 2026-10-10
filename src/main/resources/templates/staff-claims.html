@@ -14,10 +14,6 @@
       <!-- Claim eligibility and actual reimbursement are shown separately from budget reservations. -->
       <div class="card">
         <div class="card-body cats-stack">
-          <p>
-            Claim a completed External Course or Professional Certification you
-            paid for personally. Upload a receipt and completion certificate.
-          </p>
           <dl class="cats-dl">
             <dt>Approved and completed course fees</dt>
             <dd
@@ -123,7 +119,7 @@
             </div>
           </form>
           <p class="text-secondary" th:if="${#lists.isEmpty(eligible)}">
-            No unclaimed completed fee-paying courses.
+            No completed courses available to claim.
           </p>
         </div>
       </div>

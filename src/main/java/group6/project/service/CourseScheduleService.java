@@ -1,4 +1,3 @@
-// We calculate an end date from the start date and training days, skipping non-working days.
 package group6.project.service;
 
 import group6.project.model.CourseCategoryType;

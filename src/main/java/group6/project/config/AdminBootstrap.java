@@ -1,4 +1,3 @@
-// We create the first deployment Admin only when no active Admin exists.
 package group6.project.config;
 
 import group6.project.model.*;

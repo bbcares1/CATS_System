@@ -1,4 +1,3 @@
-// We show pending requests and team history, then pass decisions to the application service.
 package group6.project.controller;
 
 import group6.project.form.DecisionForm;

@@ -1,4 +1,3 @@
-// We prepare workflow emails and report delivery problems without undoing saved decisions.
 package group6.project.service;
 
 import group6.project.form.AdminEmailForm;

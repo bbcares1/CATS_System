@@ -1,4 +1,3 @@
-// We edit saved course dates here and return to the course they belong to.
 package group6.project.controller;
 
 import group6.project.form.CourseBatchForm;
@@ -24,7 +23,6 @@ public class CourseBatchController {
         this.schedules = schedules;
     }
 
-    // Load the saved values for editing.
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable Long id, Model model) {
         return render(id, service.form(id), model);

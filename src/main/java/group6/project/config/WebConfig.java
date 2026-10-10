@@ -1,4 +1,3 @@
-// We register the login and form-token checks for our MVC routes.
 package group6.project.config;
 
 import org.springframework.context.annotation.Configuration;

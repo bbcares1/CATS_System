@@ -1,4 +1,3 @@
-// We send the Admin's email through configured SMTP. Local startup does not require SMTP.
 package group6.project.service;
 
 import group6.project.form.AdminEmailForm;

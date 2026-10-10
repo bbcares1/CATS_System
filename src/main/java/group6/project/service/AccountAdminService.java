@@ -1,4 +1,3 @@
-// We validate account changes, reporting lines and role changes while keeping existing history.
 package group6.project.service;
 
 import group6.project.form.AccountForm;
@@ -37,7 +36,6 @@ public class AccountAdminService {
                 .toList();
     }
 
-    // Missing edit links give a normal 404.
     public User get(Integer id) {
         return users.findById(id)
                 .orElseThrow(

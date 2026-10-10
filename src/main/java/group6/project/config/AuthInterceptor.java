@@ -1,4 +1,3 @@
-// We check the signed-in account and its role before opening protected pages.
 package group6.project.config;
 
 import group6.project.model.Admin;

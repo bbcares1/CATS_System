@@ -1,4 +1,3 @@
-// We store a category label linked to one of the three course-rule types.
 package group6.project.model;
 
 import jakarta.persistence.Entity;

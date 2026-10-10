@@ -1,4 +1,3 @@
-// We collect the provider details shown in the course catalogue.
 package group6.project.form;
 
 import jakarta.validation.constraints.*;

@@ -1,4 +1,3 @@
-// We show the employee dashboard using the shared annual allowance calculation.
 package group6.project.controller;
 
 import group6.project.model.Staff;

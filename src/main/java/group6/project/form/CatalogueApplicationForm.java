@@ -1,4 +1,3 @@
-// We collect dates and reasons for a catalogue application; the course supplies its details.
 package group6.project.form;
 
 import jakarta.validation.constraints.*;

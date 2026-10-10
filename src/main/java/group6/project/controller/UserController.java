@@ -1,4 +1,3 @@
-// We handle the separate Employee and Admin login pages and shared logout.
 package group6.project.controller;
 
 import group6.project.model.Admin;

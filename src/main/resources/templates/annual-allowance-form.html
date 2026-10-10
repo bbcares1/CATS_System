@@ -9,7 +9,7 @@
       <div class="cats-page-header">
         <div>
           <h1>Annual allowance</h1>
-          <p class="cats-sub" th:text="${staff.name + ' · ' + staff.staffId}">
+          <p class="cats-sub" th:text="${staff.name + ' (' + staff.staffId + ')'}">
             Employee
           </p>
         </div>
@@ -66,11 +66,10 @@
               <p
                 class="form-text"
                 th:if="${suggestedDays > 0}"
-                th:text="${staff.designation + ' designation: suggested ' + suggestedDays + ' days per year.'}"
+                th:text="'Default for ' + ${staff.designation} + ': ' + ${suggestedDays} + ' days.'"
               ></p>
               <p class="form-text" th:unless="${suggestedDays > 0}">
-                Set the allowance for this employee's designation.
-                Administrative: 5 days; Professional: 10 days.
+                Administrative staff have 5 days. Professional staff have 10 days.
               </p>
             </div>
             <div>
@@ -84,10 +83,6 @@
                 required
               />
             </div>
-            <p class="form-text">
-              Pending applications reserve allowance. Approved and completed
-              courses use it. Other years stay unchanged.
-            </p>
             <div class="cats-form-footer">
               <a
                 class="btn btn-outline-secondary"

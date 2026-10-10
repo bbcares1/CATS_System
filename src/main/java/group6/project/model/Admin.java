@@ -1,4 +1,3 @@
-// We use this User subtype for accounts that maintain the system.
 package group6.project.model;
 
 import jakarta.persistence.DiscriminatorValue;

@@ -1,4 +1,3 @@
-// We handle the Admin home, annual allowances, reporting list and manual email.
 package group6.project.controller;
 
 import group6.project.form.AdminEmailForm;
@@ -53,7 +52,6 @@ public class AdminController {
     }
 
     @GetMapping("/home")
-    // Show the administrator navigation page.
     public String adminHome(HttpSession session, Model model) {
 
         if (!(session.getAttribute("user") instanceof Admin admin)) {

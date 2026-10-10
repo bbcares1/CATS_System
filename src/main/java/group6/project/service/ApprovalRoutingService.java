@@ -1,4 +1,3 @@
-// We choose the reporting Manager, or a peer Manager when the applicant has no superior.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;

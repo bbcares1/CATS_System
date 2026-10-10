@@ -1,4 +1,3 @@
-// We query Manager accounts and find Managers by their staff identifier.
 package group6.project.repo;
 
 import group6.project.model.Manager;

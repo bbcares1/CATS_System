@@ -1,4 +1,3 @@
-// We query employees and their reporting relationships.
 package group6.project.repo;
 
 import group6.project.model.Staff;
@@ -19,6 +18,5 @@ public interface StaffRepo extends JpaRepository<Staff, Integer> {
 
     Optional<Staff> findByUserName(String userName);
 
-    // Reporting manager - Find staff who report to this manager.
     List<Staff> findByManager_UserId(Integer managerId);
 }

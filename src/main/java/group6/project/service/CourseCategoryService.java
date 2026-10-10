@@ -1,4 +1,3 @@
-// We maintain category labels without changing the rules of courses already using them.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.*;
@@ -32,7 +31,6 @@ public class CourseCategoryService {
         return categories.findAll(Sort.by("categoryName"));
     }
 
-    // Return one saved category or a clear missing-record error.
     public CourseCategory get(Integer id) {
         return categories
                 .findById(id)

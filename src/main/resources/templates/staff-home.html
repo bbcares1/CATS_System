@@ -8,9 +8,9 @@
     <section id="content" class="cats-stack">
       <div class="cats-page-header">
         <div>
-          <h1>Welcome, <span th:text="${currentUser.name}"></span></h1>
+          <h1>Dashboard</h1>
           <p class="cats-sub">
-            <span th:text="${currentUser.staffId}"></span> &middot;
+            Designation:
             <span th:text="${currentUser.designation}"></span>
           </p>
         </div>
@@ -34,7 +34,7 @@
           th:if="${currentUser.role.name() == 'MANAGER'}"
           class="btn btn-outline-secondary"
           th:href="@{/manager/home}"
-          >Manager workspace</a
+          >Manager dashboard</a
         >
       </div>
     </section>

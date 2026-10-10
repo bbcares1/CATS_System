@@ -1,4 +1,3 @@
-// We store one offered date option and its capacity for a catalogue course.
 package group6.project.model;
 
 import jakarta.persistence.Entity;

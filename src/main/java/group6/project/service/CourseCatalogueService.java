@@ -1,4 +1,3 @@
-// We find available courses and date options for employees browsing the catalogue.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;

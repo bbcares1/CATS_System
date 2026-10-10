@@ -18,7 +18,7 @@
           <dl class="cats-dl">
             <dt>Employee</dt>
             <dd
-              th:text="${claim.applicant.name + ' · ' + claim.applicant.staffId}"
+              th:text="${claim.applicant.name + ' (' + claim.applicant.staffId + ')'}"
             ></dd>
             <dt>Course</dt>
             <dd th:text="${claim.courseApplication.courseTitle}"></dd>
@@ -115,8 +115,7 @@
               </button>
             </div>
             <p class="form-text">
-              Approval confirms the claim. Admin records reimbursement
-              separately after payment.
+              Admin records payment separately.
             </p>
           </form>
         </div>

@@ -1,4 +1,3 @@
-// We collect editable dates and capacity for a saved course schedule.
 package group6.project.form;
 
 import jakarta.validation.constraints.*;

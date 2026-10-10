@@ -1,4 +1,3 @@
-// We query claims for employees, reviewers and payment recording.
 package group6.project.repo;
 
 import group6.project.model.ApplicationStatus;
@@ -18,7 +17,6 @@ import java.util.Optional;
 
 public interface CourseFeeApplicationRepo extends JpaRepository<CourseFeeApplication, Integer> {
 
-    // Personal claims: Find claims submitted by this employee.
     List<CourseFeeApplication> findByApplicant_UserId(Integer userId);
 
     boolean existsByApplicant_UserId(Integer userId);

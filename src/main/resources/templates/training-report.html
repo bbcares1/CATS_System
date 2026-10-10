@@ -60,7 +60,7 @@
                   <option
                     th:each="e : ${report.employees}"
                     th:value="${e.id}"
-                    th:text="${e.name + ' · ' + e.staffId}"
+                    th:text="${e.name + ' (' + e.staffId + ')'}"
                     th:selected="${e.id == employeeId}"
                   ></option>
                 </select>
@@ -214,7 +214,7 @@
         <div class="card-header">
           <h2
             class="cats-card-title"
-            th:text="'Full-year allowances · ' + ${from.year}"
+            th:text="'Annual allowances (' + ${from.year} + ')'"
           ></h2>
         </div>
         <div class="table-responsive" tabindex="0">
@@ -229,7 +229,7 @@
             </thead>
             <tbody>
               <tr th:each="a : ${report.annual}">
-                <td th:text="${a.name + ' · ' + a.staffId}"></td>
+                <td th:text="${a.name + ' (' + a.staffId + ')'}"></td>
                 <td
                   th:text="${a.summary.dayLimit + ' / ' + a.summary.totalDays}"
                 ></td>

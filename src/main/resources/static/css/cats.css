@@ -1,8 +1,7 @@
 /* =====================================================================
    cats.css — the CATS look. Load it AFTER bootstrap.min.css.
    Rules and examples: DESIGN.md in the repo root.
-   Sections: 1 tokens · 2 Bootstrap overrides · 3 app shell · 4 page
-   structure · 5 components · 6 forms · 7 login
+   Sections: variables, Bootstrap styles, navigation, pages, forms and login.
    ===================================================================== */
 
 /* ---------- 1. Tokens ---------- */

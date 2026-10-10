@@ -1,4 +1,3 @@
-// We read claim-list fields without loading the uploaded evidence files.
 package group6.project.model;
 
 import java.math.BigDecimal;

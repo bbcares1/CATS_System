@@ -1,4 +1,3 @@
-// We prepare pending requests, team history and overlapping absences for Manager pages.
 package group6.project.service;
 
 import group6.project.model.ApplicationStatus;
@@ -37,12 +36,10 @@ public class ManagerService {
         this.courseApplicationRepo = courseApplicationRepo;
     }
 
-    // List saved Manager accounts.
     public List<Manager> getAllManagers() {
         return managerRepo.findAll();
     }
 
-    // Resolve a Manager identity or return 404.
     public Manager getManager(Integer id) {
         return managerRepo
                 .findById(id)
@@ -52,7 +49,6 @@ public class ManagerService {
                                         HttpStatus.NOT_FOUND, "Manager not found with id: " + id));
     }
 
-    // Look up a Manager using the inherited employee identifier.
     public Manager getManagerByStaffId(String staffId) {
         return managerRepo
                 .findByStaffId(staffId)

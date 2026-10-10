@@ -1,4 +1,3 @@
-// We maintain public holidays and check their effect on saved training dates.
 package group6.project.service;
 
 import group6.project.model.ApplicationStatus;
@@ -37,7 +36,6 @@ public class ExcludedDaysService {
         this.batches = batches;
     }
 
-    // Check configured public holidays.
     public boolean isExcludedDay(LocalDate date) {
         return excludedDaysRepo.existsByDate(date);
     }
@@ -50,12 +48,10 @@ public class ExcludedDaysService {
         return !isWeekend && !isExcludedDay(date);
     }
 
-    // Show holiday dates in chronological order.
     public List<ExcludedDays> getAllExcludedDays() {
         return excludedDaysRepo.findAll(Sort.by("date"));
     }
 
-    // Load one holiday for its edit form.
     public ExcludedDays getExcludedDayById(Integer id) {
         return excludedDaysRepo
                 .findById(id)

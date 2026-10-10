@@ -1,4 +1,3 @@
-// We handle the training-provider maintenance forms.
 package group6.project.controller;
 
 import group6.project.form.CourseProviderForm;
@@ -34,13 +33,11 @@ public class CourseProviderController {
         return "course-provider-list";
     }
 
-    // Open an empty form.
     @GetMapping("/new")
     public String create(Model model) {
         return render(null, new CourseProviderForm(), model);
     }
 
-    // Load the saved values for editing.
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable Integer id, Model model) {
         return render(id, service.form(id), model);

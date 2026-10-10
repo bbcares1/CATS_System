@@ -106,8 +106,8 @@
                 />
                 <p
                   class="form-text"
-                  th:text="${accountId == null} ? 'Set a simple password for this account.' : 'Leave blank to keep the current password.'"
-                ></p>
+                  th:if="${accountId != null}"
+                >Leave blank to keep the current password.</p>
               </div>
             </div>
             <div class="cats-grid cats-grid-2">
@@ -134,8 +134,7 @@
                   <option value="Professional">Professional</option>
                 </select>
                 <p class="form-text">
-                  Suggested annual days: Administrative 5, Professional 10. Set
-                  the actual annual allowance separately.
+                  Set days and budget in Annual allowances.
                 </p>
                 <div
                   class="cats-field-msg text-danger"
@@ -167,13 +166,9 @@
                     th:each="m : ${managers}"
                     th:if="${m.userId != accountId}"
                     th:value="${m.userId}"
-                    th:text="${m.name} + ' · ' + ${m.staffId}"
+                    th:text="${m.name} + ' (' + ${m.staffId} + ')'"
                   ></option>
                 </select>
-                <p class="form-text">
-                  Staff and Manager only. Self-reporting and cycles are not
-                  allowed.
-                </p>
               </div>
             </div>
             <div class="form-check">
@@ -186,8 +181,7 @@
                 Active account
               </label>
               <p class="form-text">
-                Disabling removes login access and preserves history. Resolve
-                pending employee requests first.
+                Inactive accounts cannot log in.
               </p>
             </div>
           </form>

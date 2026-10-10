@@ -42,8 +42,8 @@ Login pages do not use the layout (section 17).
 - Below 992 px the sidebar starts collapsed. Below 768 px it is hidden and opens as a drawer from the menu button in the header.
 - Navy sidebar by default. The light variant is `<div class="cats-layout light">`. No other variants.
 - The active link has an orange bar on the left and an orange icon.
-- Header: breadcrumb `Role workspace / Page title` on the left; user menu (initials, name, role, ID) on the right with Log out.
-- Managers can switch workspaces from both the sidebar and user menu: My staff workspace on Manager pages, Manager workspace on Staff pages. Ordinary Staff do not see Manager links.
+- Header: breadcrumb `Role / Page title` on the left; user menu (initials, name, ID) on the right with Log out.
+- Managers can switch workspaces from both the sidebar and user menu: My courses on Manager pages, Manager dashboard on Staff pages. Ordinary Staff do not see Manager links.
 - Log out is also the last item of the sidebar.
 - A link to a page that does not exist yet uses `fragments/ui :: navsoon` and shows a Soon tag. It is not clickable.
 
@@ -215,7 +215,7 @@ Segmented choice, for two or three options that are easier to click than a dropd
 - Numbers and money are right aligned with `.cats-num`. Dates are `text-nowrap`.
 - Actions sit in the last column, right aligned, as quiet buttons. Two at most; the rest belongs on the detail page.
 - The toolbar is optional: search and filters on the left, the row count on the right.
-- Group rows, for example applications grouped by employee: `<tr class="cats-group-row"><th colspan="6">Name <small>S0012 · 2 pending</small></th></tr>`.
+- Group rows, for example applications grouped by employee: `<tr class="cats-group-row"><th colspan="6">Name (S0012) <small>2 pending</small></th></tr>`.
 - An empty list shows the empty state (section 15), not an empty table.
 
 ## 11. Status badges
@@ -245,7 +245,7 @@ The fragment turns `APPLIED` into "Applied". Never print the raw enum.
 ```html
 <div class="card cats-metric">
   <div class="cats-metric-label">Training days remaining</div>
-  <div class="cats-metric-value">7.5<small>of 10 &middot; 3 more pending approval</small></div>
+  <div class="cats-metric-value">7.5<small>Annual limit: 10 days</small></div>
   <div class="progress" role="progressbar" aria-label="Training days used" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
     <div class="progress-bar" th:style="'width:' + ${usedPercent} + '%'"></div>
   </div>
@@ -264,7 +264,8 @@ Key-value pairs use a definition list inside a card:
   <div class="card-body">
     <dl class="cats-dl">
       <dt>Provider</dt><dd th:text="${a.trainingProvider}">NUS-ISS</dd>
-      <dt>Dates</dt><dd>12&ndash;14 Nov 2026 &middot; 3 working days</dd>
+      <dt>Dates</dt><dd>12&ndash;14 Nov 2026</dd>
+      <dt>Training days</dt><dd>3</dd>
     </dl>
   </div>
 </div>
@@ -346,3 +347,7 @@ No sidebar. A centered card with the brand above it and one line of links below.
 Paste this with your request:
 
 > This project is Spring MVC + Thymeleaf + Bootstrap 5.3 with `static/css/cats.css`. Follow `DESIGN.md` exactly. Every page uses `fragments/layout :: layout(title, role, activeKey, ~{::#content})` and starts with `.cats-page-header`. Use the fragments in `fragments/ui.html` for status pills, tags, empty states and confirmation modals, and `fragments/icons.html` for icons. No new CSS or JS frameworks, no inline styles, no `<style>` blocks, no hex colours in templates, no `confirm()`, no GET links that change data. One primary button per screen, quiet buttons inside table rows, English sentence-case text. Validate on the server and show errors with the summary + field pattern. Dates `d MMM yyyy`, money `$1,800.00`. If a pattern is missing from `cats.css`, add a `cats-` class there instead of styling the template. Use `manager-home.html` as the reference page.
+
+## UI wording
+
+Use ordinary English labels and short sentences. Do not join names, roles, features or explanations with middle dots. Keep names and IDs only where they identify an account. Explain a field only when the user needs the rule to enter a valid value. Remove repeated headings, welcome lines and generic instructions. Code comments should explain a business rule or a non-obvious implementation choice; class and method names do not need to be repeated in comments.

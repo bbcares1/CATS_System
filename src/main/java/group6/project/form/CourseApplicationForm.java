@@ -1,4 +1,3 @@
-// We collect the course details and reasons for an application outside the catalogue.
 package group6.project.form;
 
 import group6.project.model.CourseCategoryType;
@@ -11,7 +10,6 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-// Fields an employee may enter for a course outside the catalogue.
 @Getter
 @Setter
 public class CourseApplicationForm {

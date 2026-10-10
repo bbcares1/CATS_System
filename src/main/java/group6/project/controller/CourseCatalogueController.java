@@ -1,4 +1,3 @@
-// We show employees the available courses and their details.
 package group6.project.controller;
 
 import group6.project.model.CourseCategoryType;

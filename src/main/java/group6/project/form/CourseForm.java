@@ -1,4 +1,3 @@
-// We collect course details and an optional date option in one submission.
 package group6.project.form;
 
 import jakarta.validation.constraints.*;

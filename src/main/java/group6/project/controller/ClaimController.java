@@ -1,4 +1,3 @@
-// We handle claim submission, Manager review, evidence downloads and Admin payments.
 package group6.project.controller;
 
 import group6.project.form.ClaimForm;

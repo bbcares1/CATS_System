@@ -1,4 +1,3 @@
-// We show training reports and export the same selected records to CSV.
 package group6.project.controller;
 
 import group6.project.model.*;

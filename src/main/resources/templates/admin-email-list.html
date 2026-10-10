@@ -23,10 +23,7 @@
           </div>
         </div>
 
-        <section class="card" aria-labelledby="email-compose-title">
-          <div class="card-header">
-            <h2 id="email-compose-title" class="cats-card-title">New email</h2>
-          </div>
+        <section class="card" aria-label="Compose email">
           <div class="card-body">
             <form
               th:action="@{/admin/emails/send}"
@@ -50,9 +47,6 @@
                   autocomplete="email"
                   required
                 />
-                <div class="form-text">
-                  You can edit the recipient address before sending.
-                </div>
                 <div
                   class="cats-field-msg"
                   th:if="${#fields.hasErrors('recipientEmail')}"
@@ -119,9 +113,6 @@
             <h2 id="email-recipients-title" class="cats-card-title">
               Staff and managers
             </h2>
-            <p class="text-secondary small mb-0">
-              Accounts created by Admin and existing accounts appear here.
-            </p>
           </div>
           <span
             class="cats-tag"
@@ -192,9 +183,6 @@
           </table>
         </div>
       </section>
-      <p class="text-secondary small mt-3 mb-0" th:unless="${composeMode}">
-        Select a recipient to open the email editor.
-      </p>
     </section>
   </body>
 </html>

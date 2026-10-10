@@ -1,4 +1,3 @@
-// We calculate yearly reserved, used and remaining allowances for every workspace.
 package group6.project.service;
 
 import group6.project.model.ApplicationStatus;

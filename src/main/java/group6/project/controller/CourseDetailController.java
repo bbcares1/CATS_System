@@ -1,4 +1,3 @@
-// We handle course details and dates in one form, including the date calculator.
 package group6.project.controller;
 
 import group6.project.form.CourseForm;
@@ -47,13 +46,11 @@ public class CourseDetailController {
         return "admin-course-list";
     }
 
-    // Open an empty form.
     @GetMapping("/new")
     public String create(Model model) {
         return render(null, new CourseForm(), model);
     }
 
-    // Load the saved values for editing.
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable Integer id, Model model) {
         return render(id, service.form(id), model);

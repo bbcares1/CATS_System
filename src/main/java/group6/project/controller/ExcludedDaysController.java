@@ -1,4 +1,3 @@
-// We handle public-holiday forms used by the shared date calculations.
 package group6.project.controller;
 
 import group6.project.form.HolidayForm;

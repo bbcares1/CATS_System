@@ -1,4 +1,3 @@
-// We provide a small health check for the deployment container.
 package group6.project.controller;
 
 import org.springframework.dao.DataAccessException;
