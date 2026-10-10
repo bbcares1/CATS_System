@@ -1,65 +1,185 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout('Course application', 'Manager', 'approvals', ~{::#content})}">
-<body>
-<section id="content" th:with="a=${courseApplication}">
-  <div class="cats-page-header">
-    <div>
-      <h1 th:text="${a.title}">Course application</h1>
-      <p class="cats-sub"><span th:text="${a.applicantName}">Team member</span> &middot; <span th:text="${a.staffId}">S0001</span></p>
-    </div>
-    <div class="cats-page-actions">
-      <a class="btn btn-outline-secondary" th:href="@{/manager/approvals}">Back to applications</a>
-    </div>
-  </div>
-
-  <div class="card mb-4">
-    <div class="card-header">
-      <h2 class="cats-card-title">Course and schedule</h2>
-      <span th:replace="~{fragments/ui :: status(${a.status})}"></span>
-    </div>
-    <div class="card-body">
-      <dl class="cats-dl mb-0">
-        <dt>Applicant</dt><dd th:text="${a.applicantName}">Team member</dd>
-        <dt>Staff ID</dt><dd th:text="${a.staffId}">S0001</dd>
-        <dt>Category</dt><dd th:text="${a.category != null ? #strings.capitalize(#strings.toLowerCase(a.category.displayName)) : '—'}">External course</dd>
-        <dt>Provider</dt><dd th:text="${a.provider ?: '—'}">NUS-ISS</dd>
-        <dt>Start date</dt><dd th:text="${a.startDate != null ? #temporals.format(a.startDate, 'd MMM yyyy') : '—'}">12 Nov 2026</dd>
-        <dt>End date</dt><dd th:text="${a.endDate != null ? #temporals.format(a.endDate, 'd MMM yyyy') : '—'}">14 Nov 2026</dd>
-        <dt>Training days</dt><dd th:text="${a.trainingDays ?: '—'}">3</dd>
-        <dt th:if="${!#strings.isEmpty(a.halfDayPeriod)}">Half-day period</dt>
-        <dd th:if="${!#strings.isEmpty(a.halfDayPeriod)}" th:text="${a.halfDayPeriod}">AM</dd>
-        <dt>Course fee</dt><dd th:text="'$' + ${#numbers.formatDecimal(a.fee, 1, 'COMMA', 2, 'POINT')}">$1,800.00</dd>
-        <dt>Submitted</dt><dd th:text="${a.submittedAt != null ? #temporals.format(a.submittedAt, 'd MMM yyyy HH:mm') : '—'}">9 Oct 2026 10:00</dd>
-        <dt th:if="${a.updatedAt != null}">Last updated</dt>
-        <dd th:if="${a.updatedAt != null}" th:text="${#temporals.format(a.updatedAt, 'd MMM yyyy HH:mm')}">9 Oct 2026 11:00</dd>
-      </dl>
-    </div>
-  </div>
-
-  <div class="card mb-4">
-    <div class="card-header"><h2 class="cats-card-title">Justification and work arrangements</h2></div>
-    <div class="card-body">
-      <dl class="cats-dl mb-0">
-        <dt>Justification</dt><dd class="text-break" th:text="${a.justification ?: '—'}">Explain the benefit.</dd>
-        <dt>Work arrangements</dt><dd class="text-break" th:text="${a.workDissemination ?: '—'}">Share the learning with the team.</dd>
-      </dl>
-    </div>
-  </div>
-
-  <div class="card" th:if="${a.reviewedAt != null or !#strings.isEmpty(a.decisionReason) or !#strings.isEmpty(a.experienceComments)}">
-    <div class="card-header"><h2 class="cats-card-title">Decision and course feedback</h2></div>
-    <div class="card-body">
-      <dl class="cats-dl mb-0">
-        <dt th:if="${a.reviewedAt != null}">Reviewed</dt>
-        <dd th:if="${a.reviewedAt != null}" th:text="${#temporals.format(a.reviewedAt, 'd MMM yyyy HH:mm')}">10 Oct 2026 10:00</dd>
-        <dt th:if="${!#strings.isEmpty(a.decisionReason)}">Decision reason</dt>
-        <dd class="text-break" th:if="${!#strings.isEmpty(a.decisionReason)}" th:text="${a.decisionReason}">Share the learning with the team.</dd>
-        <dt th:if="${!#strings.isEmpty(a.experienceComments)}">Course feedback</dt>
-        <dd class="text-break" th:if="${!#strings.isEmpty(a.experienceComments)}" th:text="${a.experienceComments}">Useful training.</dd>
-      </dl>
-    </div>
-  </div>
-</section>
-</body>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Application review', 'Manager', 'approvals', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <a class="cats-back" th:href="@{/manager/approvals}"
+            >Back to applications</a
+          >
+          <h1 th:text="${course.courseTitle}"></h1>
+        </div>
+      </div>
+      <div th:replace="~{fragments/application :: allowance(${summary})}"></div>
+      <div class="cats-grid cats-grid-main">
+        <div th:replace="~{fragments/application :: facts(${course})}"></div>
+        <div class="cats-stack">
+          <div class="card card-body">
+            <h2 class="cats-card-title">Other approved absences</h2>
+            <p th:if="${#lists.isEmpty(overlaps)}">
+              No other team member has an approved course during this period.
+            </p>
+            <ul th:unless="${#lists.isEmpty(overlaps)}">
+              <li th:each="other : ${overlaps}">
+                <span th:text="${other.applicant.name}"></span>:
+                <a
+                  th:href="@{/manager/applications/{id}(id=${other.courseId})}"
+                  th:text="${other.courseTitle}"
+                ></a>
+              </li>
+            </ul>
+          </div>
+          <div class="card card-body" th:if="${canDecide}">
+            <form
+              id="decision-form"
+              class="cats-stack"
+              method="post"
+              th:action="@{/manager/applications/{id}/decision(id=${course.courseId})}"
+              th:object="${decision}"
+              novalidate
+            >
+              <input th:replace="~{fragments/csrf :: token}" />
+              <input type="hidden" th:field="*{version}" />
+              <div
+                class="cats-error-summary"
+                role="alert"
+                th:if="${#fields.hasErrors('*')}"
+              >
+                <div>
+                  <h2 class="cats-card-title">Please check your decision</h2>
+                  <ul>
+                    <li
+                      th:each="error : ${#fields.allErrors()}"
+                      th:text="${error}"
+                    ></li>
+                  </ul>
+                </div>
+              </div>
+              <div class="cats-field">
+                <label class="form-label cats-req" for="reason"
+                  >Reason for this decision</label
+                ><textarea
+                  rows="3"
+                  maxlength="2000"
+                  class="form-control"
+                  th:field="*{reason}"
+                  th:errorclass="is-invalid"
+                ></textarea>
+                <div class="cats-field-msg" th:errors="*{reason}"></div>
+              </div>
+              <div class="cats-form-footer">
+                <button
+                  class="btn btn-outline-danger"
+                  type="button"
+                  data-bs-toggle="modal"
+                  data-bs-target="#reject-confirm"
+                >
+                  Reject</button
+                ><button
+                  class="btn btn-primary"
+                  type="button"
+                  data-bs-toggle="modal"
+                  data-bs-target="#approve-confirm"
+                >
+                  Approve
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div
+        th:if="${canDecide}"
+        class="modal fade"
+        id="approve-confirm"
+        tabindex="-1"
+        aria-labelledby="approve-title"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2 id="approve-title" class="modal-title fs-6">
+                Approve this application?
+              </h2>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              Your decision and reason will be recorded for the employee.
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                data-bs-dismiss="modal"
+              >
+                Back</button
+              ><button
+                type="submit"
+                form="decision-form"
+                name="approved"
+                value="true"
+                class="btn btn-primary"
+              >
+                Approve
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        th:if="${canDecide}"
+        class="modal fade"
+        id="reject-confirm"
+        tabindex="-1"
+        aria-labelledby="reject-title"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2 id="reject-title" class="modal-title fs-6">
+                Reject this application?
+              </h2>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              Your decision and reason will be recorded for the employee.
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                data-bs-dismiss="modal"
+              >
+                Back</button
+              ><button
+                type="submit"
+                form="decision-form"
+                name="approved"
+                value="false"
+                class="btn btn-danger"
+              >
+                Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
 </html>

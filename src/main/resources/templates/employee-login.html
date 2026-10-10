@@ -1,68 +1,8 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CATS - Employee Login</title>
-  </head>
-
-  <body>
-    <nav>
-      <a th:href="@{/login}"> ← Back to login portal </a>
-    </nav>
-
-    <header>
-      <div>
-        <h1>CATS</h1>
-        <p>Course Application Tracking System</p>
-      </div>
-    </header>
-
-    <main>
-      <section>
-        <div><span>Employee Icon</span></div>
-        <h2>Employee Login</h2>
-        <p>Enter your account details to access your workspace.</p>
-        <div th:if="${error}">
-          <p th:text="${error}"></p>
-        </div>
-
-        <form th:action="@{/employee/login}" method="post">
-          <div>
-            <label for="designation"> Designation </label>
-            <select id="designation" name="designation" required>
-              <option value="Staff">Staff</option>
-              <option value="Manager">Manager</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="userName"> Username </label>
-            <input
-              type="text"
-              id="userName"
-              name="userName"
-              placeholder="e.g. junie"
-              required
-            />
-          </div>
-
-          <div>
-            <label for="password"> Password </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-
-          <div>
-            <button type="submit">Login to workspace</button>
-          </div>
-        </form>
-      </section>
-    </main>
-  </body>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/login :: login('Employee login', '/employee/login')}"
+>
+  <body></body>
 </html>

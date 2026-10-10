@@ -1,4 +1,14 @@
+// Handles Employee login, Admin login and logout.
 package group6.project.controller;
+
+import group6.project.model.Admin;
+import group6.project.model.Manager;
+import group6.project.model.Staff;
+import group6.project.model.User;
+import group6.project.service.UserService;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -6,98 +16,81 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import group6.project.model.Admin;
-import group6.project.model.Manager;
-import group6.project.model.Staff;
-import group6.project.model.User;
-import group6.project.service.UserService;
-import jakarta.servlet.http.HttpSession;
+import java.util.UUID;
 
 @Controller
 public class UserController {
+    private final UserService users;
 
-    private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
+    public UserController(UserService users) {
+        this.users = users;
     }
 
-   
+    // Employees and administrators have separate entry pages.
     @GetMapping({"/", "/login"})
     public String indexLogin() {
         return "login-portal";
     }
 
-    
+    // A signed-in employee returns to their own workspace.
     @GetMapping("/employee/login")
     public String employeeLoginPage(HttpSession session) {
-
-        Object user = session.getAttribute("user");
-
-        if (user instanceof Manager) {
-            return "redirect:/manager/home";
-        }
-        if (user instanceof Staff) {
-            return "redirect:/staff/home";
-        }
+        User user = users.currentUser(session);
+        if (user instanceof Manager) return "redirect:/manager/home";
+        if (user instanceof Staff) return "redirect:/staff/home";
         return "employee-login";
     }
 
+    // The saved account decides the role; users do not need to choose it twice.
     @PostMapping("/employee/login")
-    public String handleStaffLogin(@RequestParam("userName") String userName,
-                                   @RequestParam("password") String password,
-                                   @RequestParam("designation") String designation,
-                                   HttpSession session,
-                                   Model model) {
-
-        User user = userService.authenticate(userName, password);
-
-        if (user instanceof Manager manager && "Manager".equalsIgnoreCase(designation)) {
-            session.setAttribute("user", manager);
-            return "redirect:/manager/home";
+    public String employeeLogin(
+            @RequestParam String userName,
+            @RequestParam String password,
+            HttpServletRequest request,
+            Model model) {
+        User user = users.authenticate(userName, password);
+        if (user instanceof Staff) {
+            signIn(request, user);
+            return user instanceof Manager ? "redirect:/manager/home" : "redirect:/staff/home";
         }
-
-        if (user instanceof Staff staff && !(user instanceof Manager) && "Staff".equalsIgnoreCase(designation)) {
-            session.setAttribute("user", staff);
-            return "redirect:/staff/home";
-        }
-
-        model.addAttribute("error", "Incorrect username or password for the Employee!");
+        model.addAttribute("userName", userName);
+        model.addAttribute("error", "Wrong username or password.");
         return "employee-login";
     }
 
-    
+    // Admin accounts keep a separate login page.
     @GetMapping("/admin/login")
     public String adminLoginPage(HttpSession session) {
-
-        Object user = session.getAttribute("user");
-
-        if (user instanceof Admin) {
-            return "redirect:/admin/home";
-        }
-
-        return "admin-login";
+        return users.currentUser(session) instanceof Admin ? "redirect:/admin/home" : "admin-login";
     }
 
+    // Employee credentials cannot open an administrator session.
     @PostMapping("/admin/login")
-    public String handleAdminLogin(@RequestParam("userName") String userName,
-                                   @RequestParam("password") String password,
-                                    HttpSession session,
-                                    Model model) {
-
-        User user = userService.authenticate(userName, password);
-
-        if (user instanceof Admin admin) {
-            session.setAttribute("user", admin);
+    public String adminLogin(
+            @RequestParam String userName,
+            @RequestParam String password,
+            HttpServletRequest request,
+            Model model) {
+        User user = users.authenticate(userName, password);
+        if (user instanceof Admin) {
+            signIn(request, user);
             return "redirect:/admin/home";
         }
-
-        model.addAttribute("error", "Incorrect username or password for the Admin!");
+        model.addAttribute("userName", userName);
+        model.addAttribute("error", "Wrong username or password.");
         return "admin-login";
     }
 
-    
-    @GetMapping("/logout")
+    // Renew the session ID after credentials are checked.
+    private void signIn(HttpServletRequest request, User user) {
+        request.getSession();
+        request.changeSessionId();
+        request.getSession().setAttribute("user", user);
+        request.getSession().setAttribute("csrfToken", UUID.randomUUID().toString());
+    }
+
+    // Clear the saved identity when the user leaves the application.
+    @PostMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/login";

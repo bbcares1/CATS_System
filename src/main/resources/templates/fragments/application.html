@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <div th:fragment="facts(course)" class="card">
+      <div class="card-header">
+        <h2 class="cats-card-title">Application details</h2>
+        <span th:replace="~{fragments/ui :: status(${course.status})}"></span>
+      </div>
+      <div class="card-body">
+        <dl class="cats-dl">
+          <dt>Employee</dt>
+          <dd class="cats-pre-wrap" th:text="${course.applicant.name}"></dd>
+          <dt>Staff ID</dt>
+          <dd class="cats-pre-wrap" th:text="${course.applicant.staffId}"></dd>
+          <dt>Category</dt>
+          <dd
+            class="cats-pre-wrap"
+            th:text="${course.courseCategory.displayName}"
+          ></dd>
+          <dt>Provider</dt>
+          <dd class="cats-pre-wrap" th:text="${course.trainingProvider}"></dd>
+          <dt>Start date</dt>
+          <dd
+            class="cats-pre-wrap"
+            th:text="${#temporals.format(course.courseStartDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
+          ></dd>
+          <dt>End date</dt>
+          <dd
+            class="cats-pre-wrap"
+            th:text="${#temporals.format(course.courseEndDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
+          ></dd>
+          <dt>Session</dt>
+          <dd
+            class="cats-pre-wrap"
+            th:text="${#strings.isEmpty(course.halfDayPeriod) ? 'Full days' : course.halfDayPeriod}"
+          ></dd>
+          <dt>Training days</dt>
+          <dd class="cats-pre-wrap" th:text="${course.trainingDays}"></dd>
+          <dt>Fee ($)</dt>
+          <dd
+            class="cats-pre-wrap"
+            th:text="${#numbers.formatDecimal(course.courseFee,1,'COMMA',2,'POINT')}"
+          ></dd>
+          <dt>Justification</dt>
+          <dd class="cats-pre-wrap" th:text="${course.justification}"></dd>
+          <dt>Work arrangements</dt>
+          <dd class="cats-pre-wrap" th:text="${course.workDissemination}"></dd>
+          <dt>Approving Manager</dt>
+          <dd
+            class="cats-pre-wrap"
+            th:text="${course.approvalManager != null ? course.approvalManager.name : 'Not assigned'}"
+          ></dd>
+          <dt>Decision reason</dt>
+          <dd
+            class="cats-pre-wrap"
+            th:text="${course.decisionReason ?: 'Awaiting a decision'}"
+          ></dd>
+          <dt>Reviewed at</dt>
+          <dd class="cats-pre-wrap" th:text="${course.reviewedAt}"></dd>
+          <dt>Experience comments</dt>
+          <dd
+            class="cats-pre-wrap"
+            th:text="${course.experienceComments ?: 'Not completed'}"
+          ></dd>
+        </dl>
+      </div>
+    </div>
+    <div th:fragment="allowance(summary)" class="card card-body">
+      <h2 class="cats-card-title">Annual training allowance</h2>
+      <div class="cats-grid cats-grid-3">
+        <div>
+          Remaining<br /><strong
+            th:text="${summary.remainingDays} + ' days / $' + ${#numbers.formatDecimal(summary.remainingBudget,1,'COMMA',2,'POINT')}"
+          ></strong>
+        </div>
+        <div>
+          Pending reservation<br /><strong
+            th:text="${summary.reservedDays} + ' days / $' + ${#numbers.formatDecimal(summary.reservedBudget,1,'COMMA',2,'POINT')}"
+          ></strong>
+        </div>
+        <div>
+          Approved and completed<br /><strong
+            th:text="${summary.usedDays} + ' days / $' + ${#numbers.formatDecimal(summary.usedBudget,1,'COMMA',2,'POINT')}"
+          ></strong>
+        </div>
+      </div>
+    </div>
+    <div th:fragment="table(rows, base)" class="card">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Course</th>
+              <th>Category</th>
+              <th>Period</th>
+              <th class="cats-num">Fee</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="row : ${rows}">
+              <td class="cats-col-main">
+                <a
+                  class="cats-row-link"
+                  th:href="@{${base} + '/' + ${row.courseId}}"
+                  th:text="${row.courseTitle}"
+                ></a>
+                <div
+                  class="cats-cell-sub"
+                  th:text="${row.trainingProvider}"
+                ></div>
+              </td>
+              <td th:text="${row.courseCategory.displayName}"></td>
+              <td class="text-nowrap">
+                <span
+                  th:text="${#temporals.format(row.courseStartDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
+                ></span>
+                &ndash;
+                <span
+                  th:text="${#temporals.format(row.courseEndDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
+                ></span>
+              </td>
+              <td
+                class="cats-num"
+                th:text="'$' + ${#numbers.formatDecimal(row.courseFee,1,'COMMA',2,'POINT')}"
+              ></td>
+              <td>
+                <span
+                  th:replace="~{fragments/ui :: status(${row.status})}"
+                ></span>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(rows)}">
+              <td colspan="5">No applications to show.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

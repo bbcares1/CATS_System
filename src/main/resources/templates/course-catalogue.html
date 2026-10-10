@@ -1,0 +1,134 @@
+<!doctype html>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Find a course', 'Staff', 'apply', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>Find a course</h1>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/staff/apply/other}"
+          >Apply for another course</a
+        >
+      </div>
+      <form
+        method="get"
+        th:action="@{/staff/courses}"
+        class="card card-body cats-stack"
+      >
+        <div class="cats-grid cats-grid-3">
+          <div>
+            <label for="query" class="form-label">Search</label
+            ><input
+              id="query"
+              name="query"
+              class="form-control"
+              th:value="${query}"
+              placeholder="Course or provider"
+            />
+          </div>
+          <div>
+            <label for="category" class="form-label">Category</label
+            ><select id="category" name="category" class="form-select">
+              <option value="">All categories</option>
+              <option
+                th:each="item : ${categories}"
+                th:value="${item}"
+                th:text="${item.displayName}"
+                th:selected="${item == category}"
+              ></option>
+            </select>
+          </div>
+          <div>
+            <label for="providerId" class="form-label">Provider</label
+            ><select id="providerId" name="providerId" class="form-select">
+              <option value="">All providers</option>
+              <option
+                th:each="item : ${providers}"
+                th:value="${item.providerId}"
+                th:text="${item.name}"
+                th:selected="${item.providerId == providerId}"
+              ></option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <button class="btn btn-primary">Search courses</button>
+          <a th:href="@{/staff/courses}">Clear filters</a>
+        </div>
+      </form>
+      <p th:if="${#lists.isEmpty(courses)}" class="card card-body">
+        No courses match your search. Try another filter or apply for another
+        course.
+      </p>
+      <div class="cats-grid cats-grid-2">
+        <article
+          class="card card-body cats-stack"
+          th:each="course : ${courses}"
+        >
+          <div>
+            <small
+              class="text-muted"
+              th:text="${course.courseCategory.categoryName}"
+            ></small>
+            <h2 class="cats-card-title" th:text="${course.title}"></h2>
+            <p th:text="${course.provider.name}"></p>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <b
+              th:text="${course.courseFee.signum() == 0} ? 'No fee' : '$' + ${#numbers.formatDecimal(course.courseFee,1,'COMMA',2,'POINT')}"
+            ></b
+            ><a
+              class="btn btn-outline-primary"
+              th:href="@{/staff/courses/{id}(id=${course.courseId})}"
+              >View course</a
+            >
+          </div>
+        </article>
+      </div>
+      <nav aria-label="Course results">
+        <form
+          method="get"
+          th:action="@{/staff/courses}"
+          class="cats-page-actions"
+        >
+          <input type="hidden" name="query" th:value="${query}" /><input
+            type="hidden"
+            name="category"
+            th:value="${category}"
+          /><input
+            type="hidden"
+            name="providerId"
+            th:value="${providerId}"
+          /><button
+            class="btn btn-outline-secondary"
+            name="page"
+            th:value="${pageData.number-1}"
+            th:disabled="${!pageData.hasPrevious()}"
+          >
+            Previous</button
+          ><span th:text="'Page ' + ${pageData.number+1}"></span
+          ><button
+            class="btn btn-outline-secondary"
+            name="page"
+            th:value="${pageData.number+1}"
+            th:disabled="${!pageData.hasNext()}"
+          >
+            Next</button
+          ><label
+            >Rows<select name="size" class="form-select">
+              <option
+                th:each="n : ${ {10,20,25} }"
+                th:value="${n}"
+                th:selected="${n == pageData.size}"
+                th:text="${n}"
+              ></option></select></label
+          ><button class="btn btn-outline-secondary">Apply</button>
+        </form>
+      </nav>
+    </section>
+  </body>
+</html>

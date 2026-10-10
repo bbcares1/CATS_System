@@ -1,127 +1,92 @@
+// Handles course-category maintenance forms.
 package group6.project.controller;
 
-import group6.project.service.CourseApplicationService;
-import java.util.Optional;
+import group6.project.form.CourseCategoryForm;
+import group6.project.model.CourseCategoryType;
+import group6.project.service.*;
+
+import jakarta.validation.Valid;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import group6.project.model.CourseCategory;
-import group6.project.repo.CourseCategoryRepository;
-import group6.project.service.CourseCategoryService;
-import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.RequestBody;
-
-
-
-@Controller 
+@Controller
+@RequestMapping("/admin/categories")
 public class CourseCategoryController {
-  private final CourseApplicationService courseApplicationService;
-  private final CourseCategoryRepository courseCategoryRepository;
-  private final CourseCategoryService courseCategoryService;
+    private final CourseCategoryService service;
 
-  //Constructor points out the object
-  public CourseCategoryController(CourseCategoryService courseCategoryService, CourseCategoryRepository courseCategoryRepository, CourseApplicationService courseApplicationService){
-    this.courseCategoryService = courseCategoryService;
-    this.courseCategoryRepository = courseCategoryRepository;
-    this.courseApplicationService = courseApplicationService;
-  }
-
-  //Show the category list
-  @GetMapping("/admin/categories")
-  public String getAllCategories(Model model) {
-
-    model.addAttribute("categories", courseCategoryService.getAllCategories());
-
-    return "course-category-list";
-  }
-  
-  //Open an empty create-category-form
-  @GetMapping("/admin/categories/new")
-  public String showCreateCategoryForm(Model model) {
-    CourseCategory courseCategory = new CourseCategory();
-    model.addAttribute("courseCategory", courseCategory);
-
-    return "course-category-form";
-  }
-
-  //Save the created category
-  @PostMapping("/admin/categories")
-    public String saveCategory(
-    @Valid @ModelAttribute("courseCategory") CourseCategory courseCategory,
-    BindingResult result,
-    Model model,
-    RedirectAttributes redirectAttributes
-    ) {
-    if (result.hasErrors()) {
-      return "course-category-form";
+    public CourseCategoryController(CourseCategoryService service) {
+        this.service = service;
     }
-    courseCategoryService.createCategory(courseCategory);
-    redirectAttributes.addFlashAttribute("success", "Course category created successfully");
 
-    return "redirect:/admin/categories";
-  }
-
-  //Delete category
-  @GetMapping("/admin/categories/delete")
-  public String showDeleteCategoryForm(Model model) {
-    model.addAttribute("categories", courseCategoryService.getAllCategories());
-
-    return "course-category-delete";
-  }
-
-  //Submit delete
-  @PostMapping("/admin/categories/delete")
-    public String deleteCategory(
-    @RequestParam Integer categoryId,
-    RedirectAttributes redirectAttributes){
-    courseCategoryService.deleteCategory(categoryId);
-    redirectAttributes.addFlashAttribute("success", "Course category deleted successfully");
-
-    return "redirect:/admin/categories";
-  }
-
-  @PostMapping("/admin/categories/delete/{id}")
-  public String deleteCategoryById(
-      @PathVariable("id") Integer categoryId,
-      RedirectAttributes redirectAttributes) {
-    courseCategoryService.deleteCategory(categoryId);
-    redirectAttributes.addFlashAttribute("success", "Course category deleted successfully");
-    return "redirect:/admin/categories";
-  }
-
-  //Get edit category
-  @GetMapping("/admin/categories/edit/{id}")
-  public String showEditCategoryForm(@PathVariable("id") Integer categoryId, Model model) {
-    Optional<CourseCategory> existingCategory = courseCategoryService.getCategoryById(categoryId);
-    if (existingCategory.isPresent()){
-      CourseCategory category = existingCategory.get();
-      model.addAttribute("courseCategory", category);
-      return "course-category-edit";
+    // Admin can include archived rows when reviewing catalogue data.
+    @GetMapping
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
+        var result = PageSupport.page(service.getAllCategories(), page, size);
+        model.addAttribute("rows", result.getContent());
+        model.addAttribute("pageData", result);
+        return "course-category-list";
     }
-    return "redirect:/admin/categories";
-  }
 
-  @PostMapping("/admin/categories/edit/{id}")
-  public String updateCategory(
-      @PathVariable ("id") Integer categoryId,
-      @Valid @ModelAttribute("courseCategory") CourseCategory courseCategory,
-      BindingResult result,
-      RedirectAttributes redirectAttributes) {
-      if (result.hasErrors()) {
-        courseCategory.setCategoryId(categoryId);
-        return "course-category-edit";
-      }
-      courseCategoryService.updateCategory(courseCategory, categoryId);
-      redirectAttributes.addFlashAttribute("success", "Course category updated successfully");
-      return "redirect:/admin/categories";
-  }
+    @GetMapping("/new")
+    public String create(Model model) {
+        return render(null, new CourseCategoryForm(), model);
+    }
 
+    @GetMapping("/{id}/edit")
+    public String edit(@PathVariable Integer id, Model model) {
+        return render(id, service.form(id), model);
+    }
+
+    // Keep the submitted values when validation or a business rule rejects the form.
+    @PostMapping({"/new", "/{id}/edit"})
+    public String save(
+            @PathVariable(required = false) Integer id,
+            @Valid @ModelAttribute("form") CourseCategoryForm form,
+            BindingResult binding,
+            Model model,
+            RedirectAttributes redirect) {
+        if (binding.hasErrors()) return render(id, form, model);
+        try {
+            service.save(id, form);
+        } catch (ResponseStatusException error) {
+            if (error.getStatusCode().value() != 400) throw error;
+            binding.reject("catalogue", error.getReason());
+            return render(id, form, model);
+        }
+        redirect.addFlashAttribute("success", "Category saved.");
+        return "redirect:/admin/categories";
+    }
+
+    // Remove unused records while keeping existing history.
+    @PostMapping("/{id}/delete")
+    public String remove(
+            @PathVariable Integer id, @RequestParam Long version, RedirectAttributes redirect) {
+        try {
+            service.delete(id, version);
+            redirect.addFlashAttribute("success", "Category removed from active use.");
+        } catch (ResponseStatusException error) {
+            if (error.getStatusCode().value() != 400) throw error;
+            redirect.addFlashAttribute("error", error.getReason());
+        }
+        return "redirect:/admin/categories";
+    }
+
+    // Reuse the form choices after a validation error.
+    private String render(Integer id, CourseCategoryForm form, Model model) {
+        model.addAttribute("form", form);
+        model.addAttribute("editId", id);
+        model.addAttribute(
+                "formAction",
+                id == null ? "/admin/categories/new" : "/admin/categories/" + id + "/edit");
+        model.addAttribute("kinds", CourseCategoryType.values());
+        return "course-category-form";
+    }
 }

@@ -1,77 +1,167 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Application Details</title>
-        <link rel="stylesheet" th:href="@{/css/category.css}">
-        <link rel="stylesheet" th:href="@{/css/staff.css}">
-    </head>
-    <body>
-        <main class="container">
-            <nav>
-                <a th:href="@{/staff/home}">Dashboard</a>
-                <a class="active" th:href="@{/staff/personal}">Personal Course History</a>
-                <a th:href="@{/staff/apply}">Apply for Course</a>
-                <a th:href="@{/logout}">Logout</a>
-            </nav>
-            <h1 th:text="${course.courseTitle}"></h1>
-            <p class="success" th:if="${success}" th:text="${success}"></p>
-            <p class="error" th:if="${error}" th:text="${error}"></p>
-            <!-- Application details: Show the course information and decision. -->
-            <dl>
-                <dt>Application ID</dt>
-                <dd th:text="${course.courseId}"></dd>
-                <dt>Status</dt>
-                <dd th:text="${course.status}"></dd>
-                <dt>Category</dt>
-                <dd th:text="${course.courseCategory.displayName}"></dd>
-                <dt>Training provider</dt>
-                <dd th:text="${course.trainingProvider}"></dd>
-                <dt>Course period</dt>
-                <dd>
-                    <span th:text="${course.courseStartDate}"></span> to <span th:text="${course.courseEndDate}"></span></dd>
-                <dt>Session</dt>
-                <dd th:text="${#strings.isEmpty(course.halfDayPeriod) ? 'Full days' : course.halfDayPeriod}"></dd>
-                <dt>Training days</dt>
-                <dd th:text="${course.trainingDays}"></dd>
-                <dt>Course fee ($)</dt>
-                <dd th:text="${course.courseFee}"></dd>
-                <dt>Justification</dt>
-                <dd th:text="${course.justification}"></dd>
-                <dt>Work dissemination</dt>
-                <dd th:text="${course.workDissemination}"></dd>
-                <dt>Manager decision / reason</dt>
-                <dd th:text="${course.decisionReason ?: 'No decision recorded'}"></dd>
-                <dt>Reviewed at</dt>
-                <dd th:text="${course.reviewedAt}"></dd>
-                <dt>Experience comments</dt>
-                <dd th:text="${course.experienceComments}"></dd>
-            </dl>
-            <!-- Pending application: Show the edit and delete options. -->
-            <div class="actions" th:if="${course.status.name() == 'APPLIED' or course.status.name() == 'UPDATED'}">
-                <a class="btn btn-edit" th:href="@{/staff/applications/{id}/edit(id=${course.courseId})}">Edit</a>
-                <form th:action="@{/staff/applications/{id}/delete(id=${course.courseId})}" method="post">
-                    <button class="btn btn-delete" type="submit">Delete</button>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Application details', 'Staff', 'history', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <a class="cats-back" th:href="@{/staff/personal}">Back to history</a>
+          <h1 th:text="${course.courseTitle}"></h1>
+        </div>
+        <a
+          class="btn btn-primary"
+          th:if="${course.status.name() == 'APPLIED' or course.status.name() == 'UPDATED'}"
+          th:href="@{/staff/applications/{id}/edit(id=${course.courseId})}"
+          >Edit application</a
+        >
+      </div>
+      <div th:replace="~{fragments/application :: facts(${course})}"></div>
+      <div
+        th:if="${course.status.name() == 'APPLIED' or course.status.name() == 'UPDATED'}"
+      >
+        <button
+          type="button"
+          class="btn btn-outline-danger"
+          data-bs-toggle="modal"
+          data-bs-target="#delete-confirm"
+        >
+          Delete application
+        </button>
+        <div
+          class="modal fade"
+          id="delete-confirm"
+          tabindex="-1"
+          aria-labelledby="delete-title"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h2 class="modal-title fs-6" id="delete-title">
+                  Delete application?
+                </h2>
+                <button
+                  class="btn-close"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div class="modal-body">
+                This keeps the application in your history and releases its
+                reserved allowance.
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Back
+                </button>
+                <form
+                  method="post"
+                  th:action="@{/staff/applications/{id}/delete(id=${course.courseId})}"
+                >
+                  <input th:replace="~{fragments/csrf :: token}" />
+                  <input
+                    type="hidden"
+                    name="version"
+                    th:value="${course.version}"
+                  /><button class="btn btn-danger">Delete application</button>
                 </form>
+              </div>
             </div>
-            <section th:if="${course.status.name() == 'APPROVED'}">
-                <!-- Cancel application: Submit a cancellation for the approved course. -->
-                <form th:action="@{/staff/applications/{id}/cancel(id=${course.courseId})}" method="post">
-                    <button class="btn btn-delete" type="submit">Cancel Application</button>
+          </div>
+        </div>
+      </div>
+      <div th:if="${course.status.name() == 'APPROVED'}">
+        <button
+          type="button"
+          class="btn btn-outline-danger"
+          data-bs-toggle="modal"
+          data-bs-target="#cancel-confirm"
+        >
+          Cancel application
+        </button>
+        <div
+          class="modal fade"
+          id="cancel-confirm"
+          tabindex="-1"
+          aria-labelledby="cancel-title"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h2 class="modal-title fs-6" id="cancel-title">
+                  Cancel application?
+                </h2>
+                <button
+                  class="btn-close"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div class="modal-body">
+                This keeps the application in your history and releases its
+                reserved allowance.
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Back
+                </button>
+                <form
+                  method="post"
+                  th:action="@{/staff/applications/{id}/cancel(id=${course.courseId})}"
+                >
+                  <input th:replace="~{fragments/csrf :: token}" />
+                  <input
+                    type="hidden"
+                    name="version"
+                    th:value="${course.version}"
+                  /><button class="btn btn-danger">Cancel application</button>
                 </form>
-                <!-- Complete course: Enter experience comments after the course ends. -->
-                <form th:if="${course.courseEndDate.isBefore(today)}" th:action="@{/staff/applications/{id}/complete(id=${course.courseId})}" method="post">
-                    <div class="form-group">
-                        <label for="experienceComments">Experience comments *</label>
-                        <textarea id="experienceComments" name="experienceComments" rows="4" maxlength="255" required></textarea>
-                    </div>
-                    <button class="btn btn-primary" type="submit">Mark Completed</button>
-                </form>
-                <p th:unless="${course.courseEndDate.isBefore(today)}">You can mark this course completed after its end date.</p>
-            </section>
-            <p>
-                <a th:href="@{/staff/personal}">Back to History</a></p>
-        </main>
-    </body>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="card card-body"
+        th:if="${course.status.name() == 'APPROVED' and course.courseEndDate.isBefore(today)}"
+      >
+        <form
+          class="cats-stack"
+          method="post"
+          th:action="@{/staff/applications/{id}/complete(id=${course.courseId})}"
+        >
+          <input th:replace="~{fragments/csrf :: token}" />
+          <input
+            type="hidden"
+            name="version"
+            th:value="${course.version}"
+          /><label class="form-label cats-req" for="experienceComments"
+            >What did you learn?</label
+          ><textarea
+            class="form-control"
+            id="experienceComments"
+            name="experienceComments"
+            rows="4"
+            maxlength="2000"
+            th:text="${experienceComments}"
+          ></textarea
+          ><button class="btn btn-primary">Mark completed</button>
+        </form>
+      </div>
+    </section>
+  </body>
 </html>

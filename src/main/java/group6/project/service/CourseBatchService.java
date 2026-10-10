@@ -1,112 +1,151 @@
+// Validates offered dates and capacity while preserving used schedules.
 package group6.project.service;
 
-import java.util.List;
-import java.util.Optional;
-import java.time.LocalDate;
+import static org.springframework.http.HttpStatus.*;
+
+import group6.project.form.CourseBatchForm;
+import group6.project.model.*;
+import group6.project.repo.*;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
-import group6.project.model.CourseBatch;
-import group6.project.repo.CourseBatchRepo;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class CourseBatchService {
-  private final CourseBatchRepo courseBatchRepo;
+    private final CourseBatchRepo batches;
+    private final CourseDetailRepo courses;
+    private final CourseApplicationRepo applications;
+    private final ExcludedDaysRepo holidays;
+    private final TrainingCalendarPolicyRepo calendar;
+    private static final List<ApplicationStatus> SEAT_STATUSES =
+            List.of(
+                    ApplicationStatus.APPLIED,
+                    ApplicationStatus.UPDATED,
+                    ApplicationStatus.APPROVED,
+                    ApplicationStatus.COMPLETED);
 
-  public CourseBatchService(CourseBatchRepo courseBatchRepo){
-    this.courseBatchRepo = courseBatchRepo;
-  }
+    public CourseBatchService(
+            CourseBatchRepo batches,
+            CourseDetailRepo courses,
+            CourseApplicationRepo applications,
+            ExcludedDaysRepo holidays,
+            TrainingCalendarPolicyRepo calendar) {
+        this.batches = batches;
+        this.courses = courses;
+        this.applications = applications;
+        this.holidays = holidays;
+        this.calendar = calendar;
+    }
 
-  public List<CourseBatch> getAllBatches(){
-    return courseBatchRepo.findAll();
-  }
+    public List<CourseBatch> forCourse(Integer courseId) {
+        return batches.findByCourseDetail_CourseIdOrderByCourseStartDateAsc(courseId);
+    }
 
-  public Optional<CourseBatch> getBatchById(Long batchId){
-    return courseBatchRepo.findById(batchId);
-  }
+    public CourseBatch get(Long id) {
+        return batches.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Schedule not found."));
+    }
 
-  public CourseBatch createBatch(CourseBatch courseBatch){
-    validateBatch(courseBatch);
-    return courseBatchRepo.save(courseBatch);
-  }
+    // Training days are calculated by the server, not accepted from the form.
+    public CourseBatchForm form(Long id) {
+        CourseBatch batch = get(id);
+        CourseBatchForm form = new CourseBatchForm();
+        form.setVersion(batch.getVersion());
+        form.setCourseId(batch.getCourseDetail().getCourseId());
+        form.setStartDate(batch.getCourseStartDate());
+        form.setEndDate(batch.getCourseEndDate());
+        form.setHalfDayPeriod(batch.getHalfDayPeriod());
+        form.setCapacity(batch.getCapacity());
+        form.setActive(batch.isActive());
+        return form;
+    }
 
-  public void deleteBatch(Long batchId){
-    courseBatchRepo.deleteById(batchId);
-  }
-
-  public Optional<CourseBatch> updateBatch(
-        CourseBatch courseBatch,
-        Long batchId) {
-
-    Optional<CourseBatch> existingBatch =
-            courseBatchRepo.findById(batchId);
-
-    if (existingBatch.isPresent()) {
-
-        CourseBatch existing = existingBatch.get();
-
-        existing.setCapacity(
-            courseBatch.getCapacity()
-        );
-
-        boolean trainingDaysChanged =
-            !java.util.Objects.equals(existing.getTrainingDays(), courseBatch.getTrainingDays());
-        existing.setTrainingDays(
-            courseBatch.getTrainingDays()
-        );
-        if (trainingDaysChanged) {
-            existing.setCourseStartDate(null);
-            existing.setCourseEndDate(null);
+    // Used schedules keep their dates; capacity cannot drop below reserved places.
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public CourseBatch save(Long id, CourseBatchForm form) {
+        calendar.readCalendar().orElseThrow();
+        CourseDetail course =
+                courses.lockById(form.getCourseId())
+                        .orElseThrow(
+                                () -> new ResponseStatusException(BAD_REQUEST, "Choose a course."));
+        CourseBatch batch =
+                id == null
+                        ? new CourseBatch()
+                        : batches.lockById(id)
+                                .orElseThrow(
+                                        () ->
+                                                new ResponseStatusException(
+                                                        NOT_FOUND, "Schedule not found."));
+        if (id != null && !Objects.equals(form.getVersion(), batch.getVersion())) {
+            throw new ResponseStatusException(
+                    CONFLICT, "This schedule changed. Reload it before editing.");
         }
-
-        validateBatch(existing);
-
-        CourseBatch saved =
-                courseBatchRepo.save(existing);
-
-        return Optional.of(saved);
+        String halfDay =
+                form.getHalfDayPeriod() == null || form.getHalfDayPeriod().isBlank()
+                        ? null
+                        : form.getHalfDayPeriod();
+        boolean used = id != null && applications.existsByCatalogueBatch_BatchId(id);
+        if (used
+                && (!Objects.equals(form.getCourseId(), batch.getCourseDetail().getCourseId())
+                        || !Objects.equals(form.getStartDate(), batch.getCourseStartDate())
+                        || !Objects.equals(form.getEndDate(), batch.getCourseEndDate())
+                        || !Objects.equals(halfDay, batch.getHalfDayPeriod()))) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "This schedule has applications. Create a new schedule to change its dates.");
+        }
+        if (id != null
+                && applications.countByCatalogueBatch_BatchIdAndStatusIn(id, SEAT_STATUSES)
+                        > form.getCapacity()) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST, "Capacity cannot be lower than the reserved places.");
+        }
+        Set<LocalDate> excluded =
+                holidays.findAll().stream().map(ExcludedDays::getDate).collect(Collectors.toSet());
+        double days;
+        try {
+            days =
+                    TrainingDayCalculator.count(
+                            course.getCourseCategory().getKind(),
+                            form.getStartDate(),
+                            form.getEndDate(),
+                            halfDay,
+                            excluded,
+                            !used);
+        } catch (IllegalArgumentException error) {
+            throw new ResponseStatusException(BAD_REQUEST, error.getMessage());
+        }
+        batch.setCourseDetail(course);
+        batch.setCourseStartDate(form.getStartDate());
+        batch.setCourseEndDate(form.getEndDate());
+        batch.setHalfDayPeriod(halfDay);
+        batch.setTrainingDays(days);
+        batch.setCapacity(form.getCapacity());
+        batch.setActive(form.isActive());
+        return batches.save(batch);
     }
 
-    return Optional.empty();
-}
-
-public CourseBatch updateScheduleDates(
-    Long batchId,
-    LocalDate startDate,
-    LocalDate endDate) {
-  CourseBatch batch = courseBatchRepo.findById(batchId)
-      .orElseThrow(() -> new IllegalArgumentException("Course batch was not found"));
-  batch.setCourseStartDate(startDate);
-  batch.setCourseEndDate(endDate);
-  return courseBatchRepo.save(batch);
-}
-
-//Validation
-  private void validateBatch(CourseBatch courseBatch){
-    if (courseBatch.getCourseDetail() == null){
-      throw new IllegalArgumentException("Course is required");
+    // Removing a used schedule archives it without deleting applications.
+    @Transactional
+    public void remove(Long id, Long version) {
+        CourseBatch batch =
+                batches.lockById(id)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                NOT_FOUND, "Schedule not found."));
+        if (!Objects.equals(version, batch.getVersion()))
+            throw new ResponseStatusException(CONFLICT, "Reload this schedule.");
+        if (applications.existsByCatalogueBatch_BatchId(id)) batch.setActive(false);
+        else batches.delete(batch);
     }
-
-    if (courseBatch.getCourseStartDate() != null
-        && courseBatch.getCourseEndDate() != null
-        && courseBatch.getCourseEndDate().isBefore(courseBatch.getCourseStartDate())){
-      throw new IllegalArgumentException("End date cannot be before start date");
-    }
-
-    Double trainingDays = courseBatch.getTrainingDays();
-    if (trainingDays == null || !Double.isFinite(trainingDays)
-        || trainingDays <= 0 || trainingDays % 0.5 != 0) {
-      throw new IllegalArgumentException(
-          "Training days must be a positive whole or half-day amount"
-      );
-    }
-
-    if (courseBatch.getCapacity() == null ||
-    courseBatch.getCapacity() <= 0) {
-
-    throw new IllegalArgumentException(
-        "Capacity must be greater than 0"
-    );
-}
-  }
 }

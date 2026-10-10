@@ -1,61 +1,128 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout('Create course batch', 'Admin', 'batches', ~{::#content})}">
-<body>
-<section id="content">
-  <div class="cats-page-header">
-    <div>
-      <a class="cats-back" th:href="@{/admin/batches}">
-        <svg th:replace="~{fragments/icons :: icon('arrow-left')}"></svg>Course batches
-      </a>
-      <h1>Create course batch</h1>
-      <p class="cats-sub">Choose a catalogue course and define this batch's training duration and capacity. Set its dates in the calendar.</p>
-    </div>
-  </div>
-
-  <section class="card">
-    <div class="card-body px-4 pt-4 pb-2">
-      <form id="course-batch-form" th:action="@{/admin/batches/new}" th:object="${newBatch}"
-            method="post" class="cats-form" novalidate>
-        <div class="cats-form-section">
-          <div>
-            <h2>Batch details</h2>
-            <p>Each batch belongs to one catalogue course.</p>
-          </div>
-          <div class="cats-form">
-            <div class="cats-field">
-              <label class="form-label cats-req" for="courseId">Catalogue course</label>
-              <select id="courseId" name="courseId" class="form-select" required>
-                <option value="">Select a course</option>
-                <option th:each="course : ${courses}" th:value="${course.courseId}"
-                        th:text="${course.title}">Course title</option>
-              </select>
-              <div class="form-text" th:if="${#lists.isEmpty(courses)}">
-                Add a course to the catalogue before creating a batch.
-              </div>
-            </div>
-            <div class="cats-field">
-              <label class="form-label cats-req" for="trainingDays">Training days</label>
-              <input type="number" id="trainingDays" th:field="*{trainingDays}"
-                     class="form-control" min="0.5" step="0.5" required>
-              <div class="form-text">Use half-day increments. The calendar uses this duration to calculate the batch end date.</div>
-            </div>
-            <div class="cats-field">
-              <label class="form-label cats-req" for="capacity">Capacity</label>
-              <input type="number" id="capacity" th:field="*{capacity}"
-                     class="form-control" min="1" step="1" required>
-              <div class="form-text">Maximum number of participants in this batch.</div>
-            </div>
-          </div>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Schedule details', 'Admin', 'courses', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <a
+            class="cats-back"
+            th:href="@{/admin/courses/{id}/edit(id=${course.courseId})}"
+            >Back to course</a
+          >
+          <h1>Edit course dates</h1>
         </div>
-      </form>
-    </div>
-    <div class="card-footer px-4 py-3 cats-form-footer">
-      <a class="btn btn-outline-secondary" th:href="@{/admin/batches}">Cancel</a>
-      <button class="btn btn-primary" type="submit" form="course-batch-form"
-              th:disabled="${#lists.isEmpty(courses)}">Create batch</button>
-    </div>
-  </section>
-</section>
-</body>
+      </div>
+      <div class="card card-body">
+        <form
+          method="post"
+          th:action="@{${formAction}}"
+          th:object="${form}"
+          class="cats-stack"
+          novalidate
+        >
+          <input th:replace="~{fragments/csrf :: token}" />
+          <input type="hidden" th:field="*{version}" />
+          <div
+            th:if="${#fields.hasErrors('*')}"
+            class="alert alert-danger"
+            role="alert"
+          >
+            <ul class="mb-0">
+              <li
+                th:each="error : ${#fields.allErrors()}"
+                th:text="${error}"
+              ></li>
+            </ul>
+          </div>
+          <div class="cats-grid cats-grid-2">
+            <div>
+              <h2 class="cats-card-title" th:text="${course.title}"></h2>
+              <input type="hidden" th:field="*{courseId}" />
+            </div>
+            <div>
+              <label class="form-label" for="startDate">Start date</label
+              ><input
+                class="form-control"
+                type="date"
+                th:field="*{startDate}"
+                required
+              />
+              <div class="text-danger" th:errors="*{startDate}"></div>
+            </div>
+            <div>
+              <label class="form-label" for="endDate">End date</label
+              ><input
+                class="form-control"
+                type="date"
+                th:field="*{endDate}"
+                required
+              />
+              <div class="text-danger" th:errors="*{endDate}"></div>
+            </div>
+            <div>
+              <label class="form-label" for="halfDayPeriod">Session</label
+              ><select class="form-select" th:field="*{halfDayPeriod}">
+                <option value="">Full day</option>
+                <option value="AM">AM</option>
+                <option value="PM">PM</option></select
+              ><small class="text-muted"
+                >AM/PM is only for one day of Internal Training.</small
+              >
+            </div>
+            <div>
+              <label class="form-label" for="capacity">Places</label
+              ><input
+                class="form-control"
+                type="number"
+                th:field="*{capacity}"
+                min="1"
+                max="10000"
+                required
+              />
+              <div class="text-danger" th:errors="*{capacity}"></div>
+            </div>
+            <div>
+              <label class="form-label" for="days">Training days</label>
+              <input
+                class="form-control"
+                type="number"
+                th:field="*{days}"
+                min="0.5"
+                max="260"
+                step="0.5"
+              />
+              <button
+                class="btn btn-outline-secondary mt-2"
+                type="submit"
+                th:formaction="@{${formAction + '/calculate'}}"
+              >
+                Calculate end date
+              </button>
+            </div>
+            <label class="form-check"
+              ><input
+                class="form-check-input"
+                type="checkbox"
+                th:field="*{active}"
+              /><span class="form-check-label"
+                >Available for new applications</span
+              ></label
+            >
+          </div>
+          <div class="cats-page-actions">
+            <button class="btn btn-primary">Save</button
+            ><a
+              class="btn btn-outline-secondary"
+              th:href="@{/admin/courses/{id}/edit(id=${course.courseId})}"
+              >Cancel</a
+            >
+          </div>
+        </form>
+      </div>
+    </section>
+  </body>
 </html>

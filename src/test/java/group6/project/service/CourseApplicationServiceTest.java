@@ -1,131 +1,140 @@
+// We check application decisions and invalid state changes.
 package group6.project.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
-import java.util.Optional;
+import group6.project.form.CourseApplicationForm;
+import group6.project.model.*;
+import group6.project.repo.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 
-import group6.project.model.CourseApplication;
-import group6.project.model.CourseCategoryType;
-import group6.project.model.Staff;
-import group6.project.repo.CourseApplicationRepo;
-import group6.project.repo.ExcludedDaysRepo;
-import group6.project.repo.TrainingEntitlementRepo;
+import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
+import java.util.List;
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class CourseApplicationServiceTest {
-    @Mock CourseApplicationRepo applicationRepo;
-    @Mock TrainingEntitlementRepo entitlementRepo;
-    @Mock ExcludedDaysRepo excludedDaysRepo;
-
-    private CourseApplicationService service;
-    private Staff staff;
+    @Mock CourseApplicationRepo applications;
+    @Mock TrainingEntitlementService entitlements;
+    @Mock UserRepo users;
+    @Mock ExcludedDaysRepo holidays;
+    @Mock TrainingCalendarPolicyRepo calendar;
+    @Mock CourseDetailRepo courses;
+    @Mock CourseBatchRepo batches;
+    @Mock ApprovalRoutingService routing;
+    @InjectMocks CourseApplicationService service;
+    Staff staff;
+    Manager manager;
 
     @BeforeEach
-    void setUp() {
-        service = new CourseApplicationService(applicationRepo, entitlementRepo, excludedDaysRepo);
+    void setup() {
         staff = new Staff();
         staff.setUserId(7);
-        staff.setTrainingDays(5);
-        staff.setTrainingBudget(1000d);
-        lenient().when(entitlementRepo.findByStaff_UserIdAndYear(any(), any())).thenReturn(Optional.empty());
-        lenient().when(applicationRepo.findByApplicant_UserIdAndStatusIn(any(), any())).thenReturn(java.util.List.of());
-        lenient().when(excludedDaysRepo.existsByDate(any())).thenReturn(false);
-        lenient().when(applicationRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        manager = new Manager();
+        manager.setUserId(1);
+        staff.setManager(manager);
+        when(users.reportingManagerId(7)).thenReturn(Optional.of(1));
+        when(users.lockParticipants(List.of(1, 7))).thenReturn(List.of(manager, staff));
+        when(calendar.readCalendar()).thenReturn(Optional.of(new TrainingCalendarPolicy()));
     }
 
     @Test
     void internalHalfDayIsFreeAndConsumesHalfDay() {
-        CourseApplication application = valid(CourseCategoryType.INTERNAL_TRAINING);
-        application.setHalfDayPeriod("AM");
-
-        CourseApplication saved = service.create(application, staff);
-
-        assertEquals(0, saved.getCourseFee());
+        CourseApplicationForm form = valid(CourseCategoryType.INTERNAL_TRAINING);
+        form.setHalfDayPeriod("AM");
+        when(routing.resolveReviewer(staff, null)).thenReturn(manager);
+        allowance();
+        when(applications.save(any())).thenAnswer(call -> call.getArgument(0));
+        var saved = service.createOther(form, staff);
+        assertEquals(0, saved.getCourseFee().signum());
         assertEquals(0.5, saved.getTrainingDays());
+        assertEquals(manager, saved.getApprovalManager());
     }
 
     @ParameterizedTest
-    @EnumSource(value = DayOfWeek.class, names = {"SATURDAY", "SUNDAY"})
+    @EnumSource(
+            value = DayOfWeek.class,
+            names = {"SATURDAY", "SUNDAY"})
     void weekendStartDatesAreRejected(DayOfWeek weekendDay) {
-        CourseApplication application = valid(CourseCategoryType.EXTERNAL_COURSE);
-        LocalDate date = LocalDate.now().with(TemporalAdjusters.next(weekendDay));
-        application.setCourseStartDate(date);
-        application.setCourseEndDate(date);
-
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> service.create(application, staff));
-
-        assertEquals("Start and end dates must be working days.", error.getMessage());
-        verify(applicationRepo, never()).save(any());
+        var form = valid(CourseCategoryType.EXTERNAL_COURSE);
+        form.setCourseStartDate(LocalDate.now().with(TemporalAdjusters.next(weekendDay)));
+        form.setCourseEndDate(form.getCourseStartDate());
+        when(routing.resolveReviewer(staff, null)).thenReturn(manager);
+        var error =
+                assertThrows(ResponseStatusException.class, () -> service.createOther(form, staff));
+        assertEquals("Start and end dates must be working days.", error.getReason());
+        verify(applications, never()).save(any());
     }
 
     @Test
     void holidayStartDatesAreRejected() {
-        CourseApplication application = valid(CourseCategoryType.EXTERNAL_COURSE);
-        when(excludedDaysRepo.existsByDate(application.getCourseStartDate())).thenReturn(true);
-
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> service.create(application, staff));
-
-        assertEquals("Start and end dates must be working days.", error.getMessage());
-        verify(applicationRepo, never()).save(any());
+        var form = valid(CourseCategoryType.EXTERNAL_COURSE);
+        var holiday = new ExcludedDays();
+        holiday.setDate(form.getCourseStartDate());
+        when(holidays.findAll()).thenReturn(List.of(holiday));
+        when(routing.resolveReviewer(staff, null)).thenReturn(manager);
+        var error =
+                assertThrows(ResponseStatusException.class, () -> service.createOther(form, staff));
+        assertEquals("Start and end dates must be working days.", error.getReason());
+        verify(applications, never()).save(any());
     }
 
     @Test
     void negativeFeesAreRejected() {
-        CourseApplication application = valid(CourseCategoryType.EXTERNAL_COURSE);
-        application.setCourseFee(-1);
-
-        assertThrows(IllegalArgumentException.class, () -> service.create(application, staff));
+        var form = valid(CourseCategoryType.EXTERNAL_COURSE);
+        form.setCourseFee(new BigDecimal("-1"));
+        when(routing.resolveReviewer(staff, null)).thenReturn(manager);
+        assertThrows(ResponseStatusException.class, () -> service.createOther(form, staff));
+        verify(applications, never()).save(any());
     }
 
     @Test
     void sameApplicationIsExcludedWhenUpdating() {
-        CourseApplication existing = valid(CourseCategoryType.EXTERNAL_COURSE);
-        existing.setCourseId(10);
-        existing.setApplicant(staff);
-        existing.setStatus(group6.project.model.ApplicationStatus.UPDATED);
-        when(applicationRepo.findById(10)).thenReturn(Optional.of(existing));
-
-        CourseApplication edit = valid(CourseCategoryType.EXTERNAL_COURSE);
-        edit.setCourseFee(100);
-        assertEquals(group6.project.model.ApplicationStatus.UPDATED,
-                service.update(10, edit, staff).getStatus());
+        var saved = new CourseApplication();
+        saved.setCourseId(10);
+        saved.setVersion(0L);
+        saved.setApplicant(staff);
+        when(applications.applicantId(10)).thenReturn(Optional.of(7));
+        when(applications.lockById(10)).thenReturn(Optional.of(saved));
+        allowance();
+        var form = valid(CourseCategoryType.EXTERNAL_COURSE);
+        form.setVersion(0L);
+        assertEquals(ApplicationStatus.UPDATED, service.updateOther(10, form, staff).getStatus());
+        verify(entitlements).summary(staff, form.getCourseStartDate().getYear(), 10);
     }
 
-    private CourseApplication valid(CourseCategoryType category) {
-        CourseApplication application = new CourseApplication();
-        application.setCourseTitle("Effective Java");
-        application.setCourseCategory(category);
-        application.setCourseStartDate(nextWorkingDay());
-        application.setCourseEndDate(application.getCourseStartDate());
-        application.setCourseFee(100);
-        application.setJustification("Improve delivery quality");
-        return application;
+    private void allowance() {
+        when(entitlements.summary(eq(staff), anyInt(), nullable(Integer.class)))
+                .thenReturn(
+                        new TrainingEntitlementService.AnnualSummary(
+                                5, new BigDecimal("1000"), 0, BigDecimal.ZERO, 0, BigDecimal.ZERO));
     }
 
-    private LocalDate nextWorkingDay() {
+    private CourseApplicationForm valid(CourseCategoryType category) {
+        var form = new CourseApplicationForm();
+        form.setCourseTitle("Effective Java");
+        form.setTrainingProvider("Demo provider");
+        form.setCourseCategory(category);
         LocalDate date = LocalDate.now().plusDays(1);
-        while (date.getDayOfWeek().getValue() > 5) {
-            date = date.plusDays(1);
-        }
-        return date;
+        while (date.getDayOfWeek().getValue() > 5) date = date.plusDays(1);
+        form.setCourseStartDate(date);
+        form.setCourseEndDate(date);
+        form.setCourseFee(new BigDecimal("100"));
+        form.setJustification("Improve delivery quality");
+        return form;
     }
 }

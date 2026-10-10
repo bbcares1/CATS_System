@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <!-- One GET form preserves the selected employee or year while paging a list. -->
+    <nav
+      th:fragment="pager(page,route,filterName,filterValue)"
+      aria-label="Results pagination"
+      class="card card-body"
+    >
+      <form
+        method="get"
+        th:action="@{${route}}"
+        class="cats-page-actions align-items-end cats-pagination"
+      >
+        <input
+          th:if="${filterName != null and filterValue != null}"
+          type="hidden"
+          th:name="${filterName}"
+          th:value="${filterValue}"
+        />
+        <button
+          class="btn btn-outline-secondary"
+          name="page"
+          th:value="${page.number-1}"
+          th:disabled="${!page.hasPrevious()}"
+        >
+          Previous
+        </button>
+        <span
+          th:text="'Page ' + ${page.number+1} + ' of ' + ${page.totalPages == 0 ? 1 : page.totalPages}"
+        >
+        </span>
+        <button
+          class="btn btn-outline-secondary"
+          name="page"
+          th:value="${page.number+1}"
+          th:disabled="${!page.hasNext()}"
+        >
+          Next
+        </button>
+        <label>
+          Rows
+          <select name="size" class="form-select">
+            <option
+              th:each="n : ${ {10,20,25} }"
+              th:value="${n}"
+              th:selected="${n == page.size}"
+              th:text="${n}"
+            ></option>
+          </select>
+        </label>
+        <button class="btn btn-outline-secondary">Apply</button>
+      </form>
+    </nav>
+  </body>
+</html>

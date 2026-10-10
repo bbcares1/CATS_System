@@ -1,8 +1,7 @@
 /* =====================================================================
    cats.css — the CATS look. Load it AFTER bootstrap.min.css.
    Rules and examples: DESIGN.md in the repo root.
-   Sections: 1 tokens · 2 Bootstrap overrides · 3 app shell · 4 page
-   structure · 5 components · 6 forms · 7 login
+   Sections: variables, Bootstrap styles, navigation, pages, forms and login.
    ===================================================================== */
 
 /* ---------- 1. Tokens ---------- */
@@ -81,6 +80,8 @@ h1, h2, h3 { text-wrap: balance; }
 .btn-sm { --bs-btn-padding-y: .3rem; --bs-btn-padding-x: .65rem; }
 .btn .cats-icon { width: 16px; height: 16px; }
 .form-control, .form-select { border-color: var(--cats-border-strong); padding: .5rem .75rem; }
+/* Leave room for the dropdown arrow, including in narrow page-size selectors. */
+.form-select { padding-right: 2.25rem; }
 .form-control:focus, .form-select:focus { border-color: var(--bs-primary); box-shadow: 0 0 0 3px rgba(11, 99, 206, .18); outline: 0; }
 .form-control::placeholder { color: #9aa5b3; }
 .form-control[readonly] { background: #f4f6f9; color: var(--cats-muted); }
@@ -186,10 +187,11 @@ h1, h2, h3 { text-wrap: balance; }
 .cats-back .cats-icon { width: 16px; height: 16px; }
 .cats-stack { display: grid; gap: 20px; }
 .cats-grid { display: grid; gap: 16px; }
+.cats-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .cats-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .cats-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .cats-grid-main { grid-template-columns: minmax(0, 7fr) minmax(300px, 4fr); align-items: start; }
-@media (max-width: 991.98px) { .cats-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cats-grid-main { grid-template-columns: 1fr; } }
+@media (max-width: 991.98px) { .cats-grid-3 { grid-template-columns: 1fr; } .cats-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cats-grid-main { grid-template-columns: 1fr; } }
 @media (max-width: 575.98px) { .cats-grid-4, .cats-grid-2 { grid-template-columns: 1fr; } .cats-main { padding: 16px 16px 32px; } }
 
 /* ---------- 5. Components ---------- */
@@ -299,3 +301,15 @@ h1, h2, h3 { text-wrap: balance; }
 .cats-login-brand .cats-brand-text small { color: var(--cats-muted); }
 .cats-login h1 { font-size: 1.2rem; font-weight: 600; margin: 0 0 16px; }
 .cats-login-foot { text-align: center; font-size: .8rem; color: var(--cats-muted); }
+
+.cats-pre-wrap { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Attendance stays readable with horizontal scrolling on small screens. */
+.cats-calendar { min-width: 850px; table-layout: fixed; }
+.cats-calendar td { height: 130px; vertical-align: top; }
+.cats-calendar-outside { opacity: .45; }
+.cats-calendar-nonworking { background: var(--bs-tertiary-bg) !important; }
+.cats-calendar-entry { border-left: 3px solid #da710b; padding: 6px; margin-top: 8px; font-size: .8rem; overflow-wrap: anywhere; }
+
+.cats-logout { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; background: none; color: inherit; padding: 12px; text-align: left; }
+.cats-logout svg { width: 20px; height: 20px; }

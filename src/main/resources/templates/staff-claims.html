@@ -1,79 +1,174 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Course Fee Claims</title>
-        <link rel="stylesheet" th:href="@{/css/category.css}">
-        <link rel="stylesheet" th:href="@{/css/staff.css}">
-    </head>
-    <body>
-        <main class="container">
-            <nav>
-                <a th:href="@{/staff/home}">Dashboard</a>
-                <a th:href="@{/staff/personal}">Personal Course History</a>
-                <a class="active" th:href="@{/staff/fee}">Course Fee Claims</a>
-                <a th:href="@{/logout}">Logout</a>
-            </nav>
-            <h1>Course Fee Claims</h1>
-            <p class="success" th:if="${success}" th:text="${success}"></p>
-            <p class="error" th:if="${error}" th:text="${error}"></p>
-            <!-- Training budget: Show the remaining budget and reimbursements. -->
-            <div class="summary">
-                <p>Current-year budget committed: $<span th:text="${summary.usedBudget}"></span></p>
-                <p>Remaining budget: $<span th:text="${summary.remainingBudget}"></span></p>
-                <p>Reimbursements recorded for current-year courses: $<span th:text="${reimbursed}"></span></p>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Fee claims', 'Staff', 'fees', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>Fee claims</h1>
+        </div>
+      </div>
+      <!-- Claim eligibility and actual reimbursement are shown separately from budget reservations. -->
+      <div class="card">
+        <div class="card-body cats-stack">
+          <dl class="cats-dl">
+            <dt>Approved and completed course fees</dt>
+            <dd
+              th:text="'$' + ${#numbers.formatDecimal(summary.usedBudget,1,'COMMA',2,'POINT')}"
+            ></dd>
+            <dt>Budget remaining</dt>
+            <dd
+              th:text="'$' + ${#numbers.formatDecimal(summary.remainingBudget,1,'COMMA',2,'POINT')}"
+            ></dd>
+            <dt>Reimbursed for this year's courses</dt>
+            <dd
+              th:text="'$' + ${#numbers.formatDecimal(reimbursed,1,'COMMA',2,'POINT')}"
+            ></dd>
+          </dl>
+          <form
+            th:if="${!#lists.isEmpty(eligible)}"
+            th:action="@{/staff/fee}"
+            method="post"
+            enctype="multipart/form-data"
+            th:object="${form}"
+            novalidate
+            class="cats-stack"
+          >
+            <input th:replace="~{fragments/csrf :: token}" />
+            <div>
+              <label for="courseId" class="form-label cats-req">
+                Completed course
+              </label>
+              <select
+                id="courseId"
+                th:field="*{courseId}"
+                class="form-select"
+                required
+              >
+                <option
+                  th:each="c : ${eligible}"
+                  th:value="${c.courseId}"
+                  th:text="${c.courseTitle + ' ($' + #numbers.formatDecimal(c.courseFee,1,'COMMA',2,'POINT') + ')'}"
+                ></option>
+              </select>
             </div>
-            <p>Claim for a completed External Course or Professional Certification that you paid for personally. Claims require the manager's approval.</p>
-            <!-- Fee claim: Select an eligible course and attach the required documents. -->
-            <form th:if="${not #lists.isEmpty(eligible)}" th:action="@{/staff/fee}" method="post" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="courseId">Completed course</label>
-                    <select id="courseId" name="courseId" required>
-                        <option th:each="course : ${eligible}" th:value="${course.courseId}" th:text="${course.courseTitle + ' ($' + course.courseFee + ')'}"></option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" name="paidPersonally" value="true" required> I paid this course fee personally.</label>
-                </div>
-                <div class="form-group">
-                    <label for="receipt">Receipt (maximum 5 MB)</label>
-                    <input id="receipt" type="file" name="receipt" required>
-                </div>
-                <div class="form-group">
-                    <label for="certificate">Certificate of completion (maximum 5 MB)</label>
-                    <input id="certificate" type="file" name="certificate" required>
-                </div>
-                <button class="btn btn-primary" type="submit">Submit Claim</button>
-            </form>
-            <p th:if="${#lists.isEmpty(eligible)}">No unclaimed completed fee-paying courses.</p>
-            <!-- Claim history: Show submitted claims and their status. -->
-            <h2>My Claims</h2>
-            <div class="table-scroll">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Course</th>
-                            <th>Status</th>
-                            <th>Submitted</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="claim : ${claims}">
-                            <td>
-                                <a th:href="@{/staff/claims/{id}(id=${claim.applicationId})}" th:text="${claim.applicationId}"></a></td>
-                            <td th:text="${claim.courseApplication != null ? claim.courseApplication.courseTitle : 'Existing batch claim'}"></td>
-                            <td th:text="${claim.applicationStatus}"></td>
-                            <td th:text="${claim.submittedAt}"></td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(claims)}">
-                            <td colspan="4">No claims submitted.</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div th:if="${!#lists.isEmpty(reviewers)}">
+              <label class="form-label cats-req" for="reviewerId"
+                >Approving Manager</label
+              ><select
+                class="form-select"
+                id="reviewerId"
+                th:field="*{reviewerId}"
+              >
+                <option value="">Choose a Manager</option>
+                <option
+                  th:each="reviewer : ${reviewers}"
+                  th:value="${reviewer.userId}"
+                  th:text="${reviewer.name}"
+                ></option>
+              </select>
             </div>
-        </main>
-    </body>
+            <div class="form-check">
+              <input
+                id="paidPersonally"
+                class="form-check-input"
+                type="checkbox"
+                th:field="*{paidPersonally}"
+                required
+              />
+              <label for="paidPersonally" class="form-check-label">
+                I paid this course fee personally.
+              </label>
+            </div>
+            <div class="cats-grid cats-grid-2">
+              <div>
+                <label for="receipt" class="form-label cats-req">
+                  Receipt
+                </label>
+                <input
+                  id="receipt"
+                  class="form-control"
+                  type="file"
+                  name="receipt"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  required
+                />
+              </div>
+              <div>
+                <label for="certificate" class="form-label cats-req">
+                  Completion certificate
+                </label>
+                <input
+                  id="certificate"
+                  class="form-control"
+                  type="file"
+                  name="certificate"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  required
+                />
+              </div>
+            </div>
+            <p class="form-text">PDF, JPEG or PNG, up to 5 MB per file.</p>
+            <div>
+              <button class="btn btn-primary" type="submit">
+                Submit claim
+              </button>
+            </div>
+          </form>
+          <p class="text-secondary" th:if="${#lists.isEmpty(eligible)}">
+            No completed courses available to claim.
+          </p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="cats-card-title">My claims</h2>
+        </div>
+        <div class="table-responsive">
+          <table class="table cats-table">
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="c : ${claims}">
+                <td th:text="${c.courseTitle}"></td>
+                <td
+                  th:text="'$' + ${#numbers.formatDecimal(c.amount,1,'COMMA',2,'POINT')}"
+                ></td>
+                <td>
+                  <span
+                    th:replace="~{fragments/ui :: status(${c.applicationStatus})}"
+                  >
+                  </span>
+                </td>
+                <td
+                  th:text="${c.reimbursedAt == null ? 'Not recorded' : 'Reimbursed'}"
+                ></td>
+                <td>
+                  <a th:href="@{/staff/claims/{id}(id=${c.applicationId})}">
+                    View details
+                  </a>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(claims)}">
+                <td colspan="5" class="cats-empty">No claims submitted.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div
+        th:replace="~{fragments/claim-pagination :: pager(${claimPage}, ${claimRoute}, 'page')}"
+      ></div>
+    </section>
+  </body>
 </html>

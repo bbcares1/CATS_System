@@ -1,65 +1,108 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout('Course applications', 'Manager', 'approvals', ~{::#content})}">
-<body>
-<section id="content">
-  <div class="cats-page-header">
-    <div>
-      <h1>Course applications</h1>
-      <p class="cats-sub">Applications waiting for review, grouped by team member.</p>
-    </div>
-    <div class="cats-page-actions">
-      <a class="btn btn-outline-secondary" th:href="@{/manager/home}">Back to dashboard</a>
-    </div>
-  </div>
-
-  <div class="card" th:if="${#lists.isEmpty(groups)}">
-    <div th:replace="~{fragments/ui :: empty('check-square', 'No applications waiting for review', 'New applications from your team will appear here.', ~{})}"></div>
-  </div>
-
-  <p class="text-secondary" th:unless="${#lists.isEmpty(groups)}">
-    <span th:text="${applicationCount}">2</span>
-    <span th:text="${applicationCount == 1 ? 'application waiting for review' : 'applications waiting for review'}">applications waiting for review</span>
-  </p>
-  <div class="card mb-4" th:each="group : ${groups}">
-    <div class="card-header">
-      <div>
-        <h2 class="cats-card-title" th:text="${group.employeeName}">Team member</h2>
-        <span class="cats-sub" th:text="${group.staffId}">S0001</span>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Course applications', 'Manager', 'approvals', ~{::#content})}"
+>
+  <body>
+    <section id="content">
+      <div class="cats-page-header">
+        <div>
+          <h1>Course applications</h1>
+        </div>
+        <div class="cats-page-actions">
+          <a class="btn btn-outline-secondary" th:href="@{/manager/home}"
+            >Back to dashboard</a
+          >
+        </div>
       </div>
-      <span class="cats-tag" th:text="${#lists.size(group.applications) + (#lists.size(group.applications) == 1 ? ' application' : ' applications')}">1 application</span>
-    </div>
-    <div class="table-responsive">
-      <table class="table align-middle mb-0">
-        <thead>
-        <tr>
-          <th scope="col">Course</th>
-          <th scope="col">Period</th>
-          <th scope="col" class="cats-num">Days</th>
-          <th scope="col" class="cats-num">Fee</th>
-          <th scope="col">Status</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="a : ${group.applications}">
-          <td class="cats-col-main">
-            <a class="cats-row-link" th:href="@{/manager/applications/{id}(id=${a.applicationId})}" th:text="${a.title}">Course title</a>
-            <div class="cats-cell-sub" th:if="${a.category != null}"
-                 th:text="${#strings.capitalize(#strings.toLowerCase(a.category.displayName))}">External course</div>
-          </td>
-          <td class="text-nowrap">
-            <span th:text="${a.startDate != null ? #temporals.format(a.startDate, 'd MMM yyyy') : '—'}">12 Nov 2026</span>
-            &ndash;
-            <span th:text="${a.endDate != null ? #temporals.format(a.endDate, 'd MMM yyyy') : '—'}">14 Nov 2026</span>
-          </td>
-          <td class="cats-num" th:text="${a.trainingDays ?: '—'}">3</td>
-          <td class="cats-num" th:text="'$' + ${#numbers.formatDecimal(a.fee, 1, 'COMMA', 2, 'POINT')}">$1,800.00</td>
-          <td><span th:replace="~{fragments/ui :: status(${a.status})}"></span></td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
-</body>
+
+      <div class="card" th:if="${#lists.isEmpty(groups)}">
+        <div
+          th:replace="~{fragments/ui :: empty('check-square', 'No applications waiting for review', 'New applications from your team will appear here.', ~{})}"
+        ></div>
+      </div>
+
+      <p class="text-secondary" th:unless="${#lists.isEmpty(groups)}">
+        <span th:text="${applicationCount}">2</span>
+        <span
+          th:text="${applicationCount == 1 ? 'application waiting for review' : 'applications waiting for review'}"
+          >applications waiting for review</span
+        >
+      </p>
+      <div class="card mb-4" th:each="group : ${groups}">
+        <div class="card-header">
+          <div>
+            <h2 class="cats-card-title" th:text="${group.employeeName}">
+              Team member
+            </h2>
+            <span class="cats-sub" th:text="${group.staffId}">S0001</span>
+          </div>
+          <span
+            class="cats-tag"
+            th:text="${#lists.size(group.applications) + (#lists.size(group.applications) == 1 ? ' application' : ' applications')}"
+            >1 application</span
+          >
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Course</th>
+                <th scope="col">Period</th>
+                <th scope="col" class="cats-num">Days</th>
+                <th scope="col" class="cats-num">Fee</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="a : ${group.applications}">
+                <td class="cats-col-main">
+                  <a
+                    class="cats-row-link"
+                    th:href="@{/manager/applications/{id}(id=${a.courseId})}"
+                    th:text="${a.courseTitle}"
+                    >Course title</a
+                  >
+                  <div
+                    class="cats-cell-sub"
+                    th:if="${a.courseCategory != null}"
+                    th:text="${#strings.capitalize(#strings.toLowerCase(a.courseCategory.displayName))}"
+                  >
+                    External course
+                  </div>
+                </td>
+                <td class="text-nowrap">
+                  <span
+                    th:text="${a.courseStartDate != null ? #temporals.format(a.courseStartDate,'d MMM yyyy',T(java.util.Locale).ENGLISH) : '—'}"
+                    >12 Nov 2026</span
+                  >
+                  &ndash;
+                  <span
+                    th:text="${a.courseEndDate != null ? #temporals.format(a.courseEndDate,'d MMM yyyy',T(java.util.Locale).ENGLISH) : '—'}"
+                    >14 Nov 2026</span
+                  >
+                </td>
+                <td class="cats-num" th:text="${a.trainingDays ?: '—'}">3</td>
+                <td
+                  class="cats-num"
+                  th:text="'$' + ${#numbers.formatDecimal(a.courseFee, 1, 'COMMA', 2, 'POINT')}"
+                >
+                  $1,800.00
+                </td>
+                <td>
+                  <span
+                    th:replace="~{fragments/ui :: status(${a.status})}"
+                  ></span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div
+        th:replace="~{fragments/list-pagination :: pager(${pageData}, '/manager/approvals', null, null)}"
+      ></div>
+    </section>
+  </body>
 </html>

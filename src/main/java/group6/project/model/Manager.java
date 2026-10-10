@@ -1,15 +1,12 @@
+// Represents an employee who also reviews assigned applications and claims.
 package group6.project.model;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
-@Getter
-@Setter
+@DiscriminatorValue("MANAGER")
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class Manager extends Staff {
-}
+public class Manager extends Staff {}

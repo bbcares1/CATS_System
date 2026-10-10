@@ -1,271 +1,444 @@
+// Validates and saves course applications, decisions and completion.
 package group6.project.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
+import static org.springframework.http.HttpStatus.*;
+
+import group6.project.form.CatalogueApplicationForm;
+import group6.project.form.CourseApplicationForm;
+import group6.project.form.DecisionForm;
+import group6.project.model.*;
+import group6.project.repo.*;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
-import group6.project.model.ApplicationStatus;
-import group6.project.model.CourseApplication;
-import group6.project.model.CourseCategoryType;
-import group6.project.model.Staff;
-import group6.project.repo.CourseApplicationRepo;
-import group6.project.repo.ExcludedDaysRepo;
-import group6.project.repo.TrainingEntitlementRepo;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
+@Transactional(readOnly = true)
 public class CourseApplicationService {
-    private static final List<ApplicationStatus> ACTIVE_STATUSES =
-            List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED, ApplicationStatus.APPROVED);
-    private final CourseApplicationRepo courseApplicationRepo;
-    private final TrainingEntitlementRepo entitlementRepo;
-    private final ExcludedDaysRepo excludedDaysRepo;
+    private static final List<ApplicationStatus> ACTIVE =
+            List.of(
+                    ApplicationStatus.APPLIED,
+                    ApplicationStatus.UPDATED,
+                    ApplicationStatus.APPROVED);
+    private static final List<ApplicationStatus> SEATS =
+            List.of(
+                    ApplicationStatus.APPLIED,
+                    ApplicationStatus.UPDATED,
+                    ApplicationStatus.APPROVED,
+                    ApplicationStatus.COMPLETED);
+    private final CourseApplicationRepo applications;
+    private final TrainingEntitlementService entitlements;
+    private final UserRepo users;
+    private final ExcludedDaysRepo holidays;
+    private final TrainingCalendarPolicyRepo calendar;
+    private final CourseDetailRepo courses;
+    private final CourseBatchRepo batches;
+    private final ApprovalRoutingService routing;
 
-    public CourseApplicationService(CourseApplicationRepo courseApplicationRepo,
-            TrainingEntitlementRepo entitlementRepo, ExcludedDaysRepo excludedDaysRepo) {
-        this.courseApplicationRepo = courseApplicationRepo;
-        this.entitlementRepo = entitlementRepo;
-        this.excludedDaysRepo = excludedDaysRepo;
+    public CourseApplicationService(
+            CourseApplicationRepo applications,
+            TrainingEntitlementService entitlements,
+            UserRepo users,
+            ExcludedDaysRepo holidays,
+            TrainingCalendarPolicyRepo calendar,
+            CourseDetailRepo courses,
+            CourseBatchRepo batches,
+            ApprovalRoutingService routing) {
+        this.applications = applications;
+        this.entitlements = entitlements;
+        this.users = users;
+        this.holidays = holidays;
+        this.calendar = calendar;
+        this.courses = courses;
+        this.batches = batches;
+        this.routing = routing;
     }
 
-    public List<CourseApplication> findForStaffAndYear(Staff staff, int year) {
-        return courseApplicationRepo.findByApplicant_UserIdAndCourseStartDateBetweenOrderByCourseStartDateAsc(
-                staff.getUserId(), LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
+    // Personal history includes every status, including deleted and cancelled requests.
+    public List<CourseApplication> findForStaffAndYear(User employee, int year) {
+        entitlements.validateYear(year);
+        return applications
+                .findByApplicant_UserIdAndCourseStartDateBetweenOrderByCourseStartDateAsc(
+                        employee.getUserId(), LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
     }
 
-    public CourseApplication getOwned(Integer id, Staff staff) {
-        CourseApplication application = courseApplicationRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Course application was not found."));
-        if (application.getApplicant() == null
-                || !application.getApplicant().getUserId().equals(staff.getUserId())) {
-            throw new IllegalArgumentException("You can only access your own course applications.");
-        }
+    // A guessed ID must not reveal another employee's course.
+    public CourseApplication getOwned(Integer id, User employee) {
+        CourseApplication application =
+                applications
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                NOT_FOUND, "Application not found."));
+        requireOwner(application, employee);
         return application;
     }
 
-    @Transactional
-    public CourseApplication create(CourseApplication form, Staff staff) {
-        validateAndPrepare(form, staff, null, true);
-        form.setApplicant(staff);
-        form.setStatus(ApplicationStatus.APPLIED);
-        form.setSubmittedAt(LocalDateTime.now());
-        form.setUpdatedAt(LocalDateTime.now());
-        return courseApplicationRepo.save(form);
+    // External courses need their own details; identity and status never come from the form.
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public CourseApplication createOther(CourseApplicationForm form, User actor) {
+        User employee = lockEmployee(actor.getUserId(), actor.getUserId(), form.getReviewerId());
+        calendar.readCalendar().orElseThrow();
+        CourseApplication application = new CourseApplication();
+        copyOther(form, application);
+        application.setApplicant(employee);
+        application.setApprovalManager(routing.resolveReviewer(employee, form.getReviewerId()));
+        validate(application, null);
+        application.setSubmittedAt(LocalDateTime.now());
+        application.setUpdatedAt(application.getSubmittedAt());
+        return applications.save(application);
     }
 
-    @Transactional
-    public CourseApplication update(Integer id, CourseApplication form, Staff staff) {
-        CourseApplication existing = getOwned(id, staff);
-        if (existing.getStatus() != ApplicationStatus.APPLIED
-                && existing.getStatus() != ApplicationStatus.UPDATED) {
-            throw new IllegalStateException("Only Applied or Updated applications can be edited.");
+    // The offer supplies the price and category; a batch supplies its fixed dates.
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public CourseApplication createFromCatalogue(
+            Integer courseId, CatalogueApplicationForm form, User actor) {
+        User employee = lockEmployee(actor.getUserId(), actor.getUserId(), form.getReviewerId());
+        calendar.readCalendar().orElseThrow();
+        CourseDetail offer =
+                courses.lockById(courseId)
+                        .orElseThrow(
+                                () -> new ResponseStatusException(NOT_FOUND, "Course not found."));
+        checkVersion(form.getCourseVersion(), offer.getVersion());
+        if (!offer.isActive() || !offer.getProvider().isActive()) {
+            throw new ResponseStatusException(BAD_REQUEST, "This course is no longer available.");
         }
-        validateAndPrepare(form, staff, id, true);
-        existing.setCourseTitle(form.getCourseTitle());
-        existing.setCourseCategory(form.getCourseCategory());
-        existing.setTrainingProvider(form.getTrainingProvider());
-        existing.setCourseStartDate(form.getCourseStartDate());
-        existing.setCourseEndDate(form.getCourseEndDate());
-        existing.setCourseFee(form.getCourseFee());
-        existing.setJustification(form.getJustification());
-        existing.setWorkDissemination(form.getWorkDissemination());
-        existing.setTrainingDays(form.getTrainingDays());
-        existing.setHalfDayPeriod(form.getHalfDayPeriod());
-        existing.setStatus(ApplicationStatus.UPDATED);
-        existing.setUpdatedAt(LocalDateTime.now());
-        return courseApplicationRepo.save(existing);
+        CourseApplication application = new CourseApplication();
+        application.setApplicant(employee);
+        application.setApprovalManager(routing.resolveReviewer(employee, form.getReviewerId()));
+        application.setCatalogueCourse(offer);
+        application.setCourseTitle(offer.getTitle());
+        application.setCourseCategory(offer.getCourseCategory().getKind());
+        application.setTrainingProvider(offer.getProvider().getName());
+        application.setCourseFee(offer.getCourseFee());
+        copyDatesAndReason(form, application);
+        if (form.getBatchId() != null) {
+            CourseBatch batch =
+                    batches.lockById(form.getBatchId())
+                            .orElseThrow(
+                                    () ->
+                                            new ResponseStatusException(
+                                                    BAD_REQUEST, "Choose an available schedule."));
+            checkVersion(form.getBatchVersion(), batch.getVersion());
+            if (!batch.isActive() || !batch.getCourseDetail().getCourseId().equals(courseId)) {
+                throw new ResponseStatusException(
+                        BAD_REQUEST, "Choose a schedule for this course.");
+            }
+            if (applications.countByCatalogueBatch_BatchIdAndStatusIn(batch.getBatchId(), SEATS)
+                    >= batch.getCapacity()) {
+                throw new ResponseStatusException(
+                        BAD_REQUEST, "This schedule is full. Choose another schedule.");
+            }
+            application.setCatalogueBatch(batch);
+            application.setCourseStartDate(batch.getCourseStartDate());
+            application.setCourseEndDate(batch.getCourseEndDate());
+            application.setHalfDayPeriod(batch.getHalfDayPeriod());
+        } else if (!offer.isCustomDatesAllowed()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Choose one of the listed schedules.");
+        }
+        validate(application, null);
+        application.setSubmittedAt(LocalDateTime.now());
+        application.setUpdatedAt(application.getSubmittedAt());
+        return applications.save(application);
     }
 
-    @Transactional
-    public void delete(Integer id, Staff staff) {
-        CourseApplication application = getOwned(id, staff);
-        if (application.getStatus() != ApplicationStatus.APPLIED
-                && application.getStatus() != ApplicationStatus.UPDATED) {
-            throw new IllegalStateException("Only Applied or Updated applications can be deleted.");
+    // Only pending requests can change, and every edit must still fit the annual allowance.
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public CourseApplication updateOther(Integer id, CourseApplicationForm form, User actor) {
+        CourseApplication application = lockApplication(id, actor);
+        requireOwner(application, actor);
+        checkVersion(form.getVersion(), application.getVersion());
+        requirePending(application);
+        if (application.getCatalogueCourse() != null)
+            throw new ResponseStatusException(BAD_REQUEST, "Use the catalogue application form.");
+        copyOther(form, application);
+        validate(application, id);
+        application.setStatus(ApplicationStatus.UPDATED);
+        application.setUpdatedAt(LocalDateTime.now());
+        return application;
+    }
+
+    // Keep the original offer snapshot and fixed schedule, even after Admin edits the catalogue.
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public CourseApplication updateCatalogue(
+            Integer id, CatalogueApplicationForm form, User actor) {
+        CourseApplication application = lockApplication(id, actor);
+        requireOwner(application, actor);
+        checkVersion(form.getVersion(), application.getVersion());
+        requirePending(application);
+        if (application.getCatalogueCourse() == null)
+            throw new ResponseStatusException(BAD_REQUEST, "Use the other-course form.");
+        if (application.getCatalogueBatch() == null) copyDatesAndReason(form, application);
+        else {
+            application.setJustification(form.getJustification());
+            application.setWorkDissemination(form.getWorkDissemination());
         }
+        validate(application, id);
+        application.setStatus(ApplicationStatus.UPDATED);
+        application.setUpdatedAt(LocalDateTime.now());
+        return application;
+    }
+
+    // Both decisions require a reason; rejecting an expired request must remain possible.
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public CourseApplication decide(Integer id, DecisionForm form, User actor) {
+        CourseApplication application = lockApplication(id, actor);
+        User manager = users.findById(actor.getUserId()).orElseThrow();
+        if (!(manager instanceof Manager)
+                || !manager.isActive()
+                || application.getApplicant().getUserId().equals(actor.getUserId())
+                || application.getApprovalManager() == null
+                || !application.getApprovalManager().getUserId().equals(actor.getUserId())) {
+            throw new ResponseStatusException(
+                    FORBIDDEN, "Only the assigned Manager can decide this application.");
+        }
+        checkVersion(form.getVersion(), application.getVersion());
+        requirePending(application);
+        String reason = required(form.getReason(), "Decision reason", 2000);
+        if (form.getApproved() == null)
+            throw new ResponseStatusException(BAD_REQUEST, "Choose approve or reject.");
+        if (form.getApproved()) validate(application, id);
+        application.setStatus(
+                form.getApproved() ? ApplicationStatus.APPROVED : ApplicationStatus.REJECTED);
+        application.setDecisionReason(reason);
+        application.setReviewer(manager);
+        application.setReviewedAt(LocalDateTime.now());
+        application.setUpdatedAt(application.getReviewedAt());
+        return application;
+    }
+
+    // Deletion keeps the history while releasing the pending reservation.
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void delete(Integer id, Long version, User actor) {
+        CourseApplication application = lockApplication(id, actor);
+        requireOwner(application, actor);
+        checkVersion(version, application.getVersion());
+        requirePending(application);
         application.setStatus(ApplicationStatus.DELETED);
         application.setUpdatedAt(LocalDateTime.now());
-        courseApplicationRepo.save(application);
     }
 
-    @Transactional
-    public void cancel(Integer id, Staff staff) {
-        CourseApplication application = getOwned(id, staff);
+    // An approved course can be cancelled without removing the approval history.
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void cancel(Integer id, Long version, User actor) {
+        CourseApplication application = lockApplication(id, actor);
+        requireOwner(application, actor);
+        checkVersion(version, application.getVersion());
         if (application.getStatus() != ApplicationStatus.APPROVED) {
-            throw new IllegalStateException("Only Approved applications can be cancelled.");
+            throw new ResponseStatusException(
+                    BAD_REQUEST, "Only approved applications can be cancelled.");
         }
         application.setStatus(ApplicationStatus.CANCELLED);
         application.setUpdatedAt(LocalDateTime.now());
-        courseApplicationRepo.save(application);
     }
 
-    @Transactional
-    public void complete(Integer id, String comments, Staff staff) {
-        CourseApplication application = getOwned(id, staff);
-        if (application.getStatus() != ApplicationStatus.APPROVED) {
-            throw new IllegalStateException("Only Approved applications can be completed.");
+    // Completion needs learning comments and does not release the year's used allowance.
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void complete(Integer id, Long version, String comments, User actor) {
+        CourseApplication application = lockApplication(id, actor);
+        requireOwner(application, actor);
+        checkVersion(version, application.getVersion());
+        if (application.getStatus() != ApplicationStatus.APPROVED
+                || !application.getCourseEndDate().isBefore(LocalDate.now())) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST, "Complete an approved course after its end date.");
         }
-        if (application.getCourseEndDate() == null
-                || application.getCourseEndDate().isAfter(LocalDate.now())) {
-            throw new IllegalStateException("A course can only be marked completed after it ends.");
-        }
-        if (comments == null || comments.isBlank()) {
-            throw new IllegalArgumentException("Experience comments are required.");
-        }
-        application.setExperienceComments(comments.trim());
+        application.setExperienceComments(required(comments, "Experience comments", 2000));
         application.setStatus(ApplicationStatus.COMPLETED);
         application.setUpdatedAt(LocalDateTime.now());
-        courseApplicationRepo.save(application);
     }
 
-    public Summary summary(CourseApplication form, Staff staff, Integer excludedId) {
-        if (form.getCourseCategory() == null || form.getCourseStartDate() == null
-                || form.getCourseEndDate() == null) {
-            double allowance = allowanceDays(staff, LocalDate.now().getYear());
-            double budget = allowanceBudget(staff, LocalDate.now().getYear());
-            List<CourseApplication> used = usedApplications(staff, LocalDate.now().getYear(), excludedId);
-            double usedDays = used.stream().mapToDouble(a -> a.getTrainingDays() == null ? 0 : a.getTrainingDays()).sum();
-            double usedBudget = used.stream().mapToDouble(a -> a.getCourseFee()).sum();
-            return new Summary(0, Math.max(0, allowance - usedDays),
-                    Math.max(0, budget - usedBudget), usedDays, usedBudget);
+    // A version from an old page must never silently overwrite a more recent change.
+    private void checkVersion(Long supplied, Long saved) {
+        if (supplied == null || !supplied.equals(saved)) {
+            throw new ResponseStatusException(
+                    CONFLICT, "This record changed. Reload the page and try again.");
         }
-        validateBasic(form);
-        double days = form.getCourseStartDate() == null || form.getCourseEndDate() == null
-                ? 0 : calculateTrainingDays(form);
-        double usedDays = usedApplications(staff, form.getCourseStartDate() == null
-                ? LocalDate.now().getYear() : form.getCourseStartDate().getYear(), excludedId)
-                .stream().mapToDouble(a -> a.getTrainingDays() == null ? 0 : a.getTrainingDays()).sum();
-        double usedBudget = usedApplications(staff, form.getCourseStartDate() == null
-                ? LocalDate.now().getYear() : form.getCourseStartDate().getYear(), excludedId)
-                .stream().mapToDouble(a -> a.getCourseFee()).sum();
-        int year = form.getCourseStartDate().getYear();
-        double entitlementDays = allowanceDays(staff, year);
-        double entitlementBudget = allowanceBudget(staff, year);
-        return new Summary(days, Math.max(0, entitlementDays == 0 ? 0 : entitlementDays - usedDays),
-                Math.max(0, entitlementBudget - usedBudget),
-                usedDays, usedBudget);
     }
 
-    private double allowanceDays(Staff staff, int year) {
-        return entitlementRepo.findByStaff_UserIdAndYear(staff.getUserId(), year)
-                .map(e -> e.getStaff() != null && e.getStaff().getTrainingDays() != null
-                        ? e.getStaff().getTrainingDays() : staff.getTrainingDays())
-                .orElse(staff.getTrainingDays() == null ? 0 : staff.getTrainingDays());
+    // Account locks come first, followed by the calendar and then the application.
+    private CourseApplication lockApplication(Integer id, User actor) {
+        Integer applicantId =
+                applications
+                        .applicantId(id)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                NOT_FOUND, "Application not found."));
+        lockEmployee(applicantId, actor.getUserId(), null);
+        calendar.readCalendar().orElseThrow();
+        return applications
+                .lockById(id)
+                .orElseThrow(
+                        () -> new ResponseStatusException(NOT_FOUND, "Application not found."));
     }
 
-    private double allowanceBudget(Staff staff, int year) {
-        return entitlementRepo.findByStaff_UserIdAndYear(staff.getUserId(), year)
-                .map(e -> e.getStaff() != null && e.getStaff().getTrainingBudget() != null
-                        ? e.getStaff().getTrainingBudget() : staff.getTrainingBudget())
-                .orElse(staff.getTrainingBudget() == null ? 0 : staff.getTrainingBudget());
+    // Lock the few accounts involved in ID order, so concurrent requests share the same allowance.
+    private User lockEmployee(Integer employeeId, Integer actorId, Integer selectedReviewer) {
+        Integer reportingId = users.reportingManagerId(employeeId).orElse(null);
+        Set<Integer> ids = new TreeSet<>();
+        ids.add(employeeId);
+        ids.add(actorId);
+        if (reportingId != null) ids.add(reportingId);
+        if (selectedReviewer != null) ids.add(selectedReviewer);
+        List<User> locked = users.lockParticipants(new ArrayList<>(ids));
+        User employee =
+                locked.stream()
+                        .filter(user -> employeeId.equals(user.getUserId()))
+                        .findFirst()
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                NOT_FOUND, "Employee not found."));
+        User actor =
+                locked.stream()
+                        .filter(user -> actorId.equals(user.getUserId()))
+                        .findFirst()
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                FORBIDDEN, "Account not available."));
+        if (!actor.isActive())
+            throw new ResponseStatusException(FORBIDDEN, "Account not available.");
+        Integer currentReportingId =
+                employee.getManager() == null ? null : employee.getManager().getUserId();
+        if (!Objects.equals(reportingId, currentReportingId)) {
+            throw new ResponseStatusException(
+                    CONFLICT, "Your reporting manager changed. Reload the page.");
+        }
+        return employee;
     }
 
-    public record Summary(double requestedDays, double remainingDays, double remainingBudget,
-            double usedDays, double usedBudget) {}
-
-    private void validateAndPrepare(CourseApplication form, Staff staff, Integer excludedId,
-            boolean futureRequired) {
-        validateBasic(form);
-        if (futureRequired && !form.getCourseStartDate().isAfter(LocalDate.now())) {
-            throw new IllegalArgumentException("The course start date must be after today.");
+    // Allowance, overlap and dates are checked again on approval, not just when the form opens.
+    private void validate(CourseApplication application, Integer excludedId) {
+        if (!(application.getApplicant() instanceof Staff)
+                || !application.getApplicant().isActive()) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST, "The applicant must be an active employee.");
         }
-        if (form.getCourseEndDate().isBefore(form.getCourseStartDate())) {
-            throw new IllegalArgumentException("The end date cannot be before the start date.");
+        application.setCourseTitle(required(application.getCourseTitle(), "Course title", 255));
+        application.setTrainingProvider(
+                required(application.getTrainingProvider(), "Provider", 255));
+        application.setJustification(
+                required(application.getJustification(), "Justification", 2000));
+        if (application.getWorkDissemination() != null
+                && application.getWorkDissemination().length() > 2000) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST, "Work dissemination must be at most 2000 characters.");
         }
-        if (form.getCourseStartDate().getYear() != form.getCourseEndDate().getYear()) {
-            throw new IllegalArgumentException("A course must be within one calendar year.");
+        BigDecimal fee = application.getCourseFee();
+        if (fee == null
+                || fee.signum() < 0
+                || fee.scale() > 2
+                || fee.precision() - fee.scale() > 10) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST, "Use a non-negative fee with up to two decimal places.");
         }
-        if (isNonWorkingDay(form.getCourseStartDate()) || isNonWorkingDay(form.getCourseEndDate())) {
-            throw new IllegalArgumentException("Start and end dates must be working days.");
+        if (application.getCourseCategory() == CourseCategoryType.INTERNAL_TRAINING)
+            application.setCourseFee(BigDecimal.ZERO);
+        Set<LocalDate> excluded = new HashSet<>();
+        for (ExcludedDays holiday : holidays.findAll()) excluded.add(holiday.getDate());
+        try {
+            application.setTrainingDays(
+                    TrainingDayCalculator.count(
+                            application.getCourseCategory(),
+                            application.getCourseStartDate(),
+                            application.getCourseEndDate(),
+                            application.getHalfDayPeriod(),
+                            excluded,
+                            true));
+        } catch (IllegalArgumentException error) {
+            throw new ResponseStatusException(BAD_REQUEST, error.getMessage());
         }
-        if (form.getCourseFee() < 0) {
-            throw new IllegalArgumentException("Course fee cannot be negative.");
+        var annual =
+                entitlements.summary(
+                        application.getApplicant(),
+                        application.getCourseStartDate().getYear(),
+                        excludedId);
+        if (application.getTrainingDays() > annual.remainingDays()) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST, "Training days exceed the remaining annual allowance.");
         }
-        if (form.getCourseCategory() == CourseCategoryType.INTERNAL_TRAINING) {
-            form.setCourseFee(0);
-        } else if ("HALF_DAY".equals(form.getHalfDayPeriod())
-                || "AM".equals(form.getHalfDayPeriod()) || "PM".equals(form.getHalfDayPeriod())) {
-            throw new IllegalArgumentException("Only Internal Training supports half-day sessions.");
+        if (application.getCourseFee().compareTo(annual.remainingBudget()) > 0) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST, "Course fee exceeds the remaining annual training budget.");
         }
-        if (form.getCourseCategory() == CourseCategoryType.INTERNAL_TRAINING
-                && form.getHalfDayPeriod() != null && !form.getHalfDayPeriod().isBlank()
-                && !Set.of("AM", "PM").contains(form.getHalfDayPeriod())) {
-            throw new IllegalArgumentException("Half-day period must be AM or PM.");
-        }
-        form.setTrainingDays(calculateTrainingDays(form));
-        Summary summary = summary(form, staff, excludedId);
-        if (summary.requestedDays() > summary.remainingDays() + 0.0001) {
-            throw new IllegalArgumentException("Training days exceed the remaining annual allowance.");
-        }
-        if (form.getCourseCategory() != CourseCategoryType.INTERNAL_TRAINING
-                && form.getCourseFee() > summary.remainingBudget() + 0.0001) {
-            throw new IllegalArgumentException("Course fee exceeds the remaining annual training budget.");
-        }
-        for (CourseApplication other : usedApplications(staff, form.getCourseStartDate().getYear(), excludedId)) {
-            if (overlaps(form, other)) {
-                throw new IllegalArgumentException("The course overlaps another active application.");
+        for (CourseApplication other :
+                applications.findByApplicant_UserIdAndStatusIn(
+                        application.getApplicant().getUserId(), ACTIVE)) {
+            if (!Objects.equals(other.getCourseId(), excludedId) && overlaps(application, other)) {
+                throw new ResponseStatusException(
+                        BAD_REQUEST, "The course overlaps another active application.");
             }
         }
     }
 
-    private void validateBasic(CourseApplication form) {
-        if (form.getCourseTitle() == null || form.getCourseTitle().isBlank()
-                || form.getCourseCategory() == null || form.getCourseStartDate() == null
-                || form.getCourseEndDate() == null || form.getJustification() == null
-                || form.getJustification().isBlank()) {
-            throw new IllegalArgumentException("Course title, category, dates and justification are required.");
-        }
-    }
-
-    private boolean isNonWorkingDay(LocalDate date) {
-        return date.getDayOfWeek() == DayOfWeek.SATURDAY
-                || date.getDayOfWeek() == DayOfWeek.SUNDAY
-                || excludedDaysRepo.existsByDate(date);
-    }
-
-    private double calculateTrainingDays(CourseApplication application) {
-        double days = 0;
-        for (LocalDate date = application.getCourseStartDate();
-                !date.isAfter(application.getCourseEndDate()); date = date.plusDays(1)) {
-            if (!isNonWorkingDay(date)) {
-                days += 1;
-            }
-        }
-        if ("AM".equals(application.getHalfDayPeriod()) || "PM".equals(application.getHalfDayPeriod())) {
-            days -= 0.5;
-        }
-        return round(days);
-    }
-
-    private List<CourseApplication> usedApplications(Staff staff, int year, Integer excludedId) {
-        return courseApplicationRepo.findByApplicant_UserIdAndStatusIn(staff.getUserId(), ACTIVE_STATUSES)
-                .stream()
-                .filter(a -> a.getCourseStartDate() != null && a.getCourseStartDate().getYear() == year)
-                .filter(a -> excludedId == null || !a.getCourseId().equals(excludedId))
-                .toList();
-    }
-
-    private boolean overlaps(CourseApplication first, CourseApplication second) {
+    // Morning and afternoon requests on the same date do not overlap each other.
+    public static boolean overlaps(CourseApplication first, CourseApplication second) {
         if (first.getCourseEndDate().isBefore(second.getCourseStartDate())
-                || second.getCourseEndDate().isBefore(first.getCourseStartDate())) {
-            return false;
-        }
-        if (first.getCourseStartDate().equals(first.getCourseEndDate())
+                || second.getCourseEndDate().isBefore(first.getCourseStartDate())) return false;
+        boolean opposite =
+                "AM".equals(first.getHalfDayPeriod()) && "PM".equals(second.getHalfDayPeriod())
+                        || "PM".equals(first.getHalfDayPeriod())
+                                && "AM".equals(second.getHalfDayPeriod());
+        return !(first.getCourseStartDate().equals(first.getCourseEndDate())
                 && second.getCourseStartDate().equals(second.getCourseEndDate())
-                && first.getHalfDayPeriod() != null && second.getHalfDayPeriod() != null
-                && !first.getHalfDayPeriod().equals(second.getHalfDayPeriod())) {
-            return false;
-        }
-        return true;
+                && opposite);
     }
 
-    private double round(double value) {
-        return BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP).doubleValue();
+    // Keep ownership failures indistinguishable from unknown application IDs.
+    private void requireOwner(CourseApplication application, User employee) {
+        if (!application.getApplicant().getUserId().equals(employee.getUserId())) {
+            throw new ResponseStatusException(NOT_FOUND, "Application not found.");
+        }
+    }
+
+    // Editing or deciding a finished request would overwrite its history.
+    public void requirePending(CourseApplication application) {
+        if (application.getStatus() != ApplicationStatus.APPLIED
+                && application.getStatus() != ApplicationStatus.UPDATED) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST, "Only Applied or Updated applications can be changed.");
+        }
+    }
+
+    // Enforce the same text limits even when a service is called outside an HTML form.
+    private String required(String value, String label, int max) {
+        if (value == null || value.isBlank() || value.length() > max) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    label + " is required and must be at most " + max + " characters.");
+        }
+        return value.trim();
+    }
+
+    // Copy only editable details; never copy status, applicant or approval fields.
+    private void copyOther(CourseApplicationForm form, CourseApplication application) {
+        application.setCourseTitle(form.getCourseTitle());
+        application.setCourseCategory(form.getCourseCategory());
+        application.setTrainingProvider(form.getTrainingProvider());
+        application.setCourseStartDate(form.getCourseStartDate());
+        application.setCourseEndDate(form.getCourseEndDate());
+        application.setCourseFee(form.getCourseFee());
+        application.setHalfDayPeriod(form.getHalfDayPeriod());
+        application.setJustification(form.getJustification());
+        application.setWorkDissemination(form.getWorkDissemination());
+    }
+
+    // This is used only for a custom-date offer; fixed dates are loaded from its schedule.
+    private void copyDatesAndReason(CatalogueApplicationForm form, CourseApplication application) {
+        application.setCourseStartDate(form.getCourseStartDate());
+        application.setCourseEndDate(form.getCourseEndDate());
+        application.setHalfDayPeriod(form.getHalfDayPeriod());
+        application.setJustification(form.getJustification());
+        application.setWorkDissemination(form.getWorkDissemination());
     }
 }

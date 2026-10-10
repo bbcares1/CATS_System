@@ -1,8 +1,5 @@
+// Stores one offered date option and its capacity for a catalogue course.
 package group6.project.model;
-
-import java.time.LocalDate;
-
-import group6.project.model.CourseDetail;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,25 +8,27 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.EqualsAndHashCode;
+import jakarta.persistence.Version;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "course_batch")
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode
 public class CourseBatch {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long batchId;
 
-    @ManyToOne 
-    @JoinColumn (name = "course_id")
+    @ManyToOne
+    @JoinColumn(name = "course_id")
     private CourseDetail courseDetail;
 
     private LocalDate courseStartDate;
@@ -39,4 +38,7 @@ public class CourseBatch {
     private Double trainingDays;
 
     private Integer capacity;
+    private String halfDayPeriod;
+    private boolean active = true;
+    @Version private Long version;
 }

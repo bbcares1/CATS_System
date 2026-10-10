@@ -1,0 +1,131 @@
+<!doctype html>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Training calendar', ${workspace}, 'calendar', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>Training calendar</h1>
+        </div>
+      </div>
+      <!-- Calendar shows only attendance from approved requests, with no private application details. -->
+
+      <div class="card">
+        <div class="card-body">
+          <form
+            method="get"
+            th:action="@{/training/calendar}"
+            class="cats-grid cats-grid-3"
+          >
+            <div>
+              <label for="month" class="form-label"> Month </label>
+              <select id="month" name="month" class="form-select">
+                <option
+                  th:each="choice : ${months}"
+                  th:value="${choice}"
+                  th:selected="${choice == month}"
+                  th:text="${#temporals.format(choice.atDay(1), 'MMMM yyyy', T(java.util.Locale).ENGLISH)}"
+                ></option>
+              </select>
+            </div>
+            <div>
+              <label for="category" class="form-label"> Category </label>
+              <select id="category" name="category" class="form-select">
+                <option value="">All categories</option>
+                <option
+                  th:each="c : ${categories}"
+                  th:value="${c}"
+                  th:text="${c.displayName}"
+                  th:selected="${c == category}"
+                ></option>
+              </select>
+            </div>
+            <div class="cats-page-actions">
+              <button class="btn btn-primary">Show month</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="cats-page-actions">
+        <a
+          class="btn btn-outline-secondary"
+          th:if="${previous.year >= 2000}"
+          th:href="@{/training/calendar(month=${previous},category=${category})}"
+        >
+          Previous month
+        </a>
+        <strong
+          th:text="${#temporals.format(month.atDay(1),'MMMM yyyy', T(java.util.Locale).ENGLISH)}"
+        >
+        </strong>
+        <a
+          class="btn btn-outline-secondary"
+          th:if="${next.year <= 2100}"
+          th:href="@{/training/calendar(month=${next},category=${category})}"
+        >
+          Next month
+        </a>
+      </div>
+      <div class="card">
+        <div class="table-responsive" tabindex="0">
+          <table class="table cats-calendar">
+            <caption
+              class="visually-hidden"
+              th:text="'Approved attendance for ' + ${month}"
+            ></caption>
+            <thead>
+              <tr>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+                <th>Saturday</th>
+                <th>Sunday</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="week : ${weeks}">
+                <td
+                  th:each="day : ${week}"
+                  th:classappend="${!day.currentMonth ? 'cats-calendar-outside' : day.weekend or day.holiday != null ? 'cats-calendar-nonworking' : ''}"
+                >
+                  <time
+                    th:datetime="${day.date}"
+                    th:text="${day.date.dayOfMonth}"
+                  >
+                  </time>
+                  <div
+                    class="cats-cell-sub"
+                    th:if="${day.holiday != null}"
+                    th:text="${day.holiday}"
+                  ></div>
+                  <div
+                    class="cats-calendar-entry"
+                    th:each="entry : ${day.attendance}"
+                  >
+                    <strong th:text="${entry.employee}"> </strong>
+                    <div class="cats-cell-sub" th:text="${entry.staffId}"></div>
+                    <div th:text="${entry.title}"></div>
+                    <div
+                      class="cats-cell-sub"
+                      th:text="${entry.category?.displayName ?: 'Unspecified'}"
+                    ></div>
+                    <span
+                      class="cats-tag"
+                      th:text="${#strings.isEmpty(entry.halfDay) ? 'Full day' : entry.halfDay}"
+                    >
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

@@ -1,3 +1,4 @@
+// We check Manager lookups, pending requests and access to team applications.
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,10 +10,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import group6.project.model.ApplicationStatus;
+import group6.project.model.CourseApplication;
+import group6.project.model.CourseCategoryType;
+import group6.project.model.Manager;
+import group6.project.model.Staff;
+import group6.project.repo.CourseApplicationRepo;
+import group6.project.repo.ManagerRepo;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,25 +26,21 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import group6.project.model.ApplicationStatus;
-import group6.project.model.CourseApplication;
-import group6.project.model.CourseCategoryType;
-import group6.project.model.Manager;
-import group6.project.model.Staff;
-import group6.project.repo.CourseApplicationRepo;
-import group6.project.repo.ManagerRepo;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class ManagerServiceTest {
 
-    @Mock
-    private ManagerRepo managerRepo;
+    @Mock private ManagerRepo managerRepo;
 
-    @Mock
-    private CourseApplicationRepo courseApplicationRepo;
+    @Mock private CourseApplicationRepo courseApplicationRepo;
 
-    @InjectMocks
-    private ManagerService managerService;
+    @Mock private group6.project.repo.StaffRepo employees;
+
+    @InjectMocks private ManagerService managerService;
 
     @Test
     void getManagerReturnsTheManager() {
@@ -57,8 +57,8 @@ class ManagerServiceTest {
     void getManagerThatDoesNotExistGivesNotFound() {
         when(managerRepo.findById(99)).thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getManager(99));
+        ResponseStatusException error =
+                assertThrows(ResponseStatusException.class, () -> managerService.getManager(99));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
     }
@@ -76,8 +76,10 @@ class ManagerServiceTest {
     void getManagerByUnknownStaffIdGivesNotFound() {
         when(managerRepo.findByStaffId("X999")).thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getManagerByStaffId("X999"));
+        ResponseStatusException error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.getManagerByStaffId("X999"));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
     }
@@ -89,8 +91,8 @@ class ManagerServiceTest {
         CourseApplication updated = application(11, 2, "S002", ApplicationStatus.UPDATED);
         CourseApplication namesake = application(12, 3, "S003", ApplicationStatus.APPLIED);
         when(managerRepo.findById(1)).thenReturn(Optional.of(manager));
-        when(courseApplicationRepo.findPendingForManager(1,
-                List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED)))
+        when(courseApplicationRepo.findPendingForManager(
+                        1, List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED)))
                 .thenReturn(List.of(first, updated, namesake));
 
         var groups = managerService.getPendingApplicationGroups(1);
@@ -98,8 +100,11 @@ class ManagerServiceTest {
         assertEquals(2, groups.size());
         assertEquals(2, groups.getFirst().employeeId());
         assertEquals("S002", groups.getFirst().staffId());
-        assertEquals(List.of(10, 11), groups.getFirst().applications().stream()
-                .map(ManagerService.ApplicationView::applicationId).toList());
+        assertEquals(
+                List.of(10, 11),
+                groups.getFirst().applications().stream()
+                        .map(CourseApplication::getCourseId)
+                        .toList());
         assertEquals(3, groups.get(1).employeeId());
         assertEquals("S003", groups.get(1).staffId());
         assertEquals("Alex", groups.getFirst().employeeName());
@@ -110,8 +115,8 @@ class ManagerServiceTest {
     @Test
     void managerWithNoPendingApplicationsGetsAnEmptyList() {
         when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
-        when(courseApplicationRepo.findPendingForManager(1,
-                List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED)))
+        when(courseApplicationRepo.findPendingForManager(
+                        1, List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED)))
                 .thenReturn(List.of());
 
         assertEquals(List.of(), managerService.getPendingApplicationGroups(1));
@@ -121,8 +126,10 @@ class ManagerServiceTest {
     void unknownManagerCannotQueryApplications() {
         when(managerRepo.findById(99)).thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getPendingApplicationGroups(99));
+        ResponseStatusException error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.getPendingApplicationGroups(99));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
         verifyNoInteractions(courseApplicationRepo);
@@ -139,21 +146,21 @@ class ManagerServiceTest {
 
         var detail = managerService.getApplicationForManager(1, 10);
 
-        assertEquals("Alex", detail.applicantName());
-        assertEquals("S002", detail.staffId());
-        assertEquals("Java architecture", detail.title());
-        assertEquals(CourseCategoryType.EXTERNAL_COURSE, detail.category());
-        assertEquals("NUS-ISS", detail.provider());
-        assertEquals(LocalDate.of(2026, 11, 12), detail.startDate());
-        assertEquals(LocalDate.of(2026, 11, 13), detail.endDate());
-        assertEquals(2.0, detail.trainingDays());
-        assertEquals(1800.0, detail.fee());
-        assertEquals("Improve our system design.", detail.justification());
-        assertEquals("Share the learning with the team.", detail.workDissemination());
-        assertEquals(ApplicationStatus.REJECTED, detail.status());
-        assertEquals(application.getReviewedAt(), detail.reviewedAt());
-        assertEquals(application.getDecisionReason(), detail.decisionReason());
-        assertEquals(application.getExperienceComments(), detail.experienceComments());
+        assertEquals("Alex", detail.getApplicant().getName());
+        assertEquals("S002", detail.getApplicant().getStaffId());
+        assertEquals("Java architecture", detail.getCourseTitle());
+        assertEquals(CourseCategoryType.EXTERNAL_COURSE, detail.getCourseCategory());
+        assertEquals("NUS-ISS", detail.getTrainingProvider());
+        assertEquals(LocalDate.of(2026, 11, 12), detail.getCourseStartDate());
+        assertEquals(LocalDate.of(2026, 11, 13), detail.getCourseEndDate());
+        assertEquals(2.0, detail.getTrainingDays());
+        assertEquals(new java.math.BigDecimal("1800.0"), detail.getCourseFee());
+        assertEquals("Improve our system design.", detail.getJustification());
+        assertEquals("Share the learning with the team.", detail.getWorkDissemination());
+        assertEquals(ApplicationStatus.REJECTED, detail.getStatus());
+        assertEquals(application.getReviewedAt(), detail.getReviewedAt());
+        assertEquals(application.getDecisionReason(), detail.getDecisionReason());
+        assertEquals(application.getExperienceComments(), detail.getExperienceComments());
         verify(courseApplicationRepo, never()).save(any());
     }
 
@@ -162,8 +169,10 @@ class ManagerServiceTest {
         when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
         when(courseApplicationRepo.findForManager(99, 1)).thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getApplicationForManager(1, 99));
+        ResponseStatusException error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.getApplicationForManager(1, 99));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
     }
@@ -174,8 +183,8 @@ class ManagerServiceTest {
         return manager;
     }
 
-    private CourseApplication application(Integer id, Integer employeeId, String staffId,
-            ApplicationStatus status) {
+    private CourseApplication application(
+            Integer id, Integer employeeId, String staffId, ApplicationStatus status) {
         Staff employee = new Staff();
         employee.setUserId(employeeId);
         employee.setName("Alex");
@@ -190,7 +199,7 @@ class ManagerServiceTest {
         application.setCourseStartDate(LocalDate.of(2026, 11, 12));
         application.setCourseEndDate(LocalDate.of(2026, 11, 13));
         application.setTrainingDays(2.0);
-        application.setCourseFee(1800.0);
+        application.setCourseFee(new java.math.BigDecimal("1800.0"));
         application.setJustification("Improve our system design.");
         application.setWorkDissemination("Share the learning with the team.");
         application.setStatus(status);
