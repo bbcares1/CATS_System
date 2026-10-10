@@ -23,7 +23,9 @@
             <dt>Course</dt>
             <dd th:text="${claim.courseApplication.courseTitle}"></dd>
             <dt>Amount</dt>
-            <dd th:text="'$' + ${claim.amount}"></dd>
+            <dd
+              th:text="'$' + ${#numbers.formatDecimal(claim.amount,1,'COMMA',2,'POINT')}"
+            ></dd>
             <dt>Status</dt>
             <dd>
               <span
@@ -42,7 +44,9 @@
               th:text="${claim.reviewer != null ? claim.reviewer.name : 'Pending review'}"
             ></dd>
             <dt>Reimbursement recorded</dt>
-            <dd th:text="${claim.reimbursedAt ?: 'Not recorded'}"></dd>
+            <dd
+              th:text="${claim.reimbursedAt == null ? 'Not recorded' : #temporals.format(claim.reimbursedAt,'d MMM yyyy HH:mm',T(java.util.Locale).ENGLISH)}"
+            ></dd>
             <dt>Payment reference</dt>
             <dd th:text="${claim.paymentReference ?: 'Not recorded'}"></dd>
           </dl>

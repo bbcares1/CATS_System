@@ -57,11 +57,11 @@
                 ></td>
                 <td
                   class="cats-num"
-                  th:text="${'$' + #numbers.formatDecimal(row.summary.budget,1,2)}"
+                  th:text="${'$' + #numbers.formatDecimal(row.summary.budget,1,'COMMA',2,'POINT')}"
                 ></td>
                 <td
                   class="cats-num"
-                  th:text="${'$' + #numbers.formatDecimal(row.summary.reservedBudget,1,2) + ' / $' + #numbers.formatDecimal(row.summary.usedBudget,1,2)}"
+                  th:text="${'$' + #numbers.formatDecimal(row.summary.reservedBudget,1,'COMMA',2,'POINT') + ' / $' + #numbers.formatDecimal(row.summary.usedBudget,1,'COMMA',2,'POINT')}"
                 ></td>
                 <td>
                   <a

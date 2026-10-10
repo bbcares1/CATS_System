@@ -20,11 +20,17 @@
           </p>
           <dl class="cats-dl">
             <dt>Approved and completed course fees</dt>
-            <dd th:text="'$' + ${summary.usedBudget}"></dd>
+            <dd
+              th:text="'$' + ${#numbers.formatDecimal(summary.usedBudget,1,'COMMA',2,'POINT')}"
+            ></dd>
             <dt>Budget remaining</dt>
-            <dd th:text="'$' + ${summary.remainingBudget}"></dd>
+            <dd
+              th:text="'$' + ${#numbers.formatDecimal(summary.remainingBudget,1,'COMMA',2,'POINT')}"
+            ></dd>
             <dt>Reimbursed for this year's courses</dt>
-            <dd th:text="'$' + ${reimbursed}"></dd>
+            <dd
+              th:text="'$' + ${#numbers.formatDecimal(reimbursed,1,'COMMA',2,'POINT')}"
+            ></dd>
           </dl>
           <form
             th:if="${!#lists.isEmpty(eligible)}"
@@ -49,7 +55,7 @@
                 <option
                   th:each="c : ${eligible}"
                   th:value="${c.courseId}"
-                  th:text="${c.courseTitle + ' ($' + c.courseFee + ')'}"
+                  th:text="${c.courseTitle + ' ($' + #numbers.formatDecimal(c.courseFee,1,'COMMA',2,'POINT') + ')'}"
                 ></option>
               </select>
             </div>
@@ -139,7 +145,9 @@
             <tbody>
               <tr th:each="c : ${claims}">
                 <td th:text="${c.courseTitle}"></td>
-                <td th:text="'$' + ${c.amount}"></td>
+                <td
+                  th:text="'$' + ${#numbers.formatDecimal(c.amount,1,'COMMA',2,'POINT')}"
+                ></td>
                 <td>
                   <span
                     th:replace="~{fragments/ui :: status(${c.applicationStatus})}"

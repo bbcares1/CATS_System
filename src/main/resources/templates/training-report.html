@@ -103,11 +103,17 @@
         <div class="card-body">
           <dl class="cats-dl">
             <dt>Approved/completed course fees</dt>
-            <dd th:text="'$' + ${report.committedFees}"></dd>
+            <dd
+              th:text="'$' + ${#numbers.formatDecimal(report.committedFees,1,'COMMA',2,'POINT')}"
+            ></dd>
             <dt>Approved fee claims</dt>
-            <dd th:text="'$' + ${report.approvedClaims}"></dd>
+            <dd
+              th:text="'$' + ${#numbers.formatDecimal(report.approvedClaims,1,'COMMA',2,'POINT')}"
+            ></dd>
             <dt>Actual reimbursements</dt>
-            <dd th:text="'$' + ${report.reimbursed}"></dd>
+            <dd
+              th:text="'$' + ${#numbers.formatDecimal(report.reimbursed,1,'COMMA',2,'POINT')}"
+            ></dd>
           </dl>
         </div>
       </div>
@@ -133,23 +139,37 @@
                 </td>
                 <td th:text="${r.category?.displayName ?: 'Unspecified'}"></td>
                 <td>
-                  <span th:text="${r.start}"> </span>
+                  <span
+                    th:text="${#temporals.format(r.start,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
+                  >
+                  </span>
                   <br />
-                  <span th:text="${r.end}"> </span>
+                  <span
+                    th:text="${#temporals.format(r.end,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
+                  >
+                  </span>
                 </td>
                 <td>
                   <span th:text="${r.days ?: '—'}"> </span>
                   days
-                  <div th:text="${'$' + r.fee}"></div>
+                  <div
+                    th:text="${'$' + #numbers.formatDecimal(r.fee,1,'COMMA',2,'POINT')}"
+                  ></div>
                 </td>
                 <td>
                   <span th:replace="~{fragments/ui :: status(${r.status})}">
                   </span>
                 </td>
                 <td>
-                  <span th:text="'$' + ${r.approvedClaim}"> </span>
+                  <span
+                    th:text="'$' + ${#numbers.formatDecimal(r.approvedClaim,1,'COMMA',2,'POINT')}"
+                  >
+                  </span>
                   /
-                  <span th:text="'$' + ${r.reimbursed}"> </span>
+                  <span
+                    th:text="'$' + ${#numbers.formatDecimal(r.reimbursed,1,'COMMA',2,'POINT')}"
+                  >
+                  </span>
                 </td>
               </tr>
               <tr th:if="${#lists.isEmpty(rows)}">
@@ -221,10 +241,10 @@
                   th:text="${a.summary.dayLimit + ' / ' + a.summary.totalDays}"
                 ></td>
                 <td
-                  th:text="${a.summary.budget + ' / ' + a.summary.totalBudget}"
+                  th:text="${'$' + #numbers.formatDecimal(a.summary.budget,1,'COMMA',2,'POINT') + ' / $' + #numbers.formatDecimal(a.summary.totalBudget,1,'COMMA',2,'POINT')}"
                 ></td>
                 <td
-                  th:text="${a.summary.remainingDays + ' / ' + a.summary.remainingBudget}"
+                  th:text="${a.summary.remainingDays + ' / $' + #numbers.formatDecimal(a.summary.remainingBudget,1,'COMMA',2,'POINT')}"
                 ></td>
               </tr>
               <tr th:if="${#lists.isEmpty(report.annual)}">

@@ -86,9 +86,14 @@
       <div th:if="${schedule != null}" class="card card-body">
         <h2>Suggested dates</h2>
         <p>
-          <b th:text="${schedule.start}"></b> to
-          <b th:text="${schedule.end}"></b> ·
-          <span th:text="${schedule.days}"></span> training days
+          <b
+            th:text="${#temporals.format(schedule.start,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
+          ></b>
+          to
+          <b
+            th:text="${#temporals.format(schedule.end,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
+          ></b>
+          · <span th:text="${schedule.days}"></span> training days
         </p>
         <p class="text-muted">Weekends and public holidays are excluded.</p>
         <ul>

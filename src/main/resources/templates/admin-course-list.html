@@ -39,7 +39,7 @@
                 <td><span th:text="${row.provider.name}"></span></td>
                 <td>
                   <span
-                    th:text="${#numbers.formatDecimal(row.courseFee,1,2)}"
+                    th:text="${#numbers.formatDecimal(row.courseFee,1,'COMMA',2,'POINT')}"
                   ></span>
                 </td>
                 <td>
@@ -55,11 +55,8 @@
                     <form
                       method="post"
                       th:action="@{/admin/courses/{id}/delete(id=${row.courseId})}"
-                      onsubmit="
-                        return confirm(
-                          'Remove this record from active use? Referenced records may be archived or kept.',
-                        );
-                      "
+                      data-confirm-title="Remove this record?"
+                      data-confirm-message="Remove this record from active use? Referenced records may be archived or kept."
                     >
                       <input th:replace="~{fragments/csrf :: token}" />
                       <input

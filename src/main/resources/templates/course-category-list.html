@@ -40,11 +40,8 @@
                     <form
                       method="post"
                       th:action="@{/admin/categories/{id}/delete(id=${row.categoryId})}"
-                      onsubmit="
-                        return confirm(
-                          'Remove this record from active use? Referenced records may be archived or kept.',
-                        );
-                      "
+                      data-confirm-title="Remove this record?"
+                      data-confirm-message="Remove this record from active use? Referenced records may be archived or kept."
                     >
                       <input th:replace="~{fragments/csrf :: token}" />
                       <input

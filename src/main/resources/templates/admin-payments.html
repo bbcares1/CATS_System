@@ -33,7 +33,9 @@
                   <strong th:text="${c.applicantName}"> </strong>
                   <div th:text="${c.courseTitle}"></div>
                 </td>
-                <td th:text="'$' + ${c.amount}"></td>
+                <td
+                  th:text="'$' + ${#numbers.formatDecimal(c.amount,1,'COMMA',2,'POINT')}"
+                ></td>
                 <td th:text="${c.reviewerName}"></td>
                 <td>
                   <form
@@ -70,7 +72,7 @@
                     <strong th:text="${c.paymentReference}"> </strong>
                     <div
                       class="cats-cell-sub"
-                      th:text="${#temporals.format(c.reimbursedAt,'d MMM yyyy HH:mm')}"
+                      th:text="${#temporals.format(c.reimbursedAt,'d MMM yyyy HH:mm',T(java.util.Locale).ENGLISH)}"
                     ></div>
                   </div>
                 </td>

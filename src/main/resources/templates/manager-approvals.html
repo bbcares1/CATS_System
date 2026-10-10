@@ -77,12 +77,12 @@
                 </td>
                 <td class="text-nowrap">
                   <span
-                    th:text="${a.courseStartDate != null ? #temporals.format(a.courseStartDate, 'd MMM yyyy') : '—'}"
+                    th:text="${a.courseStartDate != null ? #temporals.format(a.courseStartDate,'d MMM yyyy',T(java.util.Locale).ENGLISH) : '—'}"
                     >12 Nov 2026</span
                   >
                   &ndash;
                   <span
-                    th:text="${a.courseEndDate != null ? #temporals.format(a.courseEndDate, 'd MMM yyyy') : '—'}"
+                    th:text="${a.courseEndDate != null ? #temporals.format(a.courseEndDate,'d MMM yyyy',T(java.util.Locale).ENGLISH) : '—'}"
                     >14 Nov 2026</span
                   >
                 </td>

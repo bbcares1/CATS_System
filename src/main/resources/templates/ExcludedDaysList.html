@@ -113,7 +113,7 @@
               >
                 <td
                   class="text-nowrap"
-                  th:text="${#temporals.format(day.date, 'd MMM yyyy')}"
+                  th:text="${#temporals.format(day.date,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
                 >
                   1 Jan 2026
                 </td>

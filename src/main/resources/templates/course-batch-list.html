@@ -37,7 +37,7 @@
                 <td><b th:text="${row.courseDetail.title}"></b></td>
                 <td>
                   <span
-                    th:text="${row.courseStartDate} + ' to ' + ${row.courseEndDate}"
+                    th:text="${#temporals.format(row.courseStartDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)} + ' to ' + ${#temporals.format(row.courseEndDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
                   ></span>
                   <span th:text="${row.halfDayPeriod}"></span>
                 </td>
@@ -54,11 +54,8 @@
                     <form
                       method="post"
                       th:action="@{/admin/batches/{id}/delete(id=${row.batchId})}"
-                      onsubmit="
-                        return confirm(
-                          'Remove this record from active use? Referenced records may be archived or kept.',
-                        );
-                      "
+                      data-confirm-title="Remove this record?"
+                      data-confirm-message="Remove this record from active use? Referenced records may be archived or kept."
                     >
                       <input th:replace="~{fragments/csrf :: token}" />
                       <input

@@ -31,9 +31,11 @@
                   <div class="cats-cell-sub" th:text="${c.staffId}"></div>
                 </td>
                 <td th:text="${c.courseTitle}"></td>
-                <td th:text="'$' + ${c.amount}"></td>
                 <td
-                  th:text="${#temporals.format(c.submittedAt,'d MMM yyyy')}"
+                  th:text="'$' + ${#numbers.formatDecimal(c.amount,1,'COMMA',2,'POINT')}"
+                ></td>
+                <td
+                  th:text="${#temporals.format(c.submittedAt,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
                 ></td>
                 <td>
                   <a th:href="@{/manager/claims/{id}(id=${c.applicationId})}">

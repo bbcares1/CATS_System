@@ -85,14 +85,14 @@
                 th:value="${choice.batch.batchId}"
                 th:attr="data-version=${choice.batch.version}"
                 th:disabled="${choice.places == 0}"
-                th:text="${#temporals.format(choice.batch.courseStartDate,'d MMM yyyy')} + ' – ' + ${#temporals.format(choice.batch.courseEndDate,'d MMM yyyy')} + ' ' + ${choice.batch.halfDayPeriod ?: ''} + ' (' + ${choice.places} + ' places)'"
+                th:text="${#temporals.format(choice.batch.courseStartDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)} + ' – ' + ${#temporals.format(choice.batch.courseEndDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)} + ' ' + ${choice.batch.halfDayPeriod ?: ''} + ' (' + ${choice.places} + ' places)'"
               ></option>
             </select>
           </div>
           <p th:if="${existing != null and existing.catalogueBatch != null}">
             Fixed schedule:
             <span
-              th:text="${#temporals.format(existing.courseStartDate,'d MMM yyyy')} + ' – ' + ${#temporals.format(existing.courseEndDate,'d MMM yyyy')}"
+              th:text="${#temporals.format(existing.courseStartDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)} + ' – ' + ${#temporals.format(existing.courseEndDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
             ></span>
             <span th:text="${existing.halfDayPeriod}"></span>
           </p>

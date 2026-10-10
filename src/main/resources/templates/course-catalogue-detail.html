@@ -29,7 +29,7 @@
         <p>
           <b>Fee: </b
           ><span
-            th:text="${course.courseFee.signum() == 0} ? 'No fee' : '$' + ${#numbers.formatDecimal(course.courseFee,1,2)}"
+            th:text="${course.courseFee.signum() == 0} ? 'No fee' : '$' + ${#numbers.formatDecimal(course.courseFee,1,'COMMA',2,'POINT')}"
           ></span>
         </p>
         <p th:if="${course.customDatesAllowed}">
@@ -44,7 +44,7 @@
         ></p>
         <div th:each="choice : ${schedules}" class="border-bottom py-3">
           <b
-            th:text="${choice.batch.courseStartDate} + ' to ' + ${choice.batch.courseEndDate}"
+            th:text="${#temporals.format(choice.batch.courseStartDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)} + ' to ' + ${#temporals.format(choice.batch.courseEndDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
           ></b>
           <span th:text="${choice.batch.halfDayPeriod}"></span>
           <p class="mb-0">
