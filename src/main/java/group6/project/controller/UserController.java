@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import group6.project.model.Admin;
+import group6.project.model.Manager;
+import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.service.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -28,11 +31,13 @@ public class UserController {
     
     @GetMapping("/employee/login")
     public String employeeLoginPage(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (userService.isManager(user)) {
+
+        Object user = session.getAttribute("user");
+
+        if (user instanceof Manager) {
             return "redirect:/manager/home";
         }
-        if (userService.isStaff(user)) {
+        if (user instanceof Staff) {
             return "redirect:/staff/home";
         }
         return "employee-login";
@@ -44,18 +49,17 @@ public class UserController {
                                    @RequestParam("designation") String designation,
                                    HttpSession session,
                                    Model model) {
+
         User user = userService.authenticate(userName, password);
 
-       
-        if (user != null && userService.isStaffOrManager(user)) {
-            if (user != null && userService.isManager(user) && designation.equalsIgnoreCase("Manager")) {
-                session.setAttribute("user", user);
-                return "redirect:/manager/home";
-            }
-            if (user != null && userService.isStaff(user) && designation.equalsIgnoreCase("Staff")) {
-                session.setAttribute("user", user);
-                return "redirect:/staff/home";
-            }
+        if (user instanceof Manager manager && "Manager".equalsIgnoreCase(designation)) {
+            session.setAttribute("user", manager);
+            return "redirect:/manager/home";
+        }
+
+        if (user instanceof Staff staff && !(user instanceof Manager) && "Staff".equalsIgnoreCase(designation)) {
+            session.setAttribute("user", staff);
+            return "redirect:/staff/home";
         }
 
         model.addAttribute("error", "Incorrect username or password for the Employee!");
@@ -65,23 +69,26 @@ public class UserController {
     
     @GetMapping("/admin/login")
     public String adminLoginPage(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user != null && userService.isAdmin(user)) {
+
+        Object user = session.getAttribute("user");
+
+        if (user instanceof Admin) {
             return "redirect:/admin/home";
         }
+
         return "admin-login";
     }
 
     @PostMapping("/admin/login")
     public String handleAdminLogin(@RequestParam("userName") String userName,
                                    @RequestParam("password") String password,
-                                   HttpSession session,
-                                   Model model) {
+                                    HttpSession session,
+                                    Model model) {
+
         User user = userService.authenticate(userName, password);
 
-        
-        if (user != null && userService.isAdmin(user)) {
-            session.setAttribute("user", user);
+        if (user instanceof Admin admin) {
+            session.setAttribute("user", admin);
             return "redirect:/admin/home";
         }
 
