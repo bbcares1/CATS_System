@@ -26,7 +26,6 @@ import org.springframework.mail.MailException;
 
 import group6.project.model.Admin;
 import group6.project.model.AdminEmailForm;
-import group6.project.model.AccountForm;
 import group6.project.model.ApprovalHierarchy;
 import group6.project.model.CourseCategory;
 import group6.project.model.CourseBatch;
@@ -153,27 +152,9 @@ public class AdminController {
   // ------- this part below is about budgetmanagement
   // -----------------------------------------------
 
-    @GetMapping("/staffs/update/{Id}")
-    public String update_budget(Model model, @PathVariable("Id") Integer Id) {
-        Optional<Staff> selectedStaff = adminService.getIdStaff(Id);
-        if (selectedStaff.isEmpty()) {
-            throw new RuntimeException("can not find ID as " + Id + " staff");
-        } else {
-            Staff staff = selectedStaff.get();
-            model.addAttribute("staff", staff);
-            model.addAttribute("accountRoles", List.of(Roles.STAFF, Roles.MANAGER));
-            model.addAttribute("managerList", adminService.getManagerList());
-            return "StaffForm";
-        }
-    }
 
-    @GetMapping("/staffs")
-    public String showStaffList(Model model) {
-        List<Staff> staffs = adminService.getAllStaff();
-        model.addAttribute("staffs", staffs);
-        model.addAttribute("admins", adminService.getAllAdmins());
-        return "StaffList";
-    }
+
+
 
     @GetMapping("/budgets")
     public String showBudgetList(Model model) {
@@ -224,65 +205,13 @@ public class AdminController {
         return "redirect:/admin/budgets";
     }
 
-    @GetMapping("/staffs/add")
-    public String createNewStaff(Model model) {
-        model.addAttribute("accountForm", new AccountForm());
-        model.addAttribute("accountRoles", Roles.values());
-        model.addAttribute("managerList", adminService.getManagerList());
 
-        return "StaffForm";
-    }
 
-    @PostMapping("/accounts/create")
-    public String createAccount(
-            @Valid @ModelAttribute("accountForm") AccountForm accountForm,
-            BindingResult result,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        if (result.hasErrors()) {
-            model.addAttribute("accountRoles", Roles.values());
-            model.addAttribute("managerList", adminService.getManagerList());
-            return "StaffForm";
-        }
 
-        try {
-            adminService.createAccount(accountForm);
-        } catch (IllegalArgumentException e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("accountRoles", Roles.values());
-            model.addAttribute("managerList", adminService.getManagerList());
-            return "StaffForm";
-        }
 
-        redirectAttributes.addFlashAttribute(
-                "success", "Account created successfully");
-        return "redirect:/admin/staffs";
-    }
 
-    @PostMapping("/staffs/save")
-    public String saveStaff(
-            @Valid @ModelAttribute("staff") Staff staff,
-            BindingResult result,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        if (result.hasErrors()) {
-            model.addAttribute("managerList", adminService.getManagerList());
-            return "StaffForm";
-        }
-        adminService.saveStaff(staff);
-        redirectAttributes.addFlashAttribute(
-                "success", "Staff details saved successfully");
-        return "redirect:/admin/staffs";
-    }
 
-    @PostMapping("/staffs/delete/{id}")
-    public String deleteById(
-            @PathVariable("id") Integer id,
-            RedirectAttributes redirectAttributes) {
-        adminService.deleteStaffById(id);
-        redirectAttributes.addFlashAttribute("success", "Staff account deleted successfully");
-        return "redirect:/admin/staffs";
-    }
+
 
     // this part below is about course schedule calendar
     // -------------------------------------------------

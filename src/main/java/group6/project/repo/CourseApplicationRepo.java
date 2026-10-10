@@ -35,4 +35,9 @@ public interface CourseApplicationRepo extends JpaRepository<CourseApplication,I
     Optional<CourseApplication> findForManager(
             @Param("applicationId") Integer applicationId,
             @Param("managerId") Integer managerId);
+
+    boolean existsByApplicant_UserIdOrReviewer_UserId(Integer applicant, Integer reviewer);
+    boolean existsByApprovalManager_UserId(Integer manager);
+    boolean existsByApprovalManager_UserIdAndStatusIn(Integer manager, List<ApplicationStatus> statuses);
+    boolean existsByApplicant_UserIdAndStatusIn(Integer applicant, List<ApplicationStatus> statuses);
 }

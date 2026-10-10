@@ -22,18 +22,22 @@ public class UserService {
     // Plain passwords are kept for the classroom demo, as agreed by the team.
     public User authenticate(String userName, String password) {
         if (userName == null || password == null) return null;
-        return userRepo.findByUserName(userName.trim())
-                .filter(user -> password.equals(user.getPassword()))
+        return userRepo.findByUserNameIgnoreCase(userName.trim())
+                .filter(user -> user.isActive() && password.equals(user.getPassword()))
                 .orElse(null);
     }
 
-    // Reload the account so a deleted account cannot keep using an old session.
+    // Reload identity; an account edit, disable or role change requires a fresh login.
     public User currentUser(HttpSession session) {
         Object saved = session == null ? null : session.getAttribute("user");
         if (!(saved instanceof User user) || user.getUserId() == null) return null;
         User current = userRepo.findById(user.getUserId()).orElse(null);
-        if (current == null) session.removeAttribute("user");
-        else session.setAttribute("user", current);
+        if (current == null || !current.isActive()
+                || !java.util.Objects.equals(user.getVersion(), current.getVersion())) {
+            session.removeAttribute("user");
+            return null;
+        }
+        session.setAttribute("user", current);
         return current;
     }
 

@@ -49,6 +49,8 @@ import group6.project.repo.CourseCategoryRepository;
 
 @WebMvcTest(controllers = {
         AdminController.class,
+        AccountAdminController.class,
+        LegacyAccountController.class,
         CourseBatchController.class,
         CourseCategoryController.class,
         ExcludedDaysController.class
@@ -73,6 +75,9 @@ class AdminManagementTemplateTest {
                             ? user : null;
                 });
     }
+
+    @MockitoBean
+    private group6.project.service.AccountAdminService accounts;
 
     @MockitoBean
     private AdminService adminService;
@@ -153,6 +158,14 @@ class AdminManagementTemplateTest {
         holiday.setDate(LocalDate.of(2026, 12, 25));
         holiday.setDescription("Christmas Day");
 
+        when(accounts.all()).thenReturn(List.of(staff));
+        when(accounts.managers()).thenReturn(List.of());
+        when(accounts.get(11)).thenReturn(staff);
+        group6.project.form.AccountForm account = new group6.project.form.AccountForm();
+        account.setName(staff.getName()); account.setUserName(staff.getUserName());
+        account.setStaffId(staff.getStaffId()); account.setRole(Roles.STAFF);
+        account.setVersion(0L); account.setEmail("avery@example.test");
+        when(accounts.form(staff)).thenReturn(account);
         when(adminService.getAllStaff()).thenReturn(List.of(staff));
         when(adminService.getAllAdmins()).thenReturn(List.of(new Admin()));
         when(adminService.getManagerList()).thenReturn(List.of(new Manager()));
@@ -175,7 +188,7 @@ class AdminManagementTemplateTest {
 
     @Test
     void adminManagementPagesRenderWithRowsAndConfirmationDialogs() throws Exception {
-        mockMvc.perform(get("/admin/staffs"))
+        mockMvc.perform(get("/admin/accounts"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/calendar\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Course calendar")));
@@ -188,8 +201,8 @@ class AdminManagementTemplateTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Spring (Batch 18, 5.0 days)")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("OCTOBER 2026")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("cats-calendar-table")));
-        mockMvc.perform(get("/admin/staffs/add")).andExpect(status().isOk());
-        mockMvc.perform(get("/admin/staffs/update/11")).andExpect(status().isOk());
+        mockMvc.perform(get("/admin/accounts/new")).andExpect(status().isOk());
+        mockMvc.perform(get("/admin/accounts/11/edit")).andExpect(status().isOk());
         mockMvc.perform(get("/admin/budgets")).andExpect(status().isOk());
         mockMvc.perform(get("/admin/budgets/edit/11")).andExpect(status().isOk());
         mockMvc.perform(get("/admin/hierarchy")).andExpect(status().isOk());
@@ -282,14 +295,14 @@ class AdminManagementTemplateTest {
     }
 
     @Test
-    void accountFormOffersEveryRoleAndEmployeeFieldsAreRoleControlled() throws Exception {
-        mockMvc.perform(get("/admin/staffs/add"))
+    void accountFormOffersEveryRoleAndAnExplicitManagerId() throws Exception {
+        mockMvc.perform(get("/admin/accounts/new"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"ADMIN\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"MANAGER\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"STAFF\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("type=\"email\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("data-account-fields")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"managerId\"")));
     }
 
     @Test
@@ -383,8 +396,7 @@ class AdminManagementTemplateTest {
 
     @Test
     void invalidFormSubmissionsRenderValidationFeedback() throws Exception {
-        mockMvc.perform(post("/admin/accounts/create")).andExpect(status().isOk());
-        mockMvc.perform(post("/admin/staffs/save")).andExpect(status().isOk());
+        mockMvc.perform(post("/admin/accounts/save")).andExpect(status().isOk());
         mockMvc.perform(post("/admin/budgets/save").param("userId", "11"))
                 .andExpect(status().isOk());
         mockMvc.perform(post("/admin/courses/save")).andExpect(status().isOk());

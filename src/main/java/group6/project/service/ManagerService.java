@@ -17,6 +17,7 @@ import group6.project.model.CourseApplication;
 import group6.project.model.CourseCategoryType;
 import group6.project.model.Manager;
 import group6.project.model.Staff;
+import group6.project.model.User;
 import group6.project.repo.CourseApplicationRepo;
 import group6.project.repo.ManagerRepo;
 
@@ -73,7 +74,7 @@ public class ManagerService {
     }
 
     private static ApplicationView toView(CourseApplication application) {
-        Staff applicant = application.getApplicant();
+        User applicant = application.getApplicant();
         return new ApplicationView(application.getCourseId(), applicant.getUserId(),
                 applicant.getName(), applicant.getStaffId(), application.getCourseTitle(),
                 application.getCourseCategory(), application.getTrainingProvider(),

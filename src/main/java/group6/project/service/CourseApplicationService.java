@@ -154,15 +154,13 @@ public class CourseApplicationService {
 
     private double allowanceDays(Staff staff, int year) {
         return entitlementRepo.findByStaff_UserIdAndYear(staff.getUserId(), year)
-                .map(e -> e.getStaff() != null && e.getStaff().getTrainingDays() != null
-                        ? e.getStaff().getTrainingDays() : staff.getTrainingDays())
+                .map(e -> staff.getTrainingDays() == null ? 0 : staff.getTrainingDays())
                 .orElse(staff.getTrainingDays() == null ? 0 : staff.getTrainingDays());
     }
 
     private double allowanceBudget(Staff staff, int year) {
         return entitlementRepo.findByStaff_UserIdAndYear(staff.getUserId(), year)
-                .map(e -> e.getStaff() != null && e.getStaff().getTrainingBudget() != null
-                        ? e.getStaff().getTrainingBudget() : staff.getTrainingBudget())
+                .map(e -> staff.getTrainingBudget() == null ? 0 : staff.getTrainingBudget())
                 .orElse(staff.getTrainingBudget() == null ? 0 : staff.getTrainingBudget());
     }
 

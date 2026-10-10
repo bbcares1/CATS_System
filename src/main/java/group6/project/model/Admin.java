@@ -1,19 +1,10 @@
 package group6.project.model;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import group6.project.model.User;
 
-@Entity 
-@Getter 
-@Setter 
-@NoArgsConstructor 
-@EqualsAndHashCode(callSuper = true) 
-public class Admin extends User{
-    
-  private String staffId;
-}
+@Entity
+@DiscriminatorValue("ADMIN")
+@NoArgsConstructor
+public class Admin extends User {}

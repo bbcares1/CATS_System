@@ -1,4 +1,3 @@
-
 package group6.project.model;
 
 import java.time.LocalDate;
@@ -13,7 +12,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,11 +21,21 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode
 public class CourseApplication {
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer courseId;
+
+    @jakarta.persistence.Version
+    private Long version;
+
+    @ManyToOne
+    @JoinColumn(name = "reviewer_id")
+    private User reviewer;
+
+    @ManyToOne
+    @JoinColumn(name = "approval_manager_id")
+    private User approvalManager;
 
     private double courseFee;
 
@@ -48,7 +56,7 @@ public class CourseApplication {
 
     @ManyToOne
     @JoinColumn(name = "staff_id", nullable = false)
-    private Staff applicant;
+    private User applicant;
 
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status = ApplicationStatus.APPLIED;

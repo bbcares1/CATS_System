@@ -16,7 +16,7 @@ class UserServiceTest {
         UserRepo repo = mock(UserRepo.class);
         Staff staff = new Staff();
         staff.setPassword("demo123");
-        when(repo.findByUserName("staff")).thenReturn(Optional.of(staff));
+        when(repo.findByUserNameIgnoreCase("staff")).thenReturn(Optional.of(staff));
         UserService service = new UserService(repo);
         assertSame(staff, service.authenticate(" staff ", "demo123"));
         assertNull(service.authenticate("staff", "wrong"));

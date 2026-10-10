@@ -30,3 +30,16 @@ Check: `LoginFlowTest` uses the real Spring context, repository and templates to
 Docker, isolated development/test/deployment databases, repeatable demo data and backup/restore are team decisions. They remain in scope even though the lecturer does not require Docker. They support the classroom application without adding a new Java framework.
 
 The old `imran/final-audit` branch remains a reference for verified rules and tests. It is not merged wholesale. Existing branches, database volumes and the current demo remain intact.
+
+## Accounts and identity — Owen, Jialu, Junie and Imran
+
+- Kept the agreed Java hierarchy. One `users` table now stores Staff, Manager and Admin, so a role change can keep the same database ID and history.
+- `AccountAdminController` owns account pages. `AccountForm` sends a `managerId`; the service loads that account instead of binding a nested abstract `User` from the browser. Old account links redirect to these pages.
+- `AccountAdminService` is the single write boundary for account changes. It checks unique identifiers, reporting cycles, open work, the last Admin and old form versions. History-bearing accounts are disabled instead of deleted.
+- The role update is deliberately contained in `UserRepo.changeRole`: JPA cannot turn a managed Staff object into an Admin with `setRole`. Reloading after the update gives the correct subtype.
+- Sessions expire after account changes. Login is case-insensitive for usernames; passwords remain simple classroom credentials and never appear in edit forms.
+- Annual allowances are the next integration step. The old global Staff fields still exist temporarily in this commit and are not the final design.
+
+Read: `admin-account-form.html` → `AccountAdminController` → `AccountAdminService` → `UserRepo`.
+
+Check: `AccountAdministrationIntegrationTest` covers identity/history through role changes, reporting cycles, session expiry, deletion protection and rendered forms. All 89 current tests pass against isolated H2; MySQL validation is still pending.

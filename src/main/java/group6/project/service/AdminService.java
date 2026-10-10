@@ -25,7 +25,6 @@ import jakarta.transaction.Transactional;
 
 import group6.project.model.User;
 import group6.project.model.Admin;
-import group6.project.model.AccountForm;
 import group6.project.model.Manager;
 import group6.project.repo.UserRepo;
 
@@ -87,137 +86,13 @@ public class AdminService {
           return adminRepo.findAll();
      }
 
-     @Transactional
-     public void saveStaff(Staff form) { // this function is use to edit existed staff i separate create and edit into
-                                         // two different method
-          Staff target;
 
-          if (form.getUserId() == null) {
 
-               if (form.getRole() == Roles.MANAGER) {
-                    target = new Manager();
-               } else if (form.getRole() == Roles.STAFF) {
-                    target = new Staff();
-               } else {
-                    throw new IllegalArgumentException(
-                              "Only staff and manager records can be saved here");
-               }
-          } else {
-               Optional<Staff> optionalStaff = staffRepo.findById(form.getUserId());
 
-               if (optionalStaff.isPresent()) {
 
-                    target = optionalStaff.get();
-               } else {
 
-                    throw new IllegalArgumentException("Staff member not found: " + form.getUserId());
-               }
-          }
 
-          target.setName(form.getName());
-          target.setUserName(form.getUserName());
-          target.setDesignation(form.getDesignation());
-          target.setStaffId(form.getStaffId());
-          target.setTrainingBudget(form.getTrainingBudget());
-          target.setTrainingDays(form.getTrainingDays());
-          target.setRole(form.getRole());
-          if (form.getPassword() != null && !form.getPassword().isBlank()) {
-               target.setPassword(form.getPassword());
-          }
 
-          if (form.getManager() != null && form.getManager().getUserId() != null) {
-
-               Integer managerId = form.getManager().getUserId();
-
-               Manager managerObj = managerRepo.findById(managerId).orElse(null);
-               target.setManager(managerObj);
-          } else {
-
-               target.setManager(null);
-          }
-
-          staffRepo.save(target);
-
-     }
-
-     @Transactional // this is used to create a new staff
-     public User createAccount(AccountForm form) {
-          if (form.getRole() == null) {
-               throw new IllegalArgumentException("Please select an account role");
-          }
-
-          String username = form.getUserName().trim();
-          String name = form.getName().trim();
-
-          if (userRepo.findByUserName(username).isPresent()) {
-               throw new IllegalArgumentException("Username already exists");
-          }
-          if (form.getEmail() == null || form.getEmail().isBlank()) {
-               throw new IllegalArgumentException("Email is required");
-          }
-          String email = form.getEmail().trim();
-          if (userRepo.findByEmail(email).isPresent()) {
-               throw new IllegalArgumentException("Email address already belongs to an account");
-          }
-
-          if (form.getRole() != Roles.ADMIN
-                    && (form.getStaffId() == null
-                              || form.getStaffId().isBlank()
-                              || form.getTrainingBudget() == null
-                              || form.getTrainingBudget() < 0
-                              || form.getTrainingDays() == null
-                              || form.getTrainingDays() < 0)) {
-               throw new IllegalArgumentException(
-                         "Staff ID is required and training budget and days must be zero or greater");
-          }
-
-          User account;
-          switch (form.getRole()) {
-               case ADMIN -> {
-                    Admin admin = new Admin();
-                    admin.setStaffId(form.getStaffId());
-                    account = admin;
-               }
-               case MANAGER -> {
-                    Manager manager = new Manager();
-                    setEmployeeFields(manager, form);
-                    account = manager;
-               }
-               case STAFF -> {
-                    Staff staff = new Staff();
-                    setEmployeeFields(staff, form);
-                    account = staff;
-               }
-               default -> throw new IllegalArgumentException(
-                         "Please select a valid account role");
-          }
-
-          account.setUserName(username);
-          account.setName(name);
-          account.setEmail(email);
-          account.setDesignation(form.getDesignation());
-          account.setPassword(form.getPassword());
-          account.setRole(form.getRole());
-
-          return userRepo.save(account);
-     }
-
-     private void setEmployeeFields(Staff employee, AccountForm form) {
-          employee.setStaffId(form.getStaffId());
-          employee.setTrainingBudget(form.getTrainingBudget());
-          employee.setTrainingDays(form.getTrainingDays());
-
-          if (form.getManagerId() != null) {
-               Manager manager = managerRepo.findById(form.getManagerId())
-                         .orElseThrow(() -> new IllegalArgumentException(
-                                   "Selected manager was not found"));
-               employee.setManager(manager);
-          }
-     }
-
-     public void deleteStaffById(Integer id) {
-          staffRepo.deleteById(id);
-     }
 
      public List<Manager> getManagerList() {
           return managerRepo.findAll();
