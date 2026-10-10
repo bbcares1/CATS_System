@@ -5,15 +5,18 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import group6.project.model.CourseCategory;
 import group6.project.repo.CourseCategoryRepository;
 import group6.project.service.CourseCategoryService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestBody;
 
 
@@ -52,9 +55,16 @@ public class CourseCategoryController {
   //Save the created category
   @PostMapping("/admin/categories")
     public String saveCategory(
-    @ModelAttribute CourseCategory courseCategory
+    @Valid @ModelAttribute("courseCategory") CourseCategory courseCategory,
+    BindingResult result,
+    Model model,
+    RedirectAttributes redirectAttributes
     ) {
+    if (result.hasErrors()) {
+      return "course-category-form";
+    }
     courseCategoryService.createCategory(courseCategory);
+    redirectAttributes.addFlashAttribute("success", "Course category created successfully");
 
     return "redirect:/admin/categories";
   }
@@ -70,9 +80,20 @@ public class CourseCategoryController {
   //Submit delete
   @PostMapping("/admin/categories/delete")
     public String deleteCategory(
-    @RequestParam Integer categoryId){
+    @RequestParam Integer categoryId,
+    RedirectAttributes redirectAttributes){
     courseCategoryService.deleteCategory(categoryId);
+    redirectAttributes.addFlashAttribute("success", "Course category deleted successfully");
 
+    return "redirect:/admin/categories";
+  }
+
+  @PostMapping("/admin/categories/delete/{id}")
+  public String deleteCategoryById(
+      @PathVariable("id") Integer categoryId,
+      RedirectAttributes redirectAttributes) {
+    courseCategoryService.deleteCategory(categoryId);
+    redirectAttributes.addFlashAttribute("success", "Course category deleted successfully");
     return "redirect:/admin/categories";
   }
 
@@ -89,8 +110,17 @@ public class CourseCategoryController {
   }
 
   @PostMapping("/admin/categories/edit/{id}")
-  public String updateCategory(@PathVariable ("id") Integer categoryId, @ModelAttribute CourseCategory courseCategory) {
+  public String updateCategory(
+      @PathVariable ("id") Integer categoryId,
+      @Valid @ModelAttribute("courseCategory") CourseCategory courseCategory,
+      BindingResult result,
+      RedirectAttributes redirectAttributes) {
+      if (result.hasErrors()) {
+        courseCategory.setCategoryId(categoryId);
+        return "course-category-edit";
+      }
       courseCategoryService.updateCategory(courseCategory, categoryId);
+      redirectAttributes.addFlashAttribute("success", "Course category updated successfully");
       return "redirect:/admin/categories";
   }
 

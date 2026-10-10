@@ -254,7 +254,26 @@ h1, h2, h3 { text-wrap: balance; }
 .cats-form-section h2 { font-size: .95rem; font-weight: 600; margin: 0 0 4px; }
 .cats-form-section p { color: var(--cats-muted); font-size: .8rem; margin: 0; max-width: 32ch; }
 .cats-form-section .cats-form { max-width: 640px; }
+.cats-form-section[hidden] { display: none !important; }
 @media (max-width: 991.98px) { .cats-form-section { grid-template-columns: 1fr; gap: 10px; } .cats-form-section p { max-width: none; } }
+.cats-calendar-date-picker { max-width: 240px; }
+.cats-weekend-dates { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.cats-weekend-date { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--cats-border); border-radius: 6px; }
+.cats-calendar-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.cats-calendar-month { display: grid; gap: 12px; }
+.cats-calendar-month-title { margin: 0; font-size: 1rem; font-weight: 600; }
+.cats-calendar-table { min-width: 700px; table-layout: fixed; }
+.cats-calendar-table th { text-align: center; white-space: nowrap; }
+.cats-calendar-table td { height: 112px; vertical-align: top; padding: 8px; overflow-wrap: anywhere; }
+.cats-calendar-table .cats-calendar-weekend { background: #f7f8fa; }
+.cats-calendar-day-number { display: block; font-weight: 600; margin-bottom: 6px; }
+.cats-calendar-holiday, .cats-calendar-training { display: grid; gap: 2px; margin-top: 6px; padding: 5px 7px; border-radius: 5px; font-size: .75rem; }
+.cats-calendar-holiday { color: #842029; background: #fce8e8; }
+.cats-calendar-training { color: #1e40af; background: #e8f0ff; }
+.cats-calendar-training strong { font-size: .7rem; text-transform: uppercase; }
+.cats-calendar-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 0; }
+.cats-calendar-summary dt { color: var(--cats-muted); font-size: .8rem; font-weight: 500; }
+.cats-calendar-summary dd { margin: 2px 0 0; font-weight: 600; }
 .cats-form-footer { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
 .cats-summary { background: #f8fafc; border: 1px solid var(--cats-border); padding: 12px 14px; border-radius: .375rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .cats-summary span { font-size: .78rem; color: var(--cats-muted); display: block; }

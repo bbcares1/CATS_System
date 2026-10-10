@@ -1,54 +1,45 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Course Batch Details</title>
-  </head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('Course batch details', 'Admin', 'batches', ~{::#content})}">
+<body>
+<section id="content">
+  <div class="cats-page-header">
+    <div>
+      <a class="cats-back" th:href="@{/admin/batches}">
+        <svg th:replace="~{fragments/icons :: icon('arrow-left')}"></svg>Course batches
+      </a>
+      <h1 th:text="${singleBatch.courseDetail.title}">Course title</h1>
+      <p class="cats-sub" th:text="${'Batch ' + singleBatch.batchId}">Batch 1</p>
+    </div>
+    <div class="cats-page-actions">
+      <a class="btn btn-outline-secondary" th:href="@{/admin/calendar(batchId=${singleBatch.batchId})}">Open calendar</a>
+      <a class="btn btn-primary" th:href="@{/admin/batches/edit/{id}(id=${singleBatch.batchId})}">Edit batch</a>
+    </div>
+  </div>
 
-  <body>
-    <h1>Course Batch Details</h1>
-
-    <p>
-      <strong>Batch ID:</strong>
-      <span th:text="${singleBatch.batchId}"></span>
-    </p>
-
-    <p>
-      <strong>Course:</strong>
-      <span th:text="${singleBatch.courseDetail.title}"></span>
-    </p>
-
-    <p>
-      <strong>Training Provider:</strong>
-      <span th:text="${singleBatch.courseDetail.trainingProvider}"></span>
-    </p>
-
-    <p>
-      <strong>Course Fee:</strong>
-      <span th:text="${singleBatch.courseDetail.courseFee}"></span>
-    </p>
-
-    <p>
-      <strong>Start Date:</strong>
-      <span th:text="${singleBatch.courseStartDate}"></span>
-    </p>
-
-    <p>
-      <strong>End Date:</strong>
-      <span th:text="${singleBatch.courseEndDate}"></span>
-    </p>
-
-    <p>
-      <strong>Capacity:</strong>
-      <span th:text="${singleBatch.capacity}"></span>
-    </p>
-
-    <br />
-
-    <a th:href="@{/admin/batches/edit/{id}(id=${singleBatch.batchId})}">
-      Edit Batch
-    </a>
-
-    <a th:href="@{/admin/batches}"> Back to Batch List </a>
-  </body>
+  <section class="card" aria-labelledby="batch-details-title">
+    <div class="card-header">
+      <h2 id="batch-details-title" class="cats-card-title">Batch details</h2>
+    </div>
+    <div class="card-body">
+      <dl class="cats-dl">
+        <dt>Batch ID</dt>
+        <dd th:text="${singleBatch.batchId}">1</dd>
+        <dt>Course</dt>
+        <dd th:text="${singleBatch.courseDetail.title}">Course title</dd>
+        <dt>Course fee</dt>
+        <dd th:text="${singleBatch.courseDetail.courseFee != null ? '$' + #numbers.formatDecimal(singleBatch.courseDetail.courseFee, 1, 'COMMA', 2, 'POINT') : '—'}">$1,200.00</dd>
+        <dt>Scheduled start</dt>
+        <dd th:text="${singleBatch.courseStartDate != null ? #temporals.format(singleBatch.courseStartDate, 'd MMM yyyy') : 'Not scheduled'}">Not scheduled</dd>
+        <dt>Scheduled end</dt>
+        <dd th:text="${singleBatch.courseEndDate != null ? #temporals.format(singleBatch.courseEndDate, 'd MMM yyyy') : 'Not scheduled'}">Not scheduled</dd>
+        <dt>Training days</dt>
+        <dd th:text="${singleBatch.trainingDays != null ? singleBatch.trainingDays : '—'}">5</dd>
+        <dt>Capacity</dt>
+        <dd th:text="${singleBatch.capacity != null ? singleBatch.capacity : '—'}">20</dd>
+      </dl>
+    </div>
+  </section>
+</section>
+</body>
 </html>

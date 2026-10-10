@@ -1,39 +1,59 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Delete Course Batch</title>
-  </head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('Delete course batch', 'Admin', 'batches', ~{::#content})}">
+<body>
+<section id="content">
+  <div class="cats-page-header">
+    <div>
+      <a class="cats-back" th:href="@{/admin/batches}">
+        <svg th:replace="~{fragments/icons :: icon('arrow-left')}"></svg>Course batches
+      </a>
+      <h1>Delete course batch</h1>
+      <p class="cats-sub">Deleting a batch does not delete its catalogue course.</p>
+    </div>
+  </div>
 
-  <body>
-    <h1>Delete Course Batch</h1>
-
-    <p>Select the batch you want to delete.</p>
-
-    <form th:action="@{/admin/batches/delete}" method="post">
-      <label for="batchId">Batch:</label>
-
-      <select id="batchId" name="batchId" required>
-        <option value="">-- Select Batch --</option>
-
-        <option
-          th:each="batch : ${batches}"
-          th:value="${batch.batchId}"
-          th:text="${batch.courseDetail.title
-                    + ' | '
-                    + batch.courseStartDate
-                    + ' - '
-                    + batch.courseEndDate}"
-        ></option>
-      </select>
-
-      <br /><br />
-
-      <button type="submit">Delete Batch</button>
-    </form>
-
-    <br />
-
-    <a th:href="@{/admin/batches}">Cancel</a>
-  </body>
+  <section class="card" aria-labelledby="delete-batch-title">
+    <div class="card-header">
+      <h2 id="delete-batch-title" class="cats-card-title">Select a batch to delete</h2>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col">Batch</th>
+            <th scope="col">Course</th>
+            <th scope="col">Scheduled dates</th>
+            <th scope="col" class="cats-row-actions">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="batch : ${batches}" th:with="deleteId='confirm-delete-batch-' + ${batch.batchId}">
+            <td th:text="${'Batch ' + batch.batchId}">Batch 1</td>
+            <td th:text="${batch.courseDetail != null ? batch.courseDetail.title : 'Course unavailable'}">Course</td>
+            <td>
+              <span th:if="${batch.courseStartDate != null}"
+                    th:text="${#temporals.format(batch.courseStartDate, 'd MMM yyyy')}">12 Nov 2026</span>
+              <span th:if="${batch.courseEndDate != null}">
+                &ndash; <span th:text="${#temporals.format(batch.courseEndDate, 'd MMM yyyy')}">20 Nov 2026</span>
+              </span>
+              <span th:if="${batch.courseStartDate == null}" class="cats-cell-sub">Not scheduled</span>
+            </td>
+            <td class="cats-row-actions">
+              <button type="button" class="btn btn-sm btn-outline-danger"
+                      data-bs-toggle="modal" th:attr="data-bs-target='#' + ${deleteId}">Delete</button>
+              <div th:replace="~{fragments/ui :: confirm(${deleteId}, 'Delete course batch', 'This permanently deletes the batch. The catalogue course will remain available.', @{/admin/batches/delete(batchId=${batch.batchId})}, 'Delete batch', true)}"></div>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(batches)}">
+            <td colspan="4">
+              <div th:replace="~{fragments/ui :: empty('book', 'No course batches to delete', 'Create a batch before managing batch deletions.', ~{})}"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+</body>
 </html>

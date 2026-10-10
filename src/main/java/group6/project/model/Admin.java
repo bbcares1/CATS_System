@@ -15,6 +15,5 @@ import group6.project.model.User;
 @EqualsAndHashCode(callSuper = true) 
 public class Admin extends User{
     
-    
-    private String staffNo;
+  private String staffId;
 }

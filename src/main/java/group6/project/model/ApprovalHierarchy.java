@@ -8,6 +8,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,10 +28,13 @@ public class ApprovalHierarchy {
 
  
 
+  @NotNull(message = "Approval level is required")
+  @Min(value = 1, message = "Approval level must be at least 1")
   private Integer level;
 
   @Enumerated(EnumType.STRING)
   @Column (name = "approval_role")
+  @NotNull(message = "Approver role is required")
   private Roles role;
 
 }

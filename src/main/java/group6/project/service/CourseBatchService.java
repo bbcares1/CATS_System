@@ -2,6 +2,7 @@ package group6.project.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
 
 import org.springframework.stereotype.Service;
 
@@ -48,13 +49,15 @@ public class CourseBatchService {
             courseBatch.getCapacity()
         );
 
-        existing.setCourseStartDate(
-            courseBatch.getCourseStartDate()
+        boolean trainingDaysChanged =
+            !java.util.Objects.equals(existing.getTrainingDays(), courseBatch.getTrainingDays());
+        existing.setTrainingDays(
+            courseBatch.getTrainingDays()
         );
-
-        existing.setCourseEndDate(
-            courseBatch.getCourseEndDate()
-        );
+        if (trainingDaysChanged) {
+            existing.setCourseStartDate(null);
+            existing.setCourseEndDate(null);
+        }
 
         validateBatch(existing);
 
@@ -67,19 +70,35 @@ public class CourseBatchService {
     return Optional.empty();
 }
 
+public CourseBatch updateScheduleDates(
+    Long batchId,
+    LocalDate startDate,
+    LocalDate endDate) {
+  CourseBatch batch = courseBatchRepo.findById(batchId)
+      .orElseThrow(() -> new IllegalArgumentException("Course batch was not found"));
+  batch.setCourseStartDate(startDate);
+  batch.setCourseEndDate(endDate);
+  return courseBatchRepo.save(batch);
+}
 
-  //Validation
+//Validation
   private void validateBatch(CourseBatch courseBatch){
     if (courseBatch.getCourseDetail() == null){
       throw new IllegalArgumentException("Course is required");
     }
 
-    if (courseBatch.getCourseStartDate() == null || courseBatch.getCourseEndDate() == null){
-      throw new IllegalArgumentException("Start date and end date are required");
+    if (courseBatch.getCourseStartDate() != null
+        && courseBatch.getCourseEndDate() != null
+        && courseBatch.getCourseEndDate().isBefore(courseBatch.getCourseStartDate())){
+      throw new IllegalArgumentException("End date cannot be before start date");
     }
 
-    if (courseBatch.getCourseEndDate().isBefore(courseBatch.getCourseStartDate())){
-      throw new IllegalArgumentException("End date cannot be before start date");
+    Double trainingDays = courseBatch.getTrainingDays();
+    if (trainingDays == null || !Double.isFinite(trainingDays)
+        || trainingDays <= 0 || trainingDays % 0.5 != 0) {
+      throw new IllegalArgumentException(
+          "Training days must be a positive whole or half-day amount"
+      );
     }
 
     if (courseBatch.getCapacity() == null ||
