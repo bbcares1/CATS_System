@@ -1,3 +1,4 @@
+// Collects the category name and course type.
 package group6.project.form;
 
 import group6.project.model.CourseCategoryType;

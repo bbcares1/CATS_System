@@ -1,3 +1,4 @@
+// Maintains public holidays and checks their effect on saved training dates.
 package group6.project.service;
 
 import group6.project.model.ApplicationStatus;

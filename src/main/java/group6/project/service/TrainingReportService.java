@@ -1,3 +1,4 @@
+// Collects training, claim and payment records for reports and CSV export.
 package group6.project.service;
 
 import group6.project.model.*;

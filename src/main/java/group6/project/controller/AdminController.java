@@ -1,3 +1,4 @@
+// Handles the Admin dashboard, allowances, reporting list and manual email.
 package group6.project.controller;
 
 import group6.project.form.AdminEmailForm;

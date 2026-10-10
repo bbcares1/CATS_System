@@ -1,3 +1,4 @@
+// Handles course-category maintenance forms.
 package group6.project.controller;
 
 import group6.project.form.CourseCategoryForm;

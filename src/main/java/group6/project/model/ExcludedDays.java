@@ -1,3 +1,4 @@
+// Stores public holidays excluded from training-day calculations.
 package group6.project.model;
 
 import jakarta.persistence.Entity;

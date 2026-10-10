@@ -1,3 +1,4 @@
+// Validates offered dates and capacity while preserving used schedules.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.*;

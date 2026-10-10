@@ -1,3 +1,4 @@
+// Handles shared navigation, confirmation dialogs and form controls.
 (function () {
   var layout = document.getElementById("layout");
   if (!layout) return;

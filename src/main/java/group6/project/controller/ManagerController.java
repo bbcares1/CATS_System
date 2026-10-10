@@ -1,3 +1,4 @@
+// Handles pending requests, decisions and subordinate course history.
 package group6.project.controller;
 
 import group6.project.form.DecisionForm;

@@ -1,3 +1,4 @@
+// Finds available catalogue courses and their date options.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;

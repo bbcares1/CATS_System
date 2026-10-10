@@ -1,3 +1,4 @@
+// Provides the container health-check endpoint.
 package group6.project.controller;
 
 import org.springframework.dao.DataAccessException;

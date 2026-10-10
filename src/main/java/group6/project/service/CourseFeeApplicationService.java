@@ -1,3 +1,4 @@
+// Validates claims, reviews evidence and records payments without counting fees twice.
 package group6.project.service;
 
 import group6.project.model.*;

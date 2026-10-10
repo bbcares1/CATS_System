@@ -1,3 +1,4 @@
+// Checks login credentials and reloads the signed-in account.
 package group6.project.service;
 
 import group6.project.model.Admin;

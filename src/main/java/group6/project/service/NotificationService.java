@@ -1,3 +1,4 @@
+// Sends workflow notifications without undoing saved requests or decisions.
 package group6.project.service;
 
 import group6.project.form.AdminEmailForm;

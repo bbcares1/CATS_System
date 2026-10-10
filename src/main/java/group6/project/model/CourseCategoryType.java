@@ -1,3 +1,4 @@
+// Defines the three course types and their display names.
 package group6.project.model;
 
 public enum CourseCategoryType {

@@ -1,3 +1,4 @@
+// Queries account identities and changes roles while preserving their IDs.
 package group6.project.repo;
 
 import group6.project.model.Roles;

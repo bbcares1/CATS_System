@@ -1,3 +1,4 @@
+// Stores a catalogue course that employees can apply for.
 package group6.project.model;
 
 import jakarta.persistence.*;

@@ -1,3 +1,4 @@
+// Checks login and account roles before protected pages open.
 package group6.project.config;
 
 import group6.project.model.Admin;

@@ -1,3 +1,4 @@
+// Shows the date and fee fields relevant to the selected course.
 (function () {
   const category =
     document.getElementById("courseCategory") ||

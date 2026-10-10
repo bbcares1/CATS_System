@@ -1,3 +1,4 @@
+// Handles edits to the dates and places offered for a course.
 package group6.project.controller;
 
 import group6.project.form.CourseBatchForm;

@@ -1,3 +1,4 @@
+// Saves course details and offered dates while preserving submitted applications.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.*;

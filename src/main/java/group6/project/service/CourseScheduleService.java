@@ -1,3 +1,4 @@
+// Calculates a course end date from its start date and working training days.
 package group6.project.service;
 
 import group6.project.model.CourseCategoryType;

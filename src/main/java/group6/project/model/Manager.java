@@ -1,3 +1,4 @@
+// Represents an employee who also reviews assigned applications and claims.
 package group6.project.model;
 
 import jakarta.persistence.DiscriminatorValue;

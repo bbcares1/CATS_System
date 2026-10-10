@@ -1,3 +1,4 @@
+// Represents an employee who can apply for courses.
 package group6.project.model;
 
 import jakarta.persistence.DiscriminatorValue;

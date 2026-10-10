@@ -1,3 +1,4 @@
+// Shows or hides the password being entered.
 document.querySelectorAll("[data-password-toggle]").forEach((button) => {
   button.addEventListener("click", () => {
     const input = document.getElementById(button.dataset.passwordToggle);

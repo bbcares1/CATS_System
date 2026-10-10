@@ -1,3 +1,4 @@
+// Queries fee claims for applicants, reviewers and payment recording.
 package group6.project.repo;
 
 import group6.project.model.ApplicationStatus;

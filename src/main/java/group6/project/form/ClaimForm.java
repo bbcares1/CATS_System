@@ -1,3 +1,4 @@
+// Collects the completed course, personal-payment confirmation and evidence files.
 package group6.project.form;
 
 import jakarta.validation.constraints.NotNull;

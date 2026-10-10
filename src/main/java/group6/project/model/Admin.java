@@ -1,3 +1,4 @@
+// Represents a User account that maintains the system.
 package group6.project.model;
 
 import jakarta.persistence.DiscriminatorValue;

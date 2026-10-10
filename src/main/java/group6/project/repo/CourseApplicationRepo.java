@@ -1,3 +1,4 @@
+// Queries course history, pending requests, overlaps and annual usage.
 package group6.project.repo;
 
 import group6.project.model.ApplicationStatus;

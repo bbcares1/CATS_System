@@ -1,3 +1,4 @@
+// Handles course application forms and personal history.
 package group6.project.controller;
 
 import group6.project.form.CatalogueApplicationForm;

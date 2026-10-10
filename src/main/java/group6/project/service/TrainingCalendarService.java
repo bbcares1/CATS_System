@@ -1,3 +1,4 @@
+// Groups approved employee attendance by day for the monthly calendar.
 package group6.project.service;
 
 import group6.project.model.*;

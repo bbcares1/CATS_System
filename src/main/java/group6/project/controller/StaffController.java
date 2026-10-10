@@ -1,3 +1,4 @@
+// Prepares the employee dashboard and annual allowance summary.
 package group6.project.controller;
 
 import group6.project.model.Staff;

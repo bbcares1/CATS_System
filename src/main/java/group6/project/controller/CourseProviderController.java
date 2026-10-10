@@ -1,3 +1,4 @@
+// Handles training-provider maintenance forms.
 package group6.project.controller;
 
 import group6.project.form.CourseProviderForm;

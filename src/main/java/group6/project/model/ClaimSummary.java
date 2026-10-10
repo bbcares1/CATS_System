@@ -1,3 +1,4 @@
+// Defines the fields displayed on claim list pages.
 package group6.project.model;
 
 import java.math.BigDecimal;

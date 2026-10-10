@@ -1,3 +1,4 @@
+// Handles Employee login, Admin login and logout.
 package group6.project.controller;
 
 import group6.project.model.Admin;

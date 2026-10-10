@@ -1,3 +1,4 @@
+// Collects the recipient, subject and message for manual email.
 package group6.project.form;
 
 import jakarta.validation.constraints.Email;

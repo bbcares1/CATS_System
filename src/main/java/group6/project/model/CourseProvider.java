@@ -1,3 +1,4 @@
+// Stores a training provider used by catalogue courses.
 package group6.project.model;
 
 import jakarta.persistence.*;

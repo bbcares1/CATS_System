@@ -1,3 +1,4 @@
+// Validates account, role and reporting-manager changes while preserving history.
 package group6.project.service;
 
 import group6.project.form.AccountForm;

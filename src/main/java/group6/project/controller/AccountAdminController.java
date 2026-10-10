@@ -1,3 +1,4 @@
+// Handles account forms and reporting-manager assignments.
 package group6.project.controller;
 
 import group6.project.form.AccountForm;

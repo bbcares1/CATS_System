@@ -1,3 +1,4 @@
+// Shows filtered training reports and exports their records to CSV.
 package group6.project.controller;
 
 import group6.project.model.*;

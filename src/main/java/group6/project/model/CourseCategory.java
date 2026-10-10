@@ -1,3 +1,4 @@
+// Stores a catalogue category linked to one of the three course types.
 package group6.project.model;
 
 import jakarta.persistence.Entity;

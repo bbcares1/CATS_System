@@ -1,3 +1,4 @@
+// Queries and locks the date options offered for catalogue courses.
 package group6.project.repo;
 
 import group6.project.model.CourseBatch;

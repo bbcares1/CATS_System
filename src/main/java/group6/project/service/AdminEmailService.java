@@ -1,3 +1,4 @@
+// Sends manual Admin email through optional configured SMTP.
 package group6.project.service;
 
 import group6.project.form.AdminEmailForm;

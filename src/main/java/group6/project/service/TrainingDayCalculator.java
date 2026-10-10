@@ -1,3 +1,4 @@
+// Counts working training days and applies the Internal Training half-day rule.
 package group6.project.service;
 
 import group6.project.model.CourseCategoryType;

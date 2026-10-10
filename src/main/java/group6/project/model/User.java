@@ -1,3 +1,4 @@
+// Stores shared account details and reporting links with a stable account ID.
 package group6.project.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

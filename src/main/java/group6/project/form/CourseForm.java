@@ -1,3 +1,4 @@
+// Collects course details and an optional set of offered dates.
 package group6.project.form;
 
 import jakarta.validation.constraints.*;

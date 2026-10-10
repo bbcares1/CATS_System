@@ -1,3 +1,4 @@
+// Validates and saves course applications, decisions and completion.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.*;

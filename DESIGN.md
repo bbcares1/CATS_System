@@ -350,4 +350,6 @@ Paste this with your request:
 
 ## UI wording
 
-Use ordinary English labels and short sentences. Do not join names, roles, features or explanations with middle dots. Keep names and IDs only where they identify an account. Explain a field only when the user needs the rule to enter a valid value. Remove repeated headings, welcome lines and generic instructions. Code comments should explain a business rule or a non-obvious implementation choice; class and method names do not need to be repeated in comments.
+Use ordinary English labels and short sentences. Do not join names, roles, features or explanations with middle dots. Keep names and IDs only where they identify an account. Explain a field only when the user needs the rule to enter a valid value. Remove repeated headings, welcome lines and generic instructions.
+
+Keep one short English purpose comment at the start of each Java file and JavaScript script so teammates can quickly understand its role. Function comments explain business rules or non-obvious implementation choices; avoid repeating simple method names.

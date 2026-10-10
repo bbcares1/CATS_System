@@ -1,3 +1,4 @@
+// Stores an employee's course application, course details and decision.
 package group6.project.model;
 
 import jakarta.persistence.Column;

@@ -1,3 +1,4 @@
+// Shows approved employee attendance for a selected month.
 package group6.project.controller;
 
 import group6.project.model.Admin;

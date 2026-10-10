@@ -1,3 +1,4 @@
+// Starts the CATS Spring Boot application.
 package group6.project;
 
 import org.springframework.boot.SpringApplication;

@@ -1,3 +1,4 @@
+// Calculates each employee's yearly reserved, used and remaining allowance.
 package group6.project.service;
 
 import group6.project.model.ApplicationStatus;

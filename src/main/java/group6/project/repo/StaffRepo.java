@@ -1,3 +1,4 @@
+// Queries employees and their reporting relationships.
 package group6.project.repo;
 
 import group6.project.model.Staff;

@@ -1,3 +1,4 @@
+// Collects a public-holiday date and description.
 package group6.project.form;
 
 import jakarta.validation.constraints.*;

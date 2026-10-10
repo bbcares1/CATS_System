@@ -1,3 +1,4 @@
+// Collects course details and reasons for an application outside the catalogue.
 package group6.project.form;
 
 import group6.project.model.CourseCategoryType;

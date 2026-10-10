@@ -1,3 +1,4 @@
+// Collects editable account details without exposing saved passwords.
 package group6.project.form;
 
 import group6.project.model.Roles;

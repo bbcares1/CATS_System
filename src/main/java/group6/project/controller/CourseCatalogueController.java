@@ -1,3 +1,4 @@
+// Shows available catalogue courses and their details to employees.
 package group6.project.controller;
 
 import group6.project.model.CourseCategoryType;

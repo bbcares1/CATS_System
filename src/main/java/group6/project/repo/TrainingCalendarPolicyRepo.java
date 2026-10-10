@@ -1,3 +1,4 @@
+// Provides shared and exclusive locks for calendar changes.
 package group6.project.repo;
 
 import group6.project.model.TrainingCalendarPolicy;

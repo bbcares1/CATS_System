@@ -1,3 +1,4 @@
+// Maintains category names while preserving the rules of referenced courses.
 package group6.project.service;
 
 import static org.springframework.http.HttpStatus.*;

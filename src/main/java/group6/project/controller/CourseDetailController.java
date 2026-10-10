@@ -1,3 +1,4 @@
+// Handles course details, offered dates and the date calculator.
 package group6.project.controller;
 
 import group6.project.form.CourseForm;

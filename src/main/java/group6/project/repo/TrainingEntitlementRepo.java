@@ -1,3 +1,4 @@
+// Queries and locks an employee's allowance for a selected year.
 package group6.project.repo;
 
 import group6.project.model.TrainingEntitlement;

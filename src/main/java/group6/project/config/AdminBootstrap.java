@@ -1,3 +1,4 @@
+// Creates the first production Admin when no active Admin exists.
 package group6.project.config;
 
 import group6.project.model.*;

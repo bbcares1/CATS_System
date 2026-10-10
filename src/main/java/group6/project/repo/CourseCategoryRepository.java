@@ -1,3 +1,4 @@
+// Reads and saves catalogue categories.
 package group6.project.repo;
 
 import group6.project.model.CourseCategory;

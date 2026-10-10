@@ -1,3 +1,4 @@
+// Provides page-size and page-number limits for list pages.
 package group6.project.controller;
 
 import org.springframework.data.domain.*;

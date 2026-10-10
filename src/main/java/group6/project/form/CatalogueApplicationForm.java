@@ -1,3 +1,4 @@
+// Collects dates and reasons for a catalogue course application.
 package group6.project.form;
 
 import jakarta.validation.constraints.*;

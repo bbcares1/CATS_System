@@ -1,3 +1,4 @@
+// Collects dates and capacity for an offered course schedule.
 package group6.project.form;
 
 import jakarta.validation.constraints.*;

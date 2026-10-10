@@ -1,3 +1,4 @@
+// Handles claim submission, review, document downloads and payment recording.
 package group6.project.controller;
 
 import group6.project.form.ClaimForm;
