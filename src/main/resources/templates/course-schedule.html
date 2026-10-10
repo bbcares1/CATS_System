@@ -26,6 +26,7 @@
           class="cats-stack"
           novalidate
         >
+          <input th:replace="~{fragments/csrf :: token}" />
           <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
             <ul>
               <li th:each="e : ${#fields.allErrors()}" th:text="${e}"></li>

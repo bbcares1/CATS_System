@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <!-- Every changing form sends the token issued to this browser session. -->
+    <input
+      th:fragment="token"
+      type="hidden"
+      name="_csrf"
+      th:value="${session.csrfToken}"
+    />
+  </body>
+</html>

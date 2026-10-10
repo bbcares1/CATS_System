@@ -1,7 +1,7 @@
 package group6.project.service;
 
-import group6.project.model.*;
 import group6.project.form.AccountForm;
+import group6.project.model.*;
 import group6.project.repo.*;
 
 import org.springframework.http.HttpStatus;
@@ -75,13 +75,16 @@ public class AccountAdminService {
         requireAdmin(accounts, actorId);
         User target = id == null ? subtype(form.getRole()) : find(accounts, id);
         if (id != null && !Objects.equals(form.getVersion(), target.getVersion())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"This account changed. Reload it before saving.");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "This account changed. Reload it before saving.");
         }
-        if (form.getRole() == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Choose an account role.");
+        if (form.getRole() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose an account role.");
         if (id != null
                 && id.equals(actorId)
                 && (form.getRole() != Roles.ADMIN || !form.isActive())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"You cannot remove your own Admin access.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "You cannot remove your own Admin access.");
         }
         if (id != null && (target.getRole() != form.getRole() || !form.isActive())) {
             requireAnotherAdmin(accounts, target);
@@ -92,27 +95,31 @@ public class AccountAdminService {
         }
         String username = text(form.getUserName(), "Username", 100).toLowerCase(Locale.ROOT);
         if (!username.matches("[a-z0-9_.-]{3,100}"))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
                     "Use 3–100 letters, digits, dots, underscores or hyphens for the username.");
         String staffId = text(form.getStaffId(), "Staff ID", 255);
         if (form.getEmail() == null || form.getEmail().isBlank())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Email is required for application notifications.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Email is required for application notifications.");
         String email =
                 form.getEmail() == null || form.getEmail().isBlank()
                         ? null
                         : form.getEmail().trim().toLowerCase(Locale.ROOT);
         Integer excluded = id == null ? -1 : id;
         if (users.existsByUserNameIgnoreCaseAndUserIdNot(username, excluded))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Username already exists.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username already exists.");
         if (users.existsByStaffIdIgnoreCaseAndUserIdNot(staffId, excluded))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Staff ID already exists.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Staff ID already exists.");
         if (email != null && users.existsByEmailIgnoreCaseAndUserIdNot(email, excluded))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Email already belongs to another account.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Email already belongs to another account.");
         if (email != null
                 && (email.length() > 255
                         || email.chars().anyMatch(Character::isWhitespace)
                         || !email.matches("[^ @]+@[^ @]+[.][^ @]+")))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Enter a valid email address.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Enter a valid email address.");
         User manager =
                 form.getRole() == Roles.ADMIN || form.getManagerId() == null
                         ? null
@@ -125,7 +132,8 @@ public class AccountAdminService {
         }
         if (manager != null) {
             if (!(manager instanceof Manager) || !manager.isActive())
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Choose an active manager.");
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Choose an active manager.");
             requireNoCycle(id, manager);
         }
         target.setName(text(form.getName(), "Name", 255));
@@ -155,9 +163,11 @@ public class AccountAdminService {
         requireAdmin(accounts, actorId);
         User target = find(accounts, id);
         if (id.equals(actorId))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"You cannot delete your own account.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "You cannot delete your own account.");
         if (!Objects.equals(version, target.getVersion()))
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"This account changed. Reload it before deleting.");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "This account changed. Reload it before deleting.");
         requireAnotherAdmin(accounts, target);
         requireNoReports(accounts, id);
         if (applications.existsByApplicant_UserIdOrReviewer_UserId(id, id)
@@ -166,7 +176,8 @@ public class AccountAdminService {
                         .existsByApplicant_UserIdOrReviewer_UserIdOrApprovalManager_UserIdOrReimbursedBy_UserId(
                                 id, id, id, id)
                 || !entitlements.findByStaff_UserId(id).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
                     "This account has history or annual allowances. Disable it instead.");
         }
         users.delete(target);
@@ -176,7 +187,8 @@ public class AccountAdminService {
     // Select the actual JPA subtype for a new account; a browser role cannot change an existing
     // entity type.
     private User subtype(Roles role) {
-        if (role == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Choose an account role.");
+        if (role == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose an account role.");
         User user =
                 switch (role) {
                     case ADMIN -> new Admin();
@@ -217,7 +229,8 @@ public class AccountAdminService {
                                         u instanceof Admin
                                                 && u.isActive()
                                                 && !u.getUserId().equals(target.getUserId()))) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Keep at least one active Admin account.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Keep at least one active Admin account.");
         }
     }
 
@@ -227,12 +240,14 @@ public class AccountAdminService {
                         id, List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED))
                 || claims.existsByApprovalManager_UserIdAndApplicationStatus(
                         id, ApplicationStatus.APPLIED)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
                     "Resolve this manager's assigned pending reviews first.");
         }
         if (accounts.stream()
                 .anyMatch(u -> u.getManager() != null && id.equals(u.getManager().getUserId()))) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Reassign this manager's direct reports first.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Reassign this manager's direct reports first.");
         }
     }
 
@@ -246,9 +261,10 @@ public class AccountAdminService {
                                 ApplicationStatus.APPROVED))
                 || claims.existsByApplicant_UserIdAndApplicationStatus(
                         id, ApplicationStatus.APPLIED)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
                     "Resolve pending applications/claims and complete or cancel approved courses"
-                        + " first.");
+                            + " first.");
         }
     }
 
@@ -257,7 +273,8 @@ public class AccountAdminService {
         Set<Integer> visited = new HashSet<>();
         for (User current = manager; current != null; current = current.getManager()) {
             if (current.getUserId().equals(employeeId) || !visited.add(current.getUserId())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Reporting assignments cannot contain a cycle.");
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Reporting assignments cannot contain a cycle.");
             }
         }
     }
@@ -265,7 +282,8 @@ public class AccountAdminService {
     // Required profile text is trimmed and kept within database limits.
     private String text(String value, String label, int limit) {
         if (value == null || value.isBlank() || value.trim().length() > limit)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
                     label + " is required and cannot exceed " + limit + " characters.");
         return value.trim();
     }
@@ -274,15 +292,16 @@ public class AccountAdminService {
     private String optionalText(String value, int limit) {
         if (value == null || value.isBlank()) return null;
         if (value.trim().length() > limit)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Profile text cannot exceed " + limit + " characters.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Profile text cannot exceed " + limit + " characters.");
         return value.trim();
     }
 
     // Keep classroom credentials simple; the blank edit field means no password change.
     private String password(String value) {
         if (value == null || value.isBlank() || value.length() > 255)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
                     "A new account needs a password of at most 255 characters.");
         return value;
     }

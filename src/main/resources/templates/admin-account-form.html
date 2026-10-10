@@ -1,5 +1,9 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Account details', 'Admin', 'accounts', ~{::#content})}">
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Account details', 'Admin', 'accounts', ~{::#content})}"
+>
   <body>
     <section id="content" class="cats-stack">
       <div class="cats-page-header">
@@ -7,40 +11,65 @@
           <a class="cats-back" th:href="@{/admin/accounts}">
             Accounts and reporting managers
           </a>
-          <h1 th:text="${accountId == null} ? 'Add account' : 'Edit account'">
-          </h1>
+          <h1
+            th:text="${accountId == null} ? 'Add account' : 'Edit account'"
+          ></h1>
           <p class="cats-sub">
-            Role changes keep the account ID and all history. Reassign direct reports before removing Manager access.
+            Role changes keep the account ID and all history. Reassign direct
+            reports before removing Manager access.
           </p>
         </div>
       </div>
       <div class="card">
         <div class="card-body">
-          <form id="account-form" th:action="@{/admin/accounts/save(id=${accountId})}" method="post" th:object="${form}" class="cats-stack" novalidate>
-            <input type="hidden" th:field="*{version}">
-            <div th:if="${#fields.hasErrors('*')}" class="cats-error-summary" role="alert">
-              <h2>
-                Check the fields below
-              </h2>
+          <form
+            id="account-form"
+            th:action="@{/admin/accounts/save(id=${accountId})}"
+            method="post"
+            th:object="${form}"
+            class="cats-stack"
+            novalidate
+          >
+            <input th:replace="~{fragments/csrf :: token}" />
+            <input type="hidden" th:field="*{version}" />
+            <div
+              th:if="${#fields.hasErrors('*')}"
+              class="cats-error-summary"
+              role="alert"
+            >
+              <h2>Check the fields below</h2>
               <ul>
-                <li th:each="e : ${#fields.allErrors()}" th:text="${e}">
-                </li>
+                <li th:each="e : ${#fields.allErrors()}" th:text="${e}"></li>
               </ul>
             </div>
             <div class="cats-grid cats-grid-2">
               <div>
-                <label class="form-label cats-req" for="name">
-                  Name
-                </label>
-                <input class="form-control" th:field="*{name}" maxlength="255" required>
-                <div class="cats-field-msg text-danger" th:errors="*{name}"></div>
+                <label class="form-label cats-req" for="name"> Name </label>
+                <input
+                  class="form-control"
+                  th:field="*{name}"
+                  maxlength="255"
+                  required
+                />
+                <div
+                  class="cats-field-msg text-danger"
+                  th:errors="*{name}"
+                ></div>
               </div>
               <div>
                 <label class="form-label cats-req" for="staffId">
                   Staff ID
                 </label>
-                <input class="form-control" th:field="*{staffId}" maxlength="255" required>
-                <div class="cats-field-msg text-danger" th:errors="*{staffId}"></div>
+                <input
+                  class="form-control"
+                  th:field="*{staffId}"
+                  maxlength="255"
+                  required
+                />
+                <div
+                  class="cats-field-msg text-danger"
+                  th:errors="*{staffId}"
+                ></div>
               </div>
             </div>
             <div class="cats-grid cats-grid-2">
@@ -48,35 +77,74 @@
                 <label class="form-label cats-req" for="userName">
                   Username
                 </label>
-                <input class="form-control" th:field="*{userName}" maxlength="100" autocomplete="off" required>
-                <div class="cats-field-msg text-danger" th:errors="*{userName}"></div>
+                <input
+                  class="form-control"
+                  th:field="*{userName}"
+                  maxlength="100"
+                  autocomplete="off"
+                  required
+                />
+                <div
+                  class="cats-field-msg text-danger"
+                  th:errors="*{userName}"
+                ></div>
                 <p class="form-text">
                   3–100 letters, digits, dots, underscores or hyphens.
                 </p>
               </div>
               <div>
-                <label class="form-label" for="password" th:classappend="${accountId == null} ? 'cats-req'">
+                <label
+                  class="form-label"
+                  for="password"
+                  th:classappend="${accountId == null} ? 'cats-req'"
+                >
                   Password
                 </label>
-                <input class="form-control" id="password" name="password" type="password" maxlength="255" autocomplete="new-password">
-                <p class="form-text" th:text="${accountId == null} ? 'Set a simple password for this account.' : 'Leave blank to keep the current password.'">
-                </p>
+                <input
+                  class="form-control"
+                  id="password"
+                  name="password"
+                  type="password"
+                  maxlength="255"
+                  autocomplete="new-password"
+                />
+                <p
+                  class="form-text"
+                  th:text="${accountId == null} ? 'Set a simple password for this account.' : 'Leave blank to keep the current password.'"
+                ></p>
               </div>
             </div>
             <div class="cats-grid cats-grid-2">
               <div>
-                <label class="form-label cats-req" for="email">
-                  Email
-                </label>
-                <input type="email" class="form-control" th:field="*{email}" maxlength="255">
-                <div class="cats-field-msg text-danger" th:errors="*{email}"></div>
+                <label class="form-label cats-req" for="email"> Email </label>
+                <input
+                  type="email"
+                  class="form-control"
+                  th:field="*{email}"
+                  maxlength="255"
+                />
+                <div
+                  class="cats-field-msg text-danger"
+                  th:errors="*{email}"
+                ></div>
               </div>
               <div>
                 <label class="form-label" for="designation">
                   Designation
                 </label>
-                <input class="form-control" th:field="*{designation}" maxlength="255">
-                <div class="cats-field-msg text-danger" th:errors="*{designation}"></div>
+                <select class="form-select" th:field="*{designation}">
+                  <option value="">Not assigned</option>
+                  <option value="Administrative">Administrative</option>
+                  <option value="Professional">Professional</option>
+                </select>
+                <p class="form-text">
+                  Suggested annual days: Administrative 5, Professional 10. Set
+                  the actual annual allowance separately.
+                </p>
+                <div
+                  class="cats-field-msg text-danger"
+                  th:errors="*{designation}"
+                ></div>
               </div>
             </div>
             <div class="cats-grid cats-grid-2">
@@ -85,11 +153,12 @@
                   Account role
                 </label>
                 <select class="form-select" th:field="*{role}">
-                  <option value="">
-                    Choose a role
-                  </option>
-                  <option th:each="r : ${roles}" th:value="${r}" th:text="${#strings.capitalize(#strings.toLowerCase(r))}">
-                  </option>
+                  <option value="">Choose a role</option>
+                  <option
+                    th:each="r : ${roles}"
+                    th:value="${r}"
+                    th:text="${#strings.capitalize(#strings.toLowerCase(r))}"
+                  ></option>
                 </select>
               </div>
               <div>
@@ -97,30 +166,44 @@
                   Reporting manager
                 </label>
                 <select class="form-select" th:field="*{managerId}">
-                  <option value="">
-                    Not assigned
-                  </option>
-                  <option th:each="m : ${managers}" th:if="${m.userId != accountId}" th:value="${m.userId}" th:text="${m.name} + ' · ' + ${m.staffId}">
-                  </option>
+                  <option value="">Not assigned</option>
+                  <option
+                    th:each="m : ${managers}"
+                    th:if="${m.userId != accountId}"
+                    th:value="${m.userId}"
+                    th:text="${m.name} + ' · ' + ${m.staffId}"
+                  ></option>
                 </select>
                 <p class="form-text">
-                  Staff and Manager only. Self-reporting and cycles are not allowed.
+                  Staff and Manager only. Self-reporting and cycles are not
+                  allowed.
                 </p>
               </div>
             </div>
             <div class="form-check">
-              <input type="checkbox" class="form-check-input" th:field="*{active}">
-            <label class="form-check-label" th:for="${#ids.prev('active')}">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                th:field="*{active}"
+              />
+              <label class="form-check-label" th:for="${#ids.prev('active')}">
                 Active account
               </label>
               <p class="form-text">
-                Disabling removes login access and preserves history. Resolve pending employee requests first.
+                Disabling removes login access and preserves history. Resolve
+                pending employee requests first.
               </p>
             </div>
           </form>
         </div>
         <div class="card-footer cats-form-footer">
-          <button th:if="${accountId != null}" class="btn btn-outline-danger me-auto" type="button" data-bs-toggle="modal" data-bs-target="#delete-account">
+          <button
+            th:if="${accountId != null}"
+            class="btn btn-outline-danger me-auto"
+            type="button"
+            data-bs-toggle="modal"
+            data-bs-target="#delete-account"
+          >
             Delete unused account
           </button>
           <a class="btn btn-outline-secondary" th:href="@{/admin/accounts}">
@@ -131,32 +214,52 @@
           </button>
         </div>
       </div>
-      <div th:if="${accountId != null}" class="modal fade" id="delete-account" tabindex="-1" aria-labelledby="delete-title" aria-hidden="true">
+      <div
+        th:if="${accountId != null}"
+        class="modal fade"
+        id="delete-account"
+        tabindex="-1"
+        aria-labelledby="delete-title"
+        aria-hidden="true"
+      >
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
               <h2 class="modal-title fs-6" id="delete-title">
                 Delete this unused account?
               </h2>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-              </button>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
             </div>
             <div class="modal-body">
-              <p th:text="${form.name} + ' will be removed only if there is no history, allowance or reporting assignment.'">
-              </p>
-              <p>
-                Disable an account that has history instead.
-              </p>
+              <p
+                th:text="${form.name} + ' will be removed only if there is no history, allowance or reporting assignment.'"
+              ></p>
+              <p>Disable an account that has history instead.</p>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                data-bs-dismiss="modal"
+              >
                 Cancel
               </button>
-              <form th:action="@{/admin/accounts/{id}/delete(id=${accountId})}" method="post">
-                <input type="hidden" name="version" th:value="${form.version}">
-                <button class="btn btn-danger">
-                  Delete account
-                </button>
+              <form
+                th:action="@{/admin/accounts/{id}/delete(id=${accountId})}"
+                method="post"
+              >
+                <input th:replace="~{fragments/csrf :: token}" />
+                <input
+                  type="hidden"
+                  name="version"
+                  th:value="${form.version}"
+                />
+                <button class="btn btn-danger">Delete account</button>
               </form>
             </div>
           </div>

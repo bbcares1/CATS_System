@@ -1,6 +1,7 @@
 package group6.project.service;
 
 import group6.project.model.CourseCategoryType;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Set;
@@ -10,8 +11,13 @@ public final class TrainingDayCalculator {
     private TrainingDayCalculator() {}
 
     // All categories use whole working days; only single-day Internal Training can use AM or PM.
-    public static double count(CourseCategoryType category, LocalDate start, LocalDate end,
-            String halfDay, Set<LocalDate> holidays, boolean futureRequired) {
+    public static double count(
+            CourseCategoryType category,
+            LocalDate start,
+            LocalDate end,
+            String halfDay,
+            Set<LocalDate> holidays,
+            boolean futureRequired) {
         if (category == null || start == null || end == null) {
             throw new IllegalArgumentException("Category and both dates are required.");
         }
@@ -29,7 +35,8 @@ public final class TrainingDayCalculator {
         }
         if (halfDay != null && !halfDay.isBlank()) {
             if (category != CourseCategoryType.INTERNAL_TRAINING) {
-                throw new IllegalArgumentException("Only Internal Training supports half-day sessions.");
+                throw new IllegalArgumentException(
+                        "Only Internal Training supports half-day sessions.");
             }
             if (!start.equals(end) || !Set.of("AM", "PM").contains(halfDay)) {
                 throw new IllegalArgumentException("AM/PM half-day sessions must be on one date.");
@@ -46,6 +53,7 @@ public final class TrainingDayCalculator {
     // The start, end and counted days follow the same working calendar.
     public static boolean isWorkingDay(LocalDate day, Set<LocalDate> holidays) {
         return day.getDayOfWeek() != DayOfWeek.SATURDAY
-                && day.getDayOfWeek() != DayOfWeek.SUNDAY && !holidays.contains(day);
+                && day.getDayOfWeek() != DayOfWeek.SUNDAY
+                && !holidays.contains(day);
     }
 }

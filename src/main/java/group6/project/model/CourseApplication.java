@@ -1,11 +1,6 @@
 package group6.project.model;
 
 import jakarta.persistence.Column;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -15,9 +10,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "course_application")
@@ -26,15 +26,15 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CourseApplication {
     @Id
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer courseId;
 
-    @jakarta.persistence.Version
-    private Long version;
+    @jakarta.persistence.Version private Long version;
 
     @ManyToOne
     @JoinColumn(name = "catalogue_course_id")
     private CourseDetail catalogueCourse;
+
     @ManyToOne
     @JoinColumn(name = "catalogue_batch_id")
     private CourseBatch catalogueBatch;
@@ -60,10 +60,13 @@ public class CourseApplication {
     private CourseCategoryType courseCategory;
 
     private String trainingProvider;
+
     @Column(length = 2000)
     private String justification;
+
     @Column(length = 2000)
     private String workDissemination;
+
     private Double trainingDays;
     private String halfDayPeriod;
 
@@ -77,24 +80,10 @@ public class CourseApplication {
     private LocalDateTime submittedAt;
     private LocalDateTime updatedAt;
     private LocalDateTime reviewedAt;
+
     @Column(length = 2000)
     private String decisionReason;
+
     @Column(length = 2000)
     private String experienceComments;
-
-    public ApplicationStatus getApplicationStatus() {
-        return status;
-    }
-
-    public void setApplicationStatus(ApplicationStatus status) {
-        this.status = status;
-    }
-
-    public String getReason() {
-        return justification;
-    }
-
-    public void setReason(String reason) {
-        this.justification = reason;
-    }
 }

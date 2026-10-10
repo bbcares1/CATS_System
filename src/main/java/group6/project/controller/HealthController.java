@@ -1,5 +1,6 @@
 package group6.project.controller;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
@@ -20,7 +21,7 @@ public class HealthController {
         try {
             database.queryForObject("select 1", Integer.class);
             return ResponseEntity.ok("UP");
-        } catch (org.springframework.dao.DataAccessException e) {
+        } catch (DataAccessException e) {
             return ResponseEntity.status(503).body("DOWN");
         }
     }

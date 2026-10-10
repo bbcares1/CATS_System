@@ -66,6 +66,7 @@
                   method="post"
                   th:action="@{/staff/applications/{id}/delete(id=${course.courseId})}"
                 >
+                  <input th:replace="~{fragments/csrf :: token}" />
                   <input
                     type="hidden"
                     name="version"
@@ -122,6 +123,7 @@
                   method="post"
                   th:action="@{/staff/applications/{id}/cancel(id=${course.courseId})}"
                 >
+                  <input th:replace="~{fragments/csrf :: token}" />
                   <input
                     type="hidden"
                     name="version"
@@ -142,6 +144,7 @@
           method="post"
           th:action="@{/staff/applications/{id}/complete(id=${course.courseId})}"
         >
+          <input th:replace="~{fragments/csrf :: token}" />
           <input
             type="hidden"
             name="version"

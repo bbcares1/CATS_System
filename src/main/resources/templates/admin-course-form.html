@@ -26,6 +26,7 @@
           class="cats-stack"
           novalidate
         >
+          <input th:replace="~{fragments/csrf :: token}" />
           <input type="hidden" th:field="*{version}" />
           <div
             th:if="${#fields.hasErrors('*')}"

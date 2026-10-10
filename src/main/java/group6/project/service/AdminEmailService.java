@@ -1,11 +1,13 @@
 package group6.project.service;
 
+import group6.project.form.AdminEmailForm;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import group6.project.model.AdminEmailForm;
+import java.util.Optional;
 
 @Service
 public class AdminEmailService {
@@ -14,7 +16,8 @@ public class AdminEmailService {
     private final String senderAddress;
 
     // SMTP is optional at startup; sending still requires a configured sender.
-    public AdminEmailService(java.util.Optional<JavaMailSender> mailSender,
+    public AdminEmailService(
+            Optional<JavaMailSender> mailSender,
             @Value("${cats.mail.from:}") String senderAddress,
             @Value("${spring.mail.username:}") String username) {
         this.mailSender = mailSender.orElse(null);
@@ -24,7 +27,9 @@ public class AdminEmailService {
     // Send the administrator's message without changing its body.
     public void send(AdminEmailForm form) {
         if (mailSender == null || senderAddress.isBlank()) {
-            throw new IllegalStateException("Email sender is not configured. Set SMTP credentials and activate the mail or qqmail profile.");
+            throw new IllegalStateException(
+                    "Email sender is not configured. Set SMTP credentials and activate the mail or"
+                            + " qqmail profile.");
         }
 
         SimpleMailMessage message = new SimpleMailMessage();

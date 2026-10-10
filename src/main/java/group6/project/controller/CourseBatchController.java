@@ -2,7 +2,9 @@ package group6.project.controller;
 
 import group6.project.form.CourseBatchForm;
 import group6.project.service.*;
+
 import jakarta.validation.Valid;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -24,8 +26,10 @@ public class CourseBatchController {
 
     // Admin can include archived rows when reviewing catalogue data.
     @GetMapping
-    public String list(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size, Model model) {
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
         var result = PageSupport.page(service.getAllBatches(), page, size);
         model.addAttribute("rows", result.getContent());
         model.addAttribute("pageData", result);
@@ -46,9 +50,12 @@ public class CourseBatchController {
 
     // Keep the submitted values when validation or a business rule rejects the form.
     @PostMapping({"/new", "/{id}/edit"})
-    public String save(@PathVariable(required = false) Long id,
-            @Valid @ModelAttribute("form") CourseBatchForm form, BindingResult binding,
-            Model model, RedirectAttributes redirect) {
+    public String save(
+            @PathVariable(required = false) Long id,
+            @Valid @ModelAttribute("form") CourseBatchForm form,
+            BindingResult binding,
+            Model model,
+            RedirectAttributes redirect) {
         if (binding.hasErrors()) return render(id, form, model);
         try {
             service.save(id, form);
@@ -63,7 +70,8 @@ public class CourseBatchController {
 
     // The service decides whether references require archiving or prevent deletion.
     @PostMapping("/{id}/delete")
-    public String remove(@PathVariable Long id, @RequestParam Long version, RedirectAttributes redirect) {
+    public String remove(
+            @PathVariable Long id, @RequestParam Long version, RedirectAttributes redirect) {
         try {
             service.remove(id, version);
             redirect.addFlashAttribute("success", "Schedule removed from active use.");
@@ -78,7 +86,8 @@ public class CourseBatchController {
     private String render(Long id, CourseBatchForm form, Model model) {
         model.addAttribute("form", form);
         model.addAttribute("editId", id);
-        model.addAttribute("formAction", id == null ? "/admin/batches/new" : "/admin/batches/" + id + "/edit");
+        model.addAttribute(
+                "formAction", id == null ? "/admin/batches/new" : "/admin/batches/" + id + "/edit");
         model.addAttribute("courses", courses.all());
         return "course-batch-form";
     }

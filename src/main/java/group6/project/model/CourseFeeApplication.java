@@ -55,10 +55,6 @@ public class CourseFeeApplication {
     @JoinColumn(name = "staff_id")
     private User applicant;
 
-    @ManyToOne
-    @JoinColumn(name = "batch_id")
-    private CourseBatch courseBatch;
-
     @OneToOne
     @JoinColumn(name = "course_application_id", unique = true)
     private CourseApplication courseApplication;

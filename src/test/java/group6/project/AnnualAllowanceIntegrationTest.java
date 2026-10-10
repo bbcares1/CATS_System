@@ -1,17 +1,20 @@
 package group6.project;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 import group6.project.model.*;
 import group6.project.repo.*;
 import group6.project.service.TrainingEntitlementService;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @SpringBootTest
 @Transactional
@@ -69,13 +72,23 @@ class AnnualAllowanceIntegrationTest {
     @Test
     void limitReductionsRespectSavedWork() {
         course(ApplicationStatus.APPLIED, "500.00", 4, year);
-        var daysError = assertThrows(ResponseStatusException.class,
-                () -> allowances.saveLimits(employee.getUserId(), year, 3, new BigDecimal("2000.00")));
+        var daysError =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () ->
+                                allowances.saveLimits(
+                                        employee.getUserId(), year, 3, new BigDecimal("2000.00")));
         assertEquals(400, daysError.getStatusCode().value());
-        assertThrows(ResponseStatusException.class,
-                () -> allowances.saveLimits(employee.getUserId(), year, 10, new BigDecimal("499.99")));
-        assertThrows(ResponseStatusException.class,
-                () -> allowances.saveLimits(employee.getUserId(), year, 1.25, new BigDecimal("2000.00")));
+        assertThrows(
+                ResponseStatusException.class,
+                () ->
+                        allowances.saveLimits(
+                                employee.getUserId(), year, 10, new BigDecimal("499.99")));
+        assertThrows(
+                ResponseStatusException.class,
+                () ->
+                        allowances.saveLimits(
+                                employee.getUserId(), year, 1.25, new BigDecimal("2000.00")));
         assertEquals(10, allowances.summary(employee, year, null).dayLimit());
     }
 
@@ -89,7 +102,8 @@ class AnnualAllowanceIntegrationTest {
     }
 
     // Saved fixtures cover status accounting without calling submission date validation.
-    private CourseApplication course(ApplicationStatus status, String fee, double days, int courseYear) {
+    private CourseApplication course(
+            ApplicationStatus status, String fee, double days, int courseYear) {
         CourseApplication course = new CourseApplication();
         course.setApplicant(employee);
         course.setStatus(status);

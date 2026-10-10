@@ -1,0 +1,239 @@
+<!doctype html>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Training reports', ${workspace}, 'reports', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>Training reports</h1>
+        </div>
+      </div>
+      <!-- Period totals and full-year allowances have separate labels to avoid mixing their meanings. -->
+      <p class="cats-sub">
+        Courses overlapping the selected period. Manager reports cover current
+        direct reports; Admin reports cover all accounts.
+      </p>
+      <div class="card">
+        <div class="card-body">
+          <form method="get" th:action="@{${route}}" class="cats-stack">
+            <div class="cats-grid cats-grid-2">
+              <div>
+                <label for="from" class="form-label"> From </label>
+                <input
+                  id="from"
+                  name="from"
+                  class="form-control"
+                  type="date"
+                  th:value="${from}"
+                  required
+                />
+              </div>
+              <div>
+                <label for="to" class="form-label"> To </label>
+                <input
+                  id="to"
+                  name="to"
+                  class="form-control"
+                  type="date"
+                  th:value="${to}"
+                  required
+                />
+              </div>
+            </div>
+            <div class="cats-grid cats-grid-2">
+              <div>
+                <label for="category" class="form-label"> Category </label>
+                <select id="category" name="category" class="form-select">
+                  <option value="">All categories</option>
+                  <option
+                    th:each="c : ${categories}"
+                    th:value="${c}"
+                    th:text="${c.displayName}"
+                    th:selected="${c == category}"
+                  ></option>
+                </select>
+              </div>
+              <div>
+                <label for="employeeId" class="form-label"> Employee </label>
+                <select id="employeeId" name="employeeId" class="form-select">
+                  <option value="">All employees in scope</option>
+                  <option
+                    th:each="e : ${report.employees}"
+                    th:value="${e.id}"
+                    th:text="${e.name + ' · ' + e.staffId}"
+                    th:selected="${e.id == employeeId}"
+                  ></option>
+                </select>
+              </div>
+            </div>
+            <div class="form-check">
+              <input
+                id="attendanceOnly"
+                name="attendanceOnly"
+                type="checkbox"
+                value="true"
+                class="form-check-input"
+                th:checked="${attendanceOnly}"
+              />
+              <label for="attendanceOnly" class="form-check-label"
+                >Attendance only (Approved and Completed)</label
+              >
+            </div>
+            <div class="cats-page-actions">
+              <button class="btn btn-primary">Show report</button>
+              <a
+                class="btn btn-outline-secondary"
+                th:href="@{${route + '.csv'}(from=${from},to=${to},category=${category},employeeId=${employeeId},attendanceOnly=${attendanceOnly})}"
+              >
+                Download CSV
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+      <p class="cats-sub">
+        Days, fees and claim amounts cover each matching course in full; they
+        are not prorated to the selected dates. Annual allowances below cover
+        the whole year.
+      </p>
+      <div class="card">
+        <div class="card-body">
+          <dl class="cats-dl">
+            <dt>Approved/completed course fees</dt>
+            <dd th:text="'$' + ${report.committedFees}"></dd>
+            <dt>Approved fee claims</dt>
+            <dd th:text="'$' + ${report.approvedClaims}"></dd>
+            <dt>Actual reimbursements</dt>
+            <dd th:text="'$' + ${report.reimbursed}"></dd>
+          </dl>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-responsive" tabindex="0">
+          <table class="table cats-table">
+            <thead>
+              <tr>
+                <th>Employee / course</th>
+                <th>Category</th>
+                <th>Dates</th>
+                <th>Full course days / fee</th>
+                <th>Status</th>
+                <th>Claim approved / paid</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="r : ${rows}">
+                <td>
+                  <strong th:text="${r.employee}"> </strong>
+                  <div class="cats-cell-sub" th:text="${r.staffId}"></div>
+                  <div th:text="${r.title}"></div>
+                </td>
+                <td th:text="${r.category?.displayName ?: 'Unspecified'}"></td>
+                <td>
+                  <span th:text="${r.start}"> </span>
+                  <br />
+                  <span th:text="${r.end}"> </span>
+                </td>
+                <td>
+                  <span th:text="${r.days ?: '—'}"> </span>
+                  days
+                  <div th:text="${'$' + r.fee}"></div>
+                </td>
+                <td>
+                  <span th:replace="~{fragments/ui :: status(${r.status})}">
+                  </span>
+                </td>
+                <td>
+                  <span th:text="'$' + ${r.approvedClaim}"> </span>
+                  /
+                  <span th:text="'$' + ${r.reimbursed}"> </span>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(rows)}">
+                <td colspan="6" class="cats-empty">
+                  No courses match these filters.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer cats-page-actions">
+          <a
+            th:if="${page > 0}"
+            th:href="@{${route}(from=${from},to=${to},category=${category},employeeId=${employeeId},attendanceOnly=${attendanceOnly},page=${page-1},size=${size})}"
+          >
+            Previous
+          </a>
+          <span th:text="'Page ' + ${page+1} + ' of ' + ${lastPage+1}"> </span>
+          <a
+            th:if="${page < lastPage}"
+            th:href="@{${route}(from=${from},to=${to},category=${category},employeeId=${employeeId},attendanceOnly=${attendanceOnly},page=${page+1},size=${size})}"
+          >
+            Next
+          </a>
+          <form method="get" th:action="@{${route}}">
+            <input type="hidden" name="from" th:value="${from}" />
+            <input type="hidden" name="to" th:value="${to}" />
+            <input type="hidden" name="category" th:value="${category}" />
+            <input type="hidden" name="employeeId" th:value="${employeeId}" />
+            <input
+              type="hidden"
+              name="attendanceOnly"
+              th:value="${attendanceOnly}"
+            />
+            <label for="size" class="form-label"> Rows </label>
+            <select id="size" name="size" class="form-select">
+              <option
+                th:each="n : ${ {10,20,25} }"
+                th:value="${n}"
+                th:selected="${size == n}"
+                th:text="${n}"
+              ></option>
+            </select>
+            <button class="btn btn-outline-secondary">Apply</button>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2
+            class="cats-card-title"
+            th:text="'Full-year allowances · ' + ${from.year}"
+          ></h2>
+        </div>
+        <div class="table-responsive" tabindex="0">
+          <table class="table cats-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Day limit / committed</th>
+                <th>Budget / committed</th>
+                <th>Remaining days / budget</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="a : ${report.annual}">
+                <td th:text="${a.name + ' · ' + a.staffId}"></td>
+                <td
+                  th:text="${a.summary.dayLimit + ' / ' + a.summary.totalDays}"
+                ></td>
+                <td
+                  th:text="${a.summary.budget + ' / ' + a.summary.totalBudget}"
+                ></td>
+                <td
+                  th:text="${a.summary.remainingDays + ' / ' + a.summary.remainingBudget}"
+                ></td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(report.annual)}">
+                <td colspan="4" class="cats-empty">No employees in scope.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

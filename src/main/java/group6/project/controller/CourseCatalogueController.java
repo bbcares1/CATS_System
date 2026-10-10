@@ -3,6 +3,7 @@ package group6.project.controller;
 import group6.project.model.CourseCategoryType;
 import group6.project.service.CourseCatalogueService;
 import group6.project.service.CourseProviderService;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,17 +15,21 @@ public class CourseCatalogueController {
     private final CourseProviderService providers;
 
     // Staff and Manager use the same catalogue in their personal workspace.
-    public CourseCatalogueController(CourseCatalogueService catalogue, CourseProviderService providers) {
+    public CourseCatalogueController(
+            CourseCatalogueService catalogue, CourseProviderService providers) {
         this.catalogue = catalogue;
         this.providers = providers;
     }
 
     // Keep search and filters in the URL so a result can be bookmarked.
     @GetMapping
-    public String list(@RequestParam(defaultValue = "") String query,
+    public String list(
+            @RequestParam(defaultValue = "") String query,
             @RequestParam(required = false) CourseCategoryType category,
             @RequestParam(required = false) Integer providerId,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, Model model) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
         var result = PageSupport.page(catalogue.search(query, category, providerId), page, size);
         model.addAttribute("courses", result.getContent());
         model.addAttribute("pageData", result);
@@ -32,7 +37,8 @@ public class CourseCatalogueController {
         model.addAttribute("category", category);
         model.addAttribute("providerId", providerId);
         model.addAttribute("categories", CourseCategoryType.values());
-        model.addAttribute("providers", providers.all().stream().filter(p -> p.isActive()).toList());
+        model.addAttribute(
+                "providers", providers.all().stream().filter(p -> p.isActive()).toList());
         return "course-catalogue";
     }
 

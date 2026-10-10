@@ -9,10 +9,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import group6.project.model.ApplicationStatus;
+import group6.project.model.CourseApplication;
+import group6.project.model.CourseCategoryType;
+import group6.project.model.Manager;
+import group6.project.model.Staff;
+import group6.project.repo.CourseApplicationRepo;
+import group6.project.repo.ManagerRepo;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,27 +25,21 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import group6.project.model.ApplicationStatus;
-import group6.project.model.CourseApplication;
-import group6.project.model.CourseCategoryType;
-import group6.project.model.Manager;
-import group6.project.model.Staff;
-import group6.project.repo.CourseApplicationRepo;
-import group6.project.repo.ManagerRepo;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class ManagerServiceTest {
 
-    @Mock
-    private ManagerRepo managerRepo;
+    @Mock private ManagerRepo managerRepo;
 
-    @Mock
-    private CourseApplicationRepo courseApplicationRepo;
+    @Mock private CourseApplicationRepo courseApplicationRepo;
 
     @Mock private group6.project.repo.StaffRepo employees;
 
-    @InjectMocks
-    private ManagerService managerService;
+    @InjectMocks private ManagerService managerService;
 
     @Test
     void getManagerReturnsTheManager() {
@@ -59,8 +56,8 @@ class ManagerServiceTest {
     void getManagerThatDoesNotExistGivesNotFound() {
         when(managerRepo.findById(99)).thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getManager(99));
+        ResponseStatusException error =
+                assertThrows(ResponseStatusException.class, () -> managerService.getManager(99));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
     }
@@ -78,8 +75,10 @@ class ManagerServiceTest {
     void getManagerByUnknownStaffIdGivesNotFound() {
         when(managerRepo.findByStaffId("X999")).thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getManagerByStaffId("X999"));
+        ResponseStatusException error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.getManagerByStaffId("X999"));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
     }
@@ -91,8 +90,8 @@ class ManagerServiceTest {
         CourseApplication updated = application(11, 2, "S002", ApplicationStatus.UPDATED);
         CourseApplication namesake = application(12, 3, "S003", ApplicationStatus.APPLIED);
         when(managerRepo.findById(1)).thenReturn(Optional.of(manager));
-        when(courseApplicationRepo.findPendingForManager(1,
-                List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED)))
+        when(courseApplicationRepo.findPendingForManager(
+                        1, List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED)))
                 .thenReturn(List.of(first, updated, namesake));
 
         var groups = managerService.getPendingApplicationGroups(1);
@@ -100,8 +99,11 @@ class ManagerServiceTest {
         assertEquals(2, groups.size());
         assertEquals(2, groups.getFirst().employeeId());
         assertEquals("S002", groups.getFirst().staffId());
-        assertEquals(List.of(10, 11), groups.getFirst().applications().stream()
-                .map(CourseApplication::getCourseId).toList());
+        assertEquals(
+                List.of(10, 11),
+                groups.getFirst().applications().stream()
+                        .map(CourseApplication::getCourseId)
+                        .toList());
         assertEquals(3, groups.get(1).employeeId());
         assertEquals("S003", groups.get(1).staffId());
         assertEquals("Alex", groups.getFirst().employeeName());
@@ -112,8 +114,8 @@ class ManagerServiceTest {
     @Test
     void managerWithNoPendingApplicationsGetsAnEmptyList() {
         when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
-        when(courseApplicationRepo.findPendingForManager(1,
-                List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED)))
+        when(courseApplicationRepo.findPendingForManager(
+                        1, List.of(ApplicationStatus.APPLIED, ApplicationStatus.UPDATED)))
                 .thenReturn(List.of());
 
         assertEquals(List.of(), managerService.getPendingApplicationGroups(1));
@@ -123,8 +125,10 @@ class ManagerServiceTest {
     void unknownManagerCannotQueryApplications() {
         when(managerRepo.findById(99)).thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getPendingApplicationGroups(99));
+        ResponseStatusException error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.getPendingApplicationGroups(99));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
         verifyNoInteractions(courseApplicationRepo);
@@ -164,8 +168,10 @@ class ManagerServiceTest {
         when(managerRepo.findById(1)).thenReturn(Optional.of(manager()));
         when(courseApplicationRepo.findForManager(99, 1)).thenReturn(Optional.empty());
 
-        ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> managerService.getApplicationForManager(1, 99));
+        ResponseStatusException error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> managerService.getApplicationForManager(1, 99));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
     }
@@ -176,8 +182,8 @@ class ManagerServiceTest {
         return manager;
     }
 
-    private CourseApplication application(Integer id, Integer employeeId, String staffId,
-            ApplicationStatus status) {
+    private CourseApplication application(
+            Integer id, Integer employeeId, String staffId, ApplicationStatus status) {
         Staff employee = new Staff();
         employee.setUserId(employeeId);
         employee.setName("Alex");

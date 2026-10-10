@@ -1,0 +1,122 @@
+<!doctype html>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Claim details', ${workspace}, 'claims', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1>Review claim</h1>
+        </div>
+      </div>
+      <!-- Evidence, review and payment each retain their own saved information. -->
+      <a class="cats-back" th:href="@{${back}}"> Back to claims </a>
+      <div class="card">
+        <div class="card-body cats-stack">
+          <dl class="cats-dl">
+            <dt>Employee</dt>
+            <dd
+              th:text="${claim.applicant.name + ' · ' + claim.applicant.staffId}"
+            ></dd>
+            <dt>Course</dt>
+            <dd th:text="${claim.courseApplication.courseTitle}"></dd>
+            <dt>Amount</dt>
+            <dd th:text="'$' + ${claim.amount}"></dd>
+            <dt>Status</dt>
+            <dd>
+              <span
+                th:replace="~{fragments/ui :: status(${claim.applicationStatus})}"
+              >
+              </span>
+            </dd>
+            <dt>Assigned reviewer</dt>
+            <dd
+              th:text="${claim.approvalManager != null ? claim.approvalManager.name : 'Not assigned'}"
+            ></dd>
+            <dt>Manager's reason</dt>
+            <dd th:text="${claim.decisionReason ?: 'Pending review'}"></dd>
+            <dt>Reviewed by</dt>
+            <dd
+              th:text="${claim.reviewer != null ? claim.reviewer.name : 'Pending review'}"
+            ></dd>
+            <dt>Reimbursement recorded</dt>
+            <dd th:text="${claim.reimbursedAt ?: 'Not recorded'}"></dd>
+            <dt>Payment reference</dt>
+            <dd th:text="${claim.paymentReference ?: 'Not recorded'}"></dd>
+          </dl>
+          <div class="cats-page-actions">
+            <a
+              class="btn btn-outline-secondary"
+              th:href="@{${base} + '/' + ${claim.applicationId} + '/receipt'}"
+            >
+              Download receipt
+            </a>
+            <a
+              class="btn btn-outline-secondary"
+              th:href="@{${base} + '/' + ${claim.applicationId} + '/certificate'}"
+            >
+              Download certificate
+            </a>
+          </div>
+          <form
+            th:if="${canDecide}"
+            th:action="@{/manager/claims/{id}/decision(id=${claim.applicationId})}"
+            th:object="${decision}"
+            method="post"
+            novalidate
+            data-confirm-title="Confirm your decision"
+            data-confirm-message="Check the request and your reason before recording this decision."
+            class="cats-stack"
+          >
+            <input th:replace="~{fragments/csrf :: token}" />
+            <input type="hidden" th:field="*{version}" />
+            <div
+              class="cats-error-summary"
+              th:if="${#fields.hasErrors('*')}"
+              role="alert"
+            >
+              <ul>
+                <li
+                  th:each="error : ${#fields.allErrors()}"
+                  th:text="${error}"
+                ></li>
+              </ul>
+            </div>
+            <div>
+              <label for="reason" class="form-label cats-req">
+                Decision reason
+              </label>
+              <textarea
+                id="reason"
+                th:field="*{reason}"
+                class="form-control"
+                rows="3"
+                maxlength="2000"
+                required
+              >
+              </textarea>
+            </div>
+            <div class="cats-page-actions">
+              <button class="btn btn-primary" name="approved" value="true">
+                Approve claim
+              </button>
+              <button
+                class="btn btn-outline-danger"
+                name="approved"
+                value="false"
+              >
+                Reject claim
+              </button>
+            </div>
+            <p class="form-text">
+              Approval confirms the claim. Admin records reimbursement
+              separately after payment.
+            </p>
+          </form>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

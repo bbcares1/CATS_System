@@ -1,18 +1,15 @@
 package group6.project.repo;
 
-import java.util.List;
-import java.util.Optional;
+import group6.project.model.TrainingEntitlement;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import group6.project.model.TrainingEntitlement;
+import java.util.List;
+import java.util.Optional;
 
-public interface TrainingEntitlementRepo
-        extends JpaRepository<TrainingEntitlement, Integer> {
+public interface TrainingEntitlementRepo extends JpaRepository<TrainingEntitlement, Integer> {
 
     List<TrainingEntitlement> findByStaff_UserId(Integer staffDbId);
 
-    Optional<TrainingEntitlement> findByStaff_UserIdAndYear(
-            Integer staffDbId,
-            Integer year);
+    Optional<TrainingEntitlement> findByStaff_UserIdAndYear(Integer staffDbId, Integer year);
 }

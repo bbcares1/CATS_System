@@ -1,23 +1,88 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout('Annual allowances', 'Admin', 'entitlement', ~{::#content})}">
-<body><section id="content">
-  <div class="cats-page-header"><div><h1>Annual allowances</h1>
-    <p class="cats-sub">Allocate training days by designation and a budget for each calendar year.</p></div></div>
-  <form method="get" th:action="@{/admin/entitlements}" class="cats-filter-bar mb-3">
-    <label for="year" class="form-label">Year</label><input id="year" name="year" type="number" min="2000" max="2100" th:value="${year}" required>
-    <button class="btn btn-outline-primary" type="submit">Show</button>
-  </form>
-  <section class="card"><div class="table-responsive"><table class="table cats-table">
-    <thead><tr><th>Employee</th><th>Designation</th><th>Days limit</th><th>Days reserved / used</th><th>Budget</th><th>Fees reserved / used</th><th>Action</th></tr></thead>
-    <tbody><tr th:each="row : ${rows}">
-      <td th:text="${row.staff.name}"></td><td th:text="${row.staff.designation ?: 'Not set'}"></td>
-      <td class="cats-num" th:text="${row.summary.dayLimit}"></td>
-      <td class="cats-num" th:text="${row.summary.reservedDays + ' / ' + row.summary.usedDays}"></td>
-      <td class="cats-num" th:text="${'$' + #numbers.formatDecimal(row.summary.budget,1,2)}"></td>
-      <td class="cats-num" th:text="${'$' + #numbers.formatDecimal(row.summary.reservedBudget,1,2) + ' / $' + #numbers.formatDecimal(row.summary.usedBudget,1,2)}"></td>
-      <td><a th:href="@{/admin/entitlements/{id}(id=${row.staff.userId},year=${year})}">Edit allowance</a></td>
-    </tr><tr th:if="${#lists.isEmpty(rows)}"><td colspan="7">Create an employee account before allocating training allowance.</td></tr></tbody>
-  </table></div></section>
-  <div th:replace="~{fragments/list-pagination :: pager(${pageData}, '/admin/entitlements', 'year', ${year})}"></div>
-</section></body></html>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Annual allowances', 'Admin', 'entitlement', ~{::#content})}"
+>
+  <body>
+    <section id="content">
+      <div class="cats-page-header">
+        <div>
+          <h1>Annual allowances</h1>
+          <p class="cats-sub">
+            Allocate training days by designation and a budget for each calendar
+            year.
+          </p>
+        </div>
+      </div>
+      <form
+        method="get"
+        th:action="@{/admin/entitlements}"
+        class="cats-filter-bar mb-3"
+      >
+        <label for="year" class="form-label">Year</label
+        ><input
+          id="year"
+          name="year"
+          type="number"
+          min="2000"
+          max="2100"
+          th:value="${year}"
+          required
+        />
+        <button class="btn btn-outline-primary" type="submit">Show</button>
+      </form>
+      <section class="card">
+        <div class="table-responsive">
+          <table class="table cats-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Designation</th>
+                <th>Days limit</th>
+                <th>Days reserved / used</th>
+                <th>Budget</th>
+                <th>Fees reserved / used</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="row : ${rows}">
+                <td th:text="${row.staff.name}"></td>
+                <td th:text="${row.staff.designation ?: 'Not set'}"></td>
+                <td class="cats-num" th:text="${row.summary.dayLimit}"></td>
+                <td
+                  class="cats-num"
+                  th:text="${row.summary.reservedDays + ' / ' + row.summary.usedDays}"
+                ></td>
+                <td
+                  class="cats-num"
+                  th:text="${'$' + #numbers.formatDecimal(row.summary.budget,1,2)}"
+                ></td>
+                <td
+                  class="cats-num"
+                  th:text="${'$' + #numbers.formatDecimal(row.summary.reservedBudget,1,2) + ' / $' + #numbers.formatDecimal(row.summary.usedBudget,1,2)}"
+                ></td>
+                <td>
+                  <a
+                    th:href="@{/admin/entitlements/{id}(id=${row.staff.userId},year=${year})}"
+                    >Edit allowance</a
+                  >
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(rows)}">
+                <td colspan="7">
+                  Create an employee account before allocating training
+                  allowance.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <div
+        th:replace="~{fragments/list-pagination :: pager(${pageData}, '/admin/entitlements', 'year', ${year})}"
+      ></div>
+    </section>
+  </body>
+</html>

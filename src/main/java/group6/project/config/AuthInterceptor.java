@@ -5,8 +5,10 @@ import group6.project.model.Manager;
 import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.service.UserService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -21,18 +23,22 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     // A Manager is also Staff; an authenticated wrong role gets a clear 403.
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
-            Object handler) throws Exception {
+    public boolean preHandle(
+            HttpServletRequest request, HttpServletResponse response, Object handler)
+            throws Exception {
         String path = request.getRequestURI().substring(request.getContextPath().length());
-        boolean adminPage = path.equals("/admin") || path.startsWith("/admin/")
-                || path.startsWith("/excluded-days");
+        boolean adminPage =
+                path.equals("/admin")
+                        || path.startsWith("/admin/")
+                        || path.startsWith("/excluded-days");
         User user = users.currentUser(request.getSession(false));
         if (user == null) {
             if (path.endsWith("/receipt") || path.endsWith("/certificate")) {
                 response.sendError(401);
             } else {
-                response.sendRedirect(request.getContextPath()
-                        + (adminPage ? "/admin/login" : "/employee/login"));
+                response.sendRedirect(
+                        request.getContextPath()
+                                + (adminPage ? "/admin/login" : "/employee/login"));
             }
             return false;
         }

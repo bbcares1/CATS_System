@@ -17,7 +17,10 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "training_entitlement", uniqueConstraints = @jakarta.persistence.UniqueConstraint(columnNames = {"staff_id", "year"}))
+@Table(
+        name = "training_entitlement",
+        uniqueConstraints =
+                @jakarta.persistence.UniqueConstraint(columnNames = {"staff_id", "year"}))
 @Getter
 @Setter
 @NoArgsConstructor

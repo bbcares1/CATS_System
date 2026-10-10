@@ -30,6 +30,7 @@
           method="post"
           novalidate
         >
+          <input th:replace="~{fragments/csrf :: token}" />
           <input type="hidden" th:field="*{version}" />
           <div
             class="cats-error-summary"

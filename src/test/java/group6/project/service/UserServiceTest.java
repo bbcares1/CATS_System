@@ -1,13 +1,16 @@
 package group6.project.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import group6.project.model.Manager;
 import group6.project.model.Staff;
 import group6.project.repo.UserRepo;
-import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpSession;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+
+import java.util.Optional;
 
 class UserServiceTest {
     // A trimmed username is accepted, but the password must match exactly.

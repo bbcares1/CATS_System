@@ -2,7 +2,9 @@ package group6.project.controller;
 
 import group6.project.form.CourseForm;
 import group6.project.service.*;
+
 import jakarta.validation.Valid;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -18,7 +20,10 @@ public class CourseDetailController {
     private final CourseProviderService providers;
 
     // Keep HTTP forms here and catalogue rules in the service.
-    public CourseDetailController(CourseDetailService service, CourseCategoryService categories, CourseProviderService providers) {
+    public CourseDetailController(
+            CourseDetailService service,
+            CourseCategoryService categories,
+            CourseProviderService providers) {
         this.service = service;
         this.categories = categories;
         this.providers = providers;
@@ -26,8 +31,10 @@ public class CourseDetailController {
 
     // Admin can include archived rows when reviewing catalogue data.
     @GetMapping
-    public String list(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size, Model model) {
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
         var result = PageSupport.page(service.all(), page, size);
         model.addAttribute("rows", result.getContent());
         model.addAttribute("pageData", result);
@@ -48,9 +55,12 @@ public class CourseDetailController {
 
     // Keep the submitted values when validation or a business rule rejects the form.
     @PostMapping({"/new", "/{id}/edit"})
-    public String save(@PathVariable(required = false) Integer id,
-            @Valid @ModelAttribute("form") CourseForm form, BindingResult binding,
-            Model model, RedirectAttributes redirect) {
+    public String save(
+            @PathVariable(required = false) Integer id,
+            @Valid @ModelAttribute("form") CourseForm form,
+            BindingResult binding,
+            Model model,
+            RedirectAttributes redirect) {
         if (binding.hasErrors()) return render(id, form, model);
         try {
             service.save(id, form);
@@ -65,7 +75,8 @@ public class CourseDetailController {
 
     // The service decides whether references require archiving or prevent deletion.
     @PostMapping("/{id}/delete")
-    public String remove(@PathVariable Integer id, @RequestParam Long version, RedirectAttributes redirect) {
+    public String remove(
+            @PathVariable Integer id, @RequestParam Long version, RedirectAttributes redirect) {
         try {
             service.remove(id, version);
             redirect.addFlashAttribute("success", "Course removed from active use.");
@@ -80,7 +91,8 @@ public class CourseDetailController {
     private String render(Integer id, CourseForm form, Model model) {
         model.addAttribute("form", form);
         model.addAttribute("editId", id);
-        model.addAttribute("formAction", id == null ? "/admin/courses/new" : "/admin/courses/" + id + "/edit");
+        model.addAttribute(
+                "formAction", id == null ? "/admin/courses/new" : "/admin/courses/" + id + "/edit");
         model.addAttribute("categories", categories.getAllCategories());
         model.addAttribute("providers", providers.all());
         return "admin-course-form";

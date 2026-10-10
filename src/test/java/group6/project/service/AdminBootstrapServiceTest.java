@@ -18,7 +18,14 @@ class AdminBootstrapServiceTest {
     void firstInstallCreatesAnAdmin() {
         var users = mock(UserRepo.class);
         when(users.findByUserName("operator")).thenReturn(Optional.empty());
-        new AdminBootstrap(users, " OPERATOR ", "chosen-password", "Operator", "A-INIT", "admin@example.test").run(null);
+        new AdminBootstrap(
+                        users,
+                        " OPERATOR ",
+                        "chosen-password",
+                        "Operator",
+                        "A-INIT",
+                        "admin@example.test")
+                .run(null);
         var saved = ArgumentCaptor.forClass(User.class);
         verify(users).saveAndFlush(saved.capture());
         assertInstanceOf(Admin.class, saved.getValue());
@@ -41,7 +48,9 @@ class AdminBootstrapServiceTest {
         var users = mock(UserRepo.class);
         assertThrows(
                 IllegalStateException.class,
-                () -> new AdminBootstrap(users, "", "", "Operator", "A", "admin@example.test").run(null));
+                () ->
+                        new AdminBootstrap(users, "", "", "Operator", "A", "admin@example.test")
+                                .run(null));
         verify(users, never()).saveAndFlush(any());
     }
 
@@ -52,7 +61,15 @@ class AdminBootstrapServiceTest {
         when(users.findByUserName("operator")).thenReturn(Optional.of(new Staff()));
         assertThrows(
                 IllegalStateException.class,
-                () -> new AdminBootstrap(users, "operator", "password", "Operator", "A", "admin@example.test").run(null));
+                () ->
+                        new AdminBootstrap(
+                                        users,
+                                        "operator",
+                                        "password",
+                                        "Operator",
+                                        "A",
+                                        "admin@example.test")
+                                .run(null));
         verify(users, never()).saveAndFlush(any());
     }
 }

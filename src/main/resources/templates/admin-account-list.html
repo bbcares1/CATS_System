@@ -1,14 +1,17 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout('Accounts and reporting managers', 'Admin', 'accounts', ~{::#content})}">
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Accounts and reporting managers', 'Admin', 'accounts', ~{::#content})}"
+>
   <body>
     <section id="content" class="cats-stack">
       <div class="cats-page-header">
         <div>
-          <h1>
-            Accounts and reporting managers
-          </h1>
+          <h1>Accounts and reporting managers</h1>
           <p class="cats-sub">
-            Manage access and direct reports. Annual limits are allocated separately.
+            Manage access and direct reports. Annual limits are allocated
+            separately.
           </p>
         </div>
         <a class="btn btn-primary" th:href="@{/admin/accounts/new}">
@@ -20,47 +23,41 @@
           <table class="table">
             <thead>
               <tr>
-                <th>
-                  Employee
-                </th>
-                <th>
-                  Username
-                </th>
-                <th>
-                  Role
-                </th>
-                <th>
-                  Reports to
-                </th>
-                <th>
-                  Access
-                </th>
-                <th>
-                  Actions
-                </th>
+                <th>Employee</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Reports to</th>
+                <th>Access</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr th:each="u : ${accounts}">
                 <td class="cats-col-main">
-                  <span th:text="${u.name}">
-                  </span>
-                  <div class="cats-cell-sub" th:text="${u.staffId ?: 'Staff ID needed'}">
-                  </div>
+                  <span th:text="${u.name}"> </span>
+                  <div
+                    class="cats-cell-sub"
+                    th:text="${u.staffId ?: 'Staff ID needed'}"
+                  ></div>
                 </td>
-                <td th:text="${u.userName}">
-                </td>
-                <td th:text="${#strings.capitalize(#strings.toLowerCase(u.role))}">
-                </td>
-                <td th:text="${u.manager?.name ?: 'Not assigned'}">
-                </td>
-                <td th:text="${u.active} ? 'Active' : 'Disabled'">
-                </td>
+                <td th:text="${u.userName}"></td>
+                <td
+                  th:text="${#strings.capitalize(#strings.toLowerCase(u.role))}"
+                ></td>
+                <td th:text="${u.manager?.name ?: 'Not assigned'}"></td>
+                <td th:text="${u.active} ? 'Active' : 'Disabled'"></td>
                 <td class="cats-row-actions">
-                  <a class="btn btn-sm btn-quiet" th:href="@{/admin/accounts/{id}/edit(id=${u.userId})}">
+                  <a
+                    class="btn btn-sm btn-quiet"
+                    th:href="@{/admin/accounts/{id}/edit(id=${u.userId})}"
+                  >
                     Edit
                   </a>
-                  <a th:if="${u instanceof T(group6.project.model.Staff)}" class="btn btn-sm btn-quiet" th:href="@{/admin/budgets/edit/{id}(id=${u.userId})}">
+                  <a
+                    th:if="${u instanceof T(group6.project.model.Staff)}"
+                    class="btn btn-sm btn-quiet"
+                    th:href="@{/admin/budgets/edit/{id}(id=${u.userId})}"
+                  >
                     Allowance
                   </a>
                 </td>
@@ -69,7 +66,9 @@
           </table>
         </div>
       </div>
-    <div th:replace="~{fragments/list-pagination :: pager(${pageData}, '/admin/accounts', null, null)}"></div>
-</section>
+      <div
+        th:replace="~{fragments/list-pagination :: pager(${pageData}, '/admin/accounts', null, null)}"
+      ></div>
+    </section>
   </body>
 </html>

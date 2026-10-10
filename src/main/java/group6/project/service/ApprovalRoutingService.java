@@ -1,13 +1,16 @@
 package group6.project.service;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+
 import group6.project.model.Manager;
 import group6.project.model.User;
 import group6.project.repo.ManagerRepo;
-import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
+
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -23,7 +26,10 @@ public class ApprovalRoutingService {
     public List<Manager> choices(User applicant) {
         if (!(applicant instanceof Manager) || applicant.getManager() != null) return List.of();
         return managers.findAll().stream()
-                .filter(manager -> manager.isActive() && !manager.getUserId().equals(applicant.getUserId()))
+                .filter(
+                        manager ->
+                                manager.isActive()
+                                        && !manager.getUserId().equals(applicant.getUserId()))
                 .toList();
     }
 
@@ -32,12 +38,16 @@ public class ApprovalRoutingService {
         User reviewer = applicant.getManager();
         if (reviewer == null && applicant instanceof Manager && selectedId != null) {
             reviewer = managers.findById(selectedId).orElse(null);
-        } else if (reviewer != null && selectedId != null && !selectedId.equals(reviewer.getUserId())) {
+        } else if (reviewer != null
+                && selectedId != null
+                && !selectedId.equals(reviewer.getUserId())) {
             throw new ResponseStatusException(BAD_REQUEST, "Use your assigned reporting manager.");
         }
-        if (!(reviewer instanceof Manager) || !reviewer.isActive()
+        if (!(reviewer instanceof Manager)
+                || !reviewer.isActive()
                 || reviewer.getUserId().equals(applicant.getUserId())) {
-            throw new ResponseStatusException(BAD_REQUEST, "An active, different Manager must review this request.");
+            throw new ResponseStatusException(
+                    BAD_REQUEST, "An active, different Manager must review this request.");
         }
         return reviewer;
     }

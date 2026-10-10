@@ -302,3 +302,13 @@ h1, h2, h3 { text-wrap: balance; }
 .cats-login-foot { text-align: center; font-size: .8rem; color: var(--cats-muted); }
 
 .cats-pre-wrap { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Attendance stays readable with horizontal scrolling on small screens. */
+.cats-calendar { min-width: 850px; table-layout: fixed; }
+.cats-calendar td { height: 130px; vertical-align: top; }
+.cats-calendar-outside { opacity: .45; }
+.cats-calendar-nonworking { background: var(--bs-tertiary-bg) !important; }
+.cats-calendar-entry { border-left: 3px solid #da710b; padding: 6px; margin-top: 8px; font-size: .8rem; overflow-wrap: anywhere; }
+
+.cats-logout { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; background: none; color: inherit; padding: 12px; text-align: left; }
+.cats-logout svg { width: 20px; height: 20px; }

@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
+
 @Component
 @Profile("prod")
 public class AdminBootstrap implements ApplicationRunner {
@@ -41,24 +43,26 @@ public class AdminBootstrap implements ApplicationRunner {
                 || name.isBlank()
                 || staffId.isBlank()
                 || email.isBlank()
-                || userName.length() > 255
+                || !userName.trim().matches("[A-Za-z0-9_.-]{3,100}")
+                || email.length() > 255
+                || !email.trim().matches("[^ @]+@[^ @]+[.][^ @]+")
                 || password.length() > 255
                 || name.length() > 255
                 || staffId.length() > 255) {
             throw new IllegalStateException(
                     "First production start needs CATS_ADMIN_USER, CATS_ADMIN_PASSWORD,"
-                        + " CATS_ADMIN_NAME, CATS_ADMIN_STAFF_ID and CATS_ADMIN_EMAIL.");
+                            + " CATS_ADMIN_NAME, CATS_ADMIN_STAFF_ID and CATS_ADMIN_EMAIL.");
         }
-        if (users.findByUserName(userName.trim().toLowerCase(java.util.Locale.ROOT)).isPresent())
+        if (users.findByUserName(userName.trim().toLowerCase(Locale.ROOT)).isPresent())
             throw new IllegalStateException(
                     "The bootstrap username already belongs to another account. Choose a new"
-                        + " CATS_ADMIN_USER.");
+                            + " CATS_ADMIN_USER.");
         var admin = new Admin();
-        admin.setUserName(userName.trim().toLowerCase(java.util.Locale.ROOT));
+        admin.setUserName(userName.trim().toLowerCase(Locale.ROOT));
         admin.setPassword(password);
         admin.setName(name.trim());
         admin.setStaffId(staffId.trim());
-        admin.setEmail(email.trim());
+        admin.setEmail(email.trim().toLowerCase(Locale.ROOT));
         users.saveAndFlush(admin);
     }
 }

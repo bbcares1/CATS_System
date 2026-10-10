@@ -1,15 +1,19 @@
 package group6.project.service;
 
+import static org.springframework.http.HttpStatus.*;
+
 import group6.project.form.CourseProviderForm;
 import group6.project.model.CourseProvider;
-import group6.project.repo.CourseProviderRepo;
 import group6.project.repo.CourseDetailRepo;
-import java.util.List;
-import java.util.Objects;
+import group6.project.repo.CourseProviderRepo;
+
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import static org.springframework.http.HttpStatus.*;
+
+import java.util.List;
+import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
@@ -25,12 +29,14 @@ public class CourseProviderService {
 
     // Archived providers remain visible to Admin for maintenance.
     public List<CourseProvider> all() {
-        return providers.findAll(org.springframework.data.domain.Sort.by("name"));
+        return providers.findAll(Sort.by("name"));
     }
 
     // Resolve bookmarks and edit links against saved records.
     public CourseProvider get(Integer id) {
-        return providers.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Provider not found."));
+        return providers
+                .findById(id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Provider not found."));
     }
 
     // Prepare just the values that Admin can edit.
@@ -53,9 +59,12 @@ public class CourseProviderService {
             throw new ResponseStatusException(CONFLICT, "This provider changed. Reload it.");
         }
         String name = form.getName().trim();
-        boolean duplicate = id == null ? providers.existsByNameIgnoreCase(name)
-                : providers.existsByNameIgnoreCaseAndProviderIdNot(name, id);
-        if (duplicate) throw new ResponseStatusException(BAD_REQUEST, "That provider name is already used.");
+        boolean duplicate =
+                id == null
+                        ? providers.existsByNameIgnoreCase(name)
+                        : providers.existsByNameIgnoreCaseAndProviderIdNot(name, id);
+        if (duplicate)
+            throw new ResponseStatusException(BAD_REQUEST, "That provider name is already used.");
         provider.setName(name);
         provider.setWebsite(form.getWebsite());
         provider.setEmail(form.getEmail());
@@ -67,7 +76,8 @@ public class CourseProviderService {
     @Transactional
     public void remove(Integer id, Long version) {
         CourseProvider provider = get(id);
-        if (!Objects.equals(version, provider.getVersion())) throw new ResponseStatusException(CONFLICT, "Reload this provider.");
+        if (!Objects.equals(version, provider.getVersion()))
+            throw new ResponseStatusException(CONFLICT, "Reload this provider.");
         if (courses.existsByProvider_ProviderId(id)) provider.setActive(false);
         else providers.delete(provider);
     }

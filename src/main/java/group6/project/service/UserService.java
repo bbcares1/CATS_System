@@ -5,9 +5,13 @@ import group6.project.model.Manager;
 import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.repo.UserRepo;
+
 import jakarta.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
@@ -32,8 +36,9 @@ public class UserService {
         Object saved = session == null ? null : session.getAttribute("user");
         if (!(saved instanceof User user) || user.getUserId() == null) return null;
         User current = userRepo.findById(user.getUserId()).orElse(null);
-        if (current == null || !current.isActive()
-                || !java.util.Objects.equals(user.getVersion(), current.getVersion())) {
+        if (current == null
+                || !current.isActive()
+                || !Objects.equals(user.getVersion(), current.getVersion())) {
             session.removeAttribute("user");
             return null;
         }

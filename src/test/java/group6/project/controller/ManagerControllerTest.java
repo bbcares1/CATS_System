@@ -1,13 +1,8 @@
 package group6.project.controller;
 
-import static org.mockito.ArgumentMatchers.nullable;
-
-import jakarta.servlet.http.HttpSession;
-
-import group6.project.service.UserService;
-
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -18,13 +13,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Stream;
+import group6.project.model.Admin;
+import group6.project.model.ApplicationStatus;
+import group6.project.model.CourseApplication;
+import group6.project.model.CourseCategoryType;
+import group6.project.model.Manager;
+import group6.project.model.Staff;
+import group6.project.model.User;
+import group6.project.service.ManagerService;
+import group6.project.service.ManagerService.ApplicationGroup;
+import group6.project.service.UserService;
 
-import org.junit.jupiter.api.Test;
+import jakarta.servlet.http.HttpSession;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -36,36 +39,31 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
 
-import group6.project.model.Admin;
-import group6.project.model.ApplicationStatus;
-import group6.project.model.CourseCategoryType;
-import group6.project.model.Manager;
-import group6.project.model.Staff;
-import group6.project.model.User;
-import group6.project.service.ManagerService;
-import group6.project.service.ManagerService.ApplicationGroup;
-import group6.project.model.CourseApplication;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Stream;
 
 @WebMvcTest(ManagerController.class)
 class ManagerControllerTest {
+    @MockitoBean private group6.project.service.NotificationService notifications;
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @MockitoBean
-    private UserService users;
+    @MockitoBean private UserService users;
 
     // These page tests isolate the service; LoginFlowTest checks saved identities.
     @BeforeEach
     void prepareIdentity() {
-        when(users.currentUser(
-                nullable(HttpSession.class)))
-                .thenAnswer(call -> {
-                    HttpSession session = call.getArgument(0);
-                    Object value = session == null ? null : session.getAttribute("user");
-                    return value instanceof User user && user.getUserId() != null
-                            ? user : null;
-                });
+        when(users.currentUser(nullable(HttpSession.class)))
+                .thenAnswer(
+                        call -> {
+                            HttpSession session = call.getArgument(0);
+                            Object value = session == null ? null : session.getAttribute("user");
+                            return value instanceof User user && user.getUserId() != null
+                                    ? user
+                                    : null;
+                        });
     }
 
     @MockitoBean private group6.project.service.CourseApplicationService applications;
@@ -108,14 +106,13 @@ class ManagerControllerTest {
                 .andExpect(content().string(containsString("M001")))
                 .andExpect(content().string(containsString("href=\"/staff/home\"")))
                 .andExpect(content().string(containsString("href=\"/manager/approvals\"")))
-                .andExpect(content().string(containsString("href=\"/logout\"")));
+                .andExpect(content().string(containsString("action=\"/logout\"")));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"/api/managers", "/api/managers/1", "/api/managers/staff-id/M001"})
     void retiredApiRoutesAreNotExposed(String path) throws Exception {
-        mockMvc.perform(get(path))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get(path)).andExpect(status().isNotFound());
     }
 
     @ParameterizedTest
@@ -142,15 +139,21 @@ class ManagerControllerTest {
         var groups = List.of(new ApplicationGroup(2, "Alex & Team", "S002", List.of(application)));
         when(managerService.getPendingApplicationGroups(1)).thenReturn(groups);
 
-        mockMvc.perform(get("/manager/approvals").param("managerId", "99")
-                .sessionAttr("user", manager()))
+        mockMvc.perform(
+                        get("/manager/approvals")
+                                .param("managerId", "99")
+                                .sessionAttr("user", manager()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("manager-approvals"))
                 .andExpect(model().attribute("groups", groups))
                 .andExpect(model().attribute("applicationCount", 1))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(containsString("Alex &amp; Team")))
-                .andExpect(content().string(containsString("Java &lt;script&gt;alert(1)&lt;/script&gt;")))
+                .andExpect(
+                        content()
+                                .string(
+                                        containsString(
+                                                "Java &lt;script&gt;alert(1)&lt;/script&gt;")))
                 .andExpect(content().string(containsString("href=\"/manager/applications/10\"")))
                 .andExpect(content().string(containsString("$1,800.00")))
                 .andExpect(content().string(containsString("12 Nov 2026")))
@@ -172,9 +175,15 @@ class ManagerControllerTest {
     void detailsRenderApplicationAndDecisionFieldsAsReadOnly() throws Exception {
         var application = application(ApplicationStatus.REJECTED);
         when(managerService.getApplicationForManager(1, 10)).thenReturn(application);
-        when(entitlements.summary(application.getApplicant(), 2026, null)).thenReturn(
-            new group6.project.service.TrainingEntitlementService.AnnualSummary(10, new java.math.BigDecimal("2000"),
-            0, java.math.BigDecimal.ZERO, 0, java.math.BigDecimal.ZERO));
+        when(entitlements.summary(application.getApplicant(), 2026, null))
+                .thenReturn(
+                        new group6.project.service.TrainingEntitlementService.AnnualSummary(
+                                10,
+                                new java.math.BigDecimal("2000"),
+                                0,
+                                java.math.BigDecimal.ZERO,
+                                0,
+                                java.math.BigDecimal.ZERO));
 
         mockMvc.perform(get("/manager/applications/10").sessionAttr("user", manager()))
                 .andExpect(status().isOk())
@@ -186,13 +195,20 @@ class ManagerControllerTest {
                 .andExpect(content().string(containsString("Share the learning with the team.")))
                 .andExpect(content().string(containsString("Conflicts with a project deadline.")))
                 .andExpect(content().string(containsString("cats-status-rejected")))
-                .andExpect(content().string(not(containsString("<form"))));
+                .andExpect(
+                        content()
+                                .string(
+                                        not(
+                                                containsString(
+                                                        "action=\"/manager/applications/10/decision\""))));
     }
 
     @Test
     void missingOrOtherTeamApplicationReturns404() throws Exception {
         when(managerService.getApplicationForManager(1, 99))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Course application not found"));
+                .thenThrow(
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Course application not found"));
 
         mockMvc.perform(get("/manager/applications/99").sessionAttr("user", manager()))
                 .andExpect(status().isNotFound());
@@ -207,15 +223,30 @@ class ManagerControllerTest {
     }
 
     private CourseApplication application(ApplicationStatus status) {
-        Staff applicant = new Staff(); applicant.setUserId(2); applicant.setName("Alex & Team"); applicant.setStaffId("S002");
-        CourseApplication course = new CourseApplication(); course.setCourseId(10); course.setVersion(0L);
-        course.setApplicant(applicant); course.setApprovalManager(manager());
-        course.setCourseTitle("Java <script>alert(1)</script>"); course.setCourseCategory(CourseCategoryType.EXTERNAL_COURSE);
-        course.setTrainingProvider("NUS-ISS"); course.setCourseStartDate(LocalDate.of(2026,11,12));
-        course.setCourseEndDate(LocalDate.of(2026,11,13)); course.setTrainingDays(2d); course.setCourseFee(new java.math.BigDecimal("1800.0"));
-        course.setJustification("Improve our system design."); course.setWorkDissemination("Share the learning with the team.");
-        course.setStatus(status); course.setSubmittedAt(LocalDateTime.of(2026,10,9,10,0));
-        if (status == ApplicationStatus.REJECTED) { course.setReviewedAt(LocalDateTime.of(2026,10,9,11,0)); course.setDecisionReason("Conflicts with a project deadline."); }
+        Staff applicant = new Staff();
+        applicant.setUserId(2);
+        applicant.setName("Alex & Team");
+        applicant.setStaffId("S002");
+        CourseApplication course = new CourseApplication();
+        course.setCourseId(10);
+        course.setVersion(0L);
+        course.setApplicant(applicant);
+        course.setApprovalManager(manager());
+        course.setCourseTitle("Java <script>alert(1)</script>");
+        course.setCourseCategory(CourseCategoryType.EXTERNAL_COURSE);
+        course.setTrainingProvider("NUS-ISS");
+        course.setCourseStartDate(LocalDate.of(2026, 11, 12));
+        course.setCourseEndDate(LocalDate.of(2026, 11, 13));
+        course.setTrainingDays(2d);
+        course.setCourseFee(new java.math.BigDecimal("1800.0"));
+        course.setJustification("Improve our system design.");
+        course.setWorkDissemination("Share the learning with the team.");
+        course.setStatus(status);
+        course.setSubmittedAt(LocalDateTime.of(2026, 10, 9, 10, 0));
+        if (status == ApplicationStatus.REJECTED) {
+            course.setReviewedAt(LocalDateTime.of(2026, 10, 9, 11, 0));
+            course.setDecisionReason("Conflicts with a project deadline.");
+        }
         return course;
     }
 }

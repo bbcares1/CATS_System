@@ -2,67 +2,121 @@
    Desktop: the Collapse button switches between full width and the icon rail and remembers the choice.
    Phone: the menu button opens the sidebar as a drawer; the backdrop or Escape closes it. */
 (function () {
-  var layout = document.getElementById('layout');
+  var layout = document.getElementById("layout");
   if (!layout) return;
 
-  var KEY = 'cats.sidebar';
+  var KEY = "cats.sidebar";
   var saved = null;
-  try { saved = localStorage.getItem(KEY); } catch (e) { /* storage blocked: ignore */ }
-  if (saved === 'collapsed' || (saved === null && window.innerWidth < 992)) {
-    layout.classList.add('collapsed');
+  try {
+    saved = localStorage.getItem(KEY);
+  } catch (e) {
+    /* storage blocked: ignore */
+  }
+  if (saved === "collapsed" || (saved === null && window.innerWidth < 992)) {
+    layout.classList.add("collapsed");
   }
 
-  var toggle = document.getElementById('sidebarToggle');
+  var toggle = document.getElementById("sidebarToggle");
   if (toggle) {
-    toggle.addEventListener('click', function () {
-      layout.classList.toggle('collapsed');
-      var collapsed = layout.classList.contains('collapsed');
-      toggle.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
-      toggle.setAttribute('data-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
-      try { localStorage.setItem(KEY, collapsed ? 'collapsed' : 'expanded'); } catch (e) { /* ignore */ }
+    toggle.addEventListener("click", function () {
+      layout.classList.toggle("collapsed");
+      var collapsed = layout.classList.contains("collapsed");
+      toggle.setAttribute(
+        "aria-label",
+        collapsed ? "Expand sidebar" : "Collapse sidebar",
+      );
+      toggle.setAttribute(
+        "data-label",
+        collapsed ? "Expand sidebar" : "Collapse sidebar",
+      );
+      try {
+        localStorage.setItem(KEY, collapsed ? "collapsed" : "expanded");
+      } catch (e) {
+        /* ignore */
+      }
     });
   }
 
-  var menu = document.getElementById('menuToggle');
+  var menu = document.getElementById("menuToggle");
   if (menu) {
-    menu.addEventListener('click', function () {
-      var open = layout.classList.toggle('open');
-      menu.setAttribute('aria-expanded', open ? 'true' : 'false');
+    menu.addEventListener("click", function () {
+      var open = layout.classList.toggle("open");
+      menu.setAttribute("aria-expanded", open ? "true" : "false");
     });
   }
 
-  var backdrop = document.getElementById('backdrop');
-  if (backdrop) backdrop.addEventListener('click', function () { layout.classList.remove('open'); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') layout.classList.remove('open'); });
-  var accountRole = document.querySelector('[data-account-role]');
-  var accountFields = document.querySelector('[data-account-fields]');
+  var backdrop = document.getElementById("backdrop");
+  if (backdrop)
+    backdrop.addEventListener("click", function () {
+      layout.classList.remove("open");
+    });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") layout.classList.remove("open");
+  });
+  var accountRole = document.querySelector("[data-account-role]");
+  var accountFields = document.querySelector("[data-account-fields]");
   if (accountRole && accountFields) {
     var updateAccountFields = function () {
-      var isAdmin = accountRole.value === 'ADMIN';
+      var isAdmin = accountRole.value === "ADMIN";
       accountFields.hidden = isAdmin;
-      accountFields.querySelectorAll('input, select').forEach(function (field) {
+      accountFields.querySelectorAll("input, select").forEach(function (field) {
         field.disabled = isAdmin;
-        field.required = !isAdmin && field.hasAttribute('data-required');
+        field.required = !isAdmin && field.hasAttribute("data-required");
       });
     };
-    accountFields.querySelectorAll('[required]').forEach(function (field) {
-      field.setAttribute('data-required', 'true');
+    accountFields.querySelectorAll("[required]").forEach(function (field) {
+      field.setAttribute("data-required", "true");
     });
-    accountRole.addEventListener('change', updateAccountFields);
+    accountRole.addEventListener("change", updateAccountFields);
     updateAccountFields();
   }
 
-  var courseCategory = document.querySelector('[data-course-category]');
-  var courseFee = document.querySelector('[data-course-fee]');
+  var courseCategory = document.querySelector("[data-course-category]");
+  var courseFee = document.querySelector("[data-course-fee]");
   if (courseCategory && courseFee) {
     var updateCourseFee = function () {
       var option = courseCategory.options[courseCategory.selectedIndex];
-      var isInternalTraining = option && option.textContent.trim().toLowerCase() === 'internal training';
+      var isInternalTraining =
+        option &&
+        option.textContent.trim().toLowerCase() === "internal training";
       courseFee.readOnly = Boolean(isInternalTraining);
-      if (isInternalTraining) courseFee.value = '0';
+      if (isInternalTraining) courseFee.value = "0";
     };
-    courseCategory.addEventListener('change', updateCourseFee);
+    courseCategory.addEventListener("change", updateCourseFee);
     updateCourseFee();
   }
+})();
 
+// Confirm sensitive changes, keeping the clicked decision button in the normal POST.
+(function () {
+  var dialog = document.getElementById("confirm-action");
+  if (!dialog || !window.bootstrap) return;
+  var modal = new bootstrap.Modal(dialog);
+  var pendingForm, pendingButton;
+  document
+    .querySelectorAll("form[data-confirm-title]")
+    .forEach(function (form) {
+      form.addEventListener("submit", function (event) {
+        if (form.dataset.confirmed === "yes") {
+          delete form.dataset.confirmed;
+          return;
+        }
+        event.preventDefault();
+        pendingForm = form;
+        pendingButton = event.submitter;
+        document.getElementById("confirm-action-title").textContent =
+          form.dataset.confirmTitle;
+        document.getElementById("confirm-action-message").textContent =
+          form.dataset.confirmMessage;
+        modal.show();
+      });
+    });
+  document
+    .getElementById("confirm-action-submit")
+    .addEventListener("click", function () {
+      if (!pendingForm) return;
+      pendingForm.dataset.confirmed = "yes";
+      pendingForm.requestSubmit(pendingButton);
+      modal.hide();
+    });
 })();

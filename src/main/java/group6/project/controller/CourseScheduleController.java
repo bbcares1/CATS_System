@@ -3,7 +3,9 @@ package group6.project.controller;
 import group6.project.form.ScheduleForm;
 import group6.project.model.CourseCategoryType;
 import group6.project.service.CourseScheduleService;
+
 import jakarta.validation.Valid;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -28,11 +30,17 @@ public class CourseScheduleController {
 
     // Preview the dates and return input errors next to the same form.
     @PostMapping
-    public String preview(@Valid @ModelAttribute("form") ScheduleForm form, BindingResult binding, Model model) {
+    public String preview(
+            @Valid @ModelAttribute("form") ScheduleForm form, BindingResult binding, Model model) {
         if (!binding.hasErrors()) {
             try {
-                model.addAttribute("schedule", schedules.calculate(form.getCategory(), form.getStartDate(),
-                        form.getDays(), form.getHalfDayPeriod()));
+                model.addAttribute(
+                        "schedule",
+                        schedules.calculate(
+                                form.getCategory(),
+                                form.getStartDate(),
+                                form.getDays(),
+                                form.getHalfDayPeriod()));
             } catch (IllegalArgumentException error) {
                 binding.reject("schedule", error.getMessage());
             }

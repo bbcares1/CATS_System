@@ -1,59 +1,105 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<!-- Small reusable pieces. Rules and examples: DESIGN.md -->
-<body>
-
-<!-- Status pill. value: an ApplicationStatus (APPLIED) or a string ("Applied"). -->
-<span th:fragment="status(value)" class="cats-status"
+  <!-- Small reusable pieces. Rules and examples: DESIGN.md -->
+  <body>
+    <!-- Status pill. value: an ApplicationStatus (APPLIED) or a string ("Applied"). -->
+    <span
+      th:fragment="status(value)"
+      class="cats-status"
       th:with="s=${#strings.toLowerCase(value)}"
       th:classappend="'cats-status-' + ${s}"
-      th:text="${#strings.capitalize(s)}">Applied</span>
+      th:text="${#strings.capitalize(s)}"
+      >Applied</span
+    >
 
-<!-- Grey tag for categories and other labels that are not a state. -->
-<span th:fragment="tag(text)" class="cats-tag" th:text="${text}">External Course</span>
+    <!-- Grey tag for categories and other labels that are not a state. -->
+    <span th:fragment="tag(text)" class="cats-tag" th:text="${text}"
+      >External Course</span
+    >
 
-<!-- Sidebar link. active: the key of the current page. -->
-<a th:fragment="navlink(href, key, label, iconName, active)"
-   th:href="${href}"
-   th:classappend="${active == key} ? 'active'"
-   th:attr="aria-current=${active == key} ? 'page' : null, data-label=${label}">
-  <svg th:replace="~{fragments/icons :: icon(${iconName})}"></svg><span th:text="${label}">Dashboard</span>
-</a>
+    <!-- Sidebar link. active: the key of the current page. -->
+    <a
+      th:fragment="navlink(href, key, label, iconName, active)"
+      th:href="${href}"
+      th:classappend="${active == key} ? 'active'"
+      th:attr="aria-current=${active == key} ? 'page' : null, data-label=${label}"
+    >
+      <svg th:replace="~{fragments/icons :: icon(${iconName})}"></svg
+      ><span th:text="${label}">Dashboard</span>
+    </a>
 
-<!-- Sidebar link for a page that is not built yet. -->
-<a th:fragment="navsoon(label, iconName)" href="#" aria-disabled="true" tabindex="-1" th:attr="data-label=${label}">
-  <svg th:replace="~{fragments/icons :: icon(${iconName})}"></svg><span th:text="${label}">Approvals</span><span class="cats-soon">Soon</span>
-</a>
+    <!-- Sidebar link for a page that is not built yet. -->
+    <a
+      th:fragment="navsoon(label, iconName)"
+      href="#"
+      aria-disabled="true"
+      tabindex="-1"
+      th:attr="data-label=${label}"
+    >
+      <svg th:replace="~{fragments/icons :: icon(${iconName})}"></svg
+      ><span th:text="${label}">Approvals</span
+      ><span class="cats-soon">Soon</span>
+    </a>
 
-<!-- Empty state inside a card. action: a fragment such as ~{::#apply-btn}, or ~{} for none. -->
-<div th:fragment="empty(iconName, title, text, action)" class="cats-empty">
-  <svg th:replace="~{fragments/icons :: icon(${iconName})}"></svg>
-  <strong th:text="${title}">Nothing here yet</strong>
-  <span th:text="${text}">Add the first item to get started.</span>
-  <br><th:block th:replace="${action}"></th:block>
-</div>
+    <!-- Empty state inside a card. action: a fragment such as ~{::#apply-btn}, or ~{} for none. -->
+    <div th:fragment="empty(iconName, title, text, action)" class="cats-empty">
+      <svg th:replace="~{fragments/icons :: icon(${iconName})}"></svg>
+      <strong th:text="${title}">Nothing here yet</strong>
+      <span th:text="${text}">Add the first item to get started.</span>
+      <br /><th:block th:replace="${action}"></th:block>
+    </div>
 
-<!-- Confirmation dialog: a POST form inside a Bootstrap modal.
+    <!-- Confirmation dialog: a POST form inside a Bootstrap modal.
      Open it with: <button type="button" data-bs-toggle="modal" data-bs-target="#delete-42">Delete</button>
      danger = true for delete / reject / cancel, false for approve. -->
-<div th:fragment="confirm(id, title, body, action, label, danger)" class="modal fade" th:id="${id}" tabindex="-1"
-     th:attr="aria-labelledby=${id} + '-title'" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title fs-6 fw-semibold" th:id="${id} + '-title'" th:text="${title}">Delete this course?</h2>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" th:text="${body}">This cannot be undone.</div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <form th:action="${action}" method="post">
-          <button type="submit" class="btn" th:classappend="${danger} ? 'btn-danger' : 'btn-primary'" th:text="${label}">Delete</button>
-        </form>
+    <div
+      th:fragment="confirm(id, title, body, action, label, danger)"
+      class="modal fade"
+      th:id="${id}"
+      tabindex="-1"
+      th:attr="aria-labelledby=${id} + '-title'"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2
+              class="modal-title fs-6 fw-semibold"
+              th:id="${id} + '-title'"
+              th:text="${title}"
+            >
+              Delete this course?
+            </h2>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body" th:text="${body}">This cannot be undone.</div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <form th:action="${action}" method="post">
+              <input th:replace="~{fragments/csrf :: token}" />
+              <button
+                type="submit"
+                class="btn"
+                th:classappend="${danger} ? 'btn-danger' : 'btn-primary'"
+                th:text="${label}"
+              >
+                Delete
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
-
-</body>
+  </body>
 </html>

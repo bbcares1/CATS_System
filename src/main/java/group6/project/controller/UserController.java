@@ -5,13 +5,17 @@ import group6.project.model.Manager;
 import group6.project.model.Staff;
 import group6.project.model.User;
 import group6.project.service.UserService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.UUID;
 
 @Controller
 public class UserController {
@@ -39,8 +43,11 @@ public class UserController {
 
     // The saved account decides the role; users do not need to choose it twice.
     @PostMapping("/employee/login")
-    public String employeeLogin(@RequestParam String userName, @RequestParam String password,
-            HttpServletRequest request, Model model) {
+    public String employeeLogin(
+            @RequestParam String userName,
+            @RequestParam String password,
+            HttpServletRequest request,
+            Model model) {
         User user = users.authenticate(userName, password);
         if (user instanceof Staff) {
             signIn(request, user);
@@ -59,8 +66,11 @@ public class UserController {
 
     // Employee credentials cannot open an administrator session.
     @PostMapping("/admin/login")
-    public String adminLogin(@RequestParam String userName, @RequestParam String password,
-            HttpServletRequest request, Model model) {
+    public String adminLogin(
+            @RequestParam String userName,
+            @RequestParam String password,
+            HttpServletRequest request,
+            Model model) {
         User user = users.authenticate(userName, password);
         if (user instanceof Admin) {
             signIn(request, user);
@@ -76,10 +86,11 @@ public class UserController {
         request.getSession();
         request.changeSessionId();
         request.getSession().setAttribute("user", user);
+        request.getSession().setAttribute("csrfToken", UUID.randomUUID().toString());
     }
 
     // Clear the saved identity when the user leaves the application.
-    @GetMapping("/logout")
+    @PostMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/login";
