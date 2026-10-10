@@ -1,140 +1,46 @@
 package group6.project.service;
 
+import group6.project.model.ApprovalHierarchy;
+import group6.project.model.User;
+import group6.project.repo.ApprovalHierarchyRepo;
+import group6.project.repo.UserRepo;
 import java.util.List;
 import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import group6.project.model.ApprovalHierarchy;
-import group6.project.model.CourseCategory;
-import group6.project.model.CourseDetail;
-import group6.project.model.ExcludedDays;
-import group6.project.model.Manager;
-import group6.project.model.Roles;
-import group6.project.model.Staff;
-import group6.project.model.TrainingEntitlement;
-import group6.project.repo.AdminRepo;
-import group6.project.repo.ApprovalHierarchyRepo;
-import group6.project.repo.CourseDetailRepo;
-import group6.project.repo.ExcludedDaysRepo;
-import group6.project.repo.ManagerRepo;
-import group6.project.repo.StaffRepo;
-import group6.project.repo.TrainingEntitlementRepo;
-import jakarta.transaction.Transactional;
-
-import group6.project.model.User;
-import group6.project.model.Admin;
-import group6.project.model.Manager;
-import group6.project.repo.UserRepo;
 
 @Service
 public class AdminService {
-     @Autowired
-     public AdminRepo adminRepo;
+    private final UserRepo users;
+    private final ApprovalHierarchyRepo hierarchies;
 
-     @Autowired
-     public StaffRepo staffRepo;
+    // Catalogue and account writes have their own services.
+    public AdminService(UserRepo users, ApprovalHierarchyRepo hierarchies) {
+        this.users = users;
+        this.hierarchies = hierarchies;
+    }
 
-     @Autowired
-     public TrainingEntitlementRepo trainingEntitlementRepo;
+    // Read the existing hierarchy page while reporting managers are consolidated.
+    public List<ApprovalHierarchy> getAllApprovalHierarchy() {
+        return hierarchies.findAllByOrderByLevelAsc();
+    }
 
-     @Autowired
-     public ExcludedDaysRepo excludedDaysRepo;
+    // Resolve an existing hierarchy entry for its edit form.
+    public Optional<ApprovalHierarchy> getHierarchyById(Integer id) {
+        return hierarchies.findById(id);
+    }
 
-     @Autowired
-     private UserRepo userRepo;
+    // Save a hierarchy entry from the current Admin form.
+    public void saveHierarchy(ApprovalHierarchy hierarchy) {
+        hierarchies.save(hierarchy);
+    }
 
-     @Autowired
-     public CourseDetailRepo courseDetailRepo;
+    // Remove an unused hierarchy entry.
+    public void deleteHierarchyById(Integer id) {
+        hierarchies.deleteById(id);
+    }
 
-     @Autowired
-     public ApprovalHierarchyRepo approvalHierarchyRepo;
-
-     @Autowired
-     public ManagerRepo managerRepo;
-
-     public List<Staff> getAllStaff() {
-          return staffRepo.findAll();
-     }
-
-     public Optional<Staff> getIdStaff(Integer id) {
-          return staffRepo.findById(id);
-     }
-
-     public List<Admin> getAllAdmins() {
-          return adminRepo.findAll();
-     }
-
-
-
-
-
-
-
-
-
-     public List<Manager> getManagerList() {
-          return managerRepo.findAll();
-     }
-
-     // here below is about excluded days
-     // -----------------------------------
-
-     public List<ExcludedDays> getAllExcludedDays() {
-          return excludedDaysRepo.findAll();
-     }
-
-     public void saveExcludedDays(ExcludedDays excludedDays) {
-          excludedDaysRepo.save(excludedDays);
-     }
-
-     public void deleteExcludedDays(Integer id) {
-          excludedDaysRepo.deleteById(id);
-     }
-
-     public List<CourseDetail> getAllCourseDetails() {
-
-          return courseDetailRepo.findAll();
-     }
-
-     public Optional<CourseDetail> getByIdCourseDetails(Integer id) {
-          return courseDetailRepo.findById(id);
-     }
-
-     public void saveCourse(CourseDetail course) {
-
-          courseDetailRepo.save(course);
-     }
-
-     public void deleteCourseById(Integer id) {
-          courseDetailRepo.deleteById(id);
-     }
-
-     public List<ApprovalHierarchy> getAllApprovalHierarchy() {
-          return approvalHierarchyRepo.findAllByOrderByLevelAsc();
-     }
-
-     public Optional<ApprovalHierarchy> getHierarchyById(Integer id) {
-          return approvalHierarchyRepo.findById(id);
-     }
-
-     public void saveHierarchy(ApprovalHierarchy hierarchy) {
-          approvalHierarchyRepo.save(hierarchy);
-     }
-
-     public void deleteHierarchyById(Integer id) {
-          approvalHierarchyRepo.deleteById(id);
-     }
-
-     public void save(Staff staff) {
-          // TODO Auto-generated method stub
-          throw new UnsupportedOperationException("Unimplemented method 'save'");
-     }
-
-     public List<User> viewList() {
-          return userRepo.findAll();
-     }
-
-
+    // Admin's manual email page chooses recipients from saved accounts.
+    public List<User> viewList() {
+        return users.findAll();
+    }
 }

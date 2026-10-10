@@ -33,6 +33,13 @@ public class CourseApplication {
     private Long version;
 
     @ManyToOne
+    @JoinColumn(name = "catalogue_course_id")
+    private CourseDetail catalogueCourse;
+    @ManyToOne
+    @JoinColumn(name = "catalogue_batch_id")
+    private CourseBatch catalogueBatch;
+
+    @ManyToOne
     @JoinColumn(name = "reviewer_id")
     private User reviewer;
 
@@ -53,7 +60,9 @@ public class CourseApplication {
     private CourseCategoryType courseCategory;
 
     private String trainingProvider;
+    @Column(length = 2000)
     private String justification;
+    @Column(length = 2000)
     private String workDissemination;
     private Double trainingDays;
     private String halfDayPeriod;
@@ -68,7 +77,9 @@ public class CourseApplication {
     private LocalDateTime submittedAt;
     private LocalDateTime updatedAt;
     private LocalDateTime reviewedAt;
+    @Column(length = 2000)
     private String decisionReason;
+    @Column(length = 2000)
     private String experienceComments;
 
     public ApplicationStatus getApplicationStatus() {

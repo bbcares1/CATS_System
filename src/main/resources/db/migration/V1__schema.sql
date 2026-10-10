@@ -1,4 +1,4 @@
--- Fresh installation only. Do not apply this baseline over an earlier integration database.
+-- Schema and reference categories for a fresh CATS installation.
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     user_name VARCHAR(255) NOT NULL UNIQUE,
@@ -34,14 +34,29 @@ CREATE TABLE approvalhierarchy (
 );
 CREATE TABLE course_category (
     category_id INT AUTO_INCREMENT PRIMARY KEY,
-    category_name VARCHAR(255) UNIQUE
+    category_name VARCHAR(255) UNIQUE,
+    kind VARCHAR(40) NOT NULL,
+    version BIGINT NOT NULL DEFAULT 0
+);
+CREATE TABLE course_provider (
+    provider_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    website VARCHAR(255),
+    email VARCHAR(255),
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    version BIGINT NOT NULL DEFAULT 0
 );
 CREATE TABLE course_detail (
     course_id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255),
-    course_fee DOUBLE,
+    title VARCHAR(255) NOT NULL,
+    course_fee DECIMAL(12,2) NOT NULL,
     course_description VARCHAR(2000),
-    category_id INT,
+    category_id INT NOT NULL,
+    provider_id INT NOT NULL,
+    custom_dates_allowed BOOLEAN NOT NULL DEFAULT FALSE,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    version BIGINT NOT NULL DEFAULT 0,
+    CONSTRAINT fk_course_provider FOREIGN KEY (provider_id) REFERENCES course_provider(provider_id),
     CONSTRAINT fk_catalogue_category FOREIGN KEY (category_id) REFERENCES course_category(category_id)
 );
 CREATE TABLE course_batch (
@@ -51,6 +66,9 @@ CREATE TABLE course_batch (
     course_end_date DATE,
     training_days DOUBLE,
     capacity INT,
+    half_day_period VARCHAR(255),
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    version BIGINT NOT NULL DEFAULT 0,
     CONSTRAINT fk_batch_course FOREIGN KEY (course_id) REFERENCES course_detail(course_id)
 );
 CREATE TABLE course_application (
@@ -65,8 +83,8 @@ CREATE TABLE course_application (
     course_start_date DATE,
     course_end_date DATE,
     course_fee DECIMAL(12,2) NOT NULL,
-    justification VARCHAR(255),
-    work_dissemination VARCHAR(255),
+    justification VARCHAR(2000),
+    work_dissemination VARCHAR(2000),
     training_days DOUBLE,
     half_day_period VARCHAR(255),
     status VARCHAR(20),
@@ -74,7 +92,11 @@ CREATE TABLE course_application (
     updated_at TIMESTAMP(6),
     reviewed_at TIMESTAMP(6),
     decision_reason VARCHAR(2000),
-    experience_comments VARCHAR(255),
+    experience_comments VARCHAR(2000),
+    catalogue_course_id INT,
+    catalogue_batch_id BIGINT,
+    CONSTRAINT fk_application_course FOREIGN KEY (catalogue_course_id) REFERENCES course_detail(course_id),
+    CONSTRAINT fk_application_batch FOREIGN KEY (catalogue_batch_id) REFERENCES course_batch(batch_id),
     CONSTRAINT fk_application_reviewer FOREIGN KEY (reviewer_id) REFERENCES users(user_id),
     CONSTRAINT fk_application_manager FOREIGN KEY (approval_manager_id) REFERENCES users(user_id),
     CONSTRAINT fk_application_staff FOREIGN KEY (staff_id) REFERENCES users(user_id)
@@ -112,5 +134,7 @@ CREATE TABLE course_fee_application (
 );
 
 -- Reference categories are present in every environment; these are not demo users.
-INSERT INTO course_category(category_id, category_name) VALUES
-(1, 'Internal Training'), (2, 'External Course'), (3, 'Professional Certification');
+INSERT INTO course_category(category_id, category_name, kind) VALUES
+(1, 'Internal Training', 'INTERNAL_TRAINING'),
+(2, 'External Course', 'EXTERNAL_COURSE'),
+(3, 'Professional Certification', 'PROFESSIONAL_CERTIFICATION');

@@ -27,6 +27,7 @@ All local sample passwords are `demo123`:
 
 These are fictitious accounts with `example.test` email addresses. Development does not send email unless SMTP is configured.
 `staff` and `staff2` report to `manager`; `staff3` reports to `manager2`.
+The sample catalogue includes Internal Training, an External Course and Professional Certification, with upcoming schedules.
 
 ## Run tests
 

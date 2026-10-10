@@ -11,6 +11,9 @@ import group6.project.model.ApplicationStatus;
 import group6.project.model.CourseApplication;
 
 public interface CourseApplicationRepo extends JpaRepository<CourseApplication,Integer>{
+    boolean existsByCatalogueCourse_CourseId(Integer id);
+    boolean existsByCatalogueBatch_BatchId(Long id);
+    long countByCatalogueBatch_BatchIdAndStatusIn(Long id, List<ApplicationStatus> statuses);
     List<CourseApplication> findByApplicant_UserIdAndCourseStartDateBetweenOrderByCourseStartDateAsc(
             Integer userId, java.time.LocalDate from, java.time.LocalDate to);
 

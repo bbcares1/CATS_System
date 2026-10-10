@@ -2,15 +2,15 @@
 <html
   lang="en"
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{fragments/layout :: layout('Course categories', 'Admin', 'categories', ~{::#content})}"
+  th:replace="~{fragments/layout :: layout('Course catalogue', 'Admin', 'courses', ~{::#content})}"
 >
   <body>
     <section id="content" class="cats-stack">
       <div class="cats-page-header">
-        <h1>Course categories</h1>
+        <h1>Course catalogue</h1>
         <div class="cats-page-actions">
-          <a class="btn btn-primary" th:href="@{/admin/categories/new}"
-            >Add category</a
+          <a class="btn btn-primary" th:href="@{/admin/courses/new}"
+            >Add course</a
           >
         </div>
       </div>
@@ -22,24 +22,39 @@
           <table class="table align-middle">
             <thead>
               <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Rule type</th>
+                <th scope="col">Course</th>
+                <th scope="col">Category</th>
+                <th scope="col">Provider</th>
+                <th scope="col">Fee</th>
+                <th scope="col">Status</th>
                 <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr th:each="row : ${rows}">
-                <td><b th:text="${row.categoryName}"></b></td>
-                <td><span th:text="${row.kind.displayName}"></span></td>
+                <td><b th:text="${row.title}"></b></td>
+                <td>
+                  <span th:text="${row.courseCategory.categoryName}"></span>
+                </td>
+                <td><span th:text="${row.provider.name}"></span></td>
+                <td>
+                  <span
+                    th:text="${#numbers.formatDecimal(row.courseFee,1,2)}"
+                  ></span>
+                </td>
+                <td>
+                  <span
+                    th:text="${row.active} ? 'Published' : 'Archived'"
+                  ></span>
+                </td>
                 <td>
                   <div class="cats-page-actions">
-                    <a
-                      th:href="@{/admin/categories/{id}/edit(id=${row.categoryId})}"
+                    <a th:href="@{/admin/courses/{id}/edit(id=${row.courseId})}"
                       >Edit</a
                     >
                     <form
                       method="post"
-                      th:action="@{/admin/categories/{id}/delete(id=${row.categoryId})}"
+                      th:action="@{/admin/courses/{id}/delete(id=${row.courseId})}"
                       onsubmit="
                         return confirm(
                           'Remove this record from active use? Referenced records may be archived or kept.',
@@ -62,7 +77,7 @@
         </div>
       </div>
       <div
-        th:replace="~{fragments/list-pagination :: pager(${pageData},'/admin/categories',null,null)}"
+        th:replace="~{fragments/list-pagination :: pager(${pageData},'/admin/courses',null,null)}"
       ></div>
     </section>
   </body>

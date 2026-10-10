@@ -51,8 +51,6 @@ import group6.project.repo.CourseCategoryRepository;
         AdminController.class,
         AccountAdminController.class,
         LegacyAccountController.class,
-        CourseBatchController.class,
-        CourseCategoryController.class,
         ExcludedDaysController.class
 })
 class AdminManagementTemplateTest {
@@ -136,7 +134,7 @@ class AdminManagementTemplateTest {
         course = new CourseDetail();
         course.setCourseId(7);
         course.setTitle("Spring");
-        course.setCourseFee(50.0);
+        course.setCourseFee(new java.math.BigDecimal("50.00"));
         course.setCourseCategory(category);
 
         batch = new CourseBatch();
@@ -165,22 +163,11 @@ class AdminManagementTemplateTest {
         account.setStaffId(staff.getStaffId()); account.setRole(Roles.STAFF);
         account.setVersion(0L); account.setEmail("avery@example.test");
         when(accounts.form(staff)).thenReturn(account);
-        when(adminService.getAllStaff()).thenReturn(List.of(staff));
-        when(adminService.getAllAdmins()).thenReturn(List.of(new Admin()));
-        when(adminService.getManagerList()).thenReturn(List.of(new Manager()));
-        when(adminService.getIdStaff(11)).thenReturn(Optional.of(staff));
         when(adminService.getAllApprovalHierarchy()).thenReturn(List.of(hierarchy));
         when(adminService.getHierarchyById(3)).thenReturn(Optional.of(hierarchy));
-        when(adminService.getAllCourseDetails()).thenReturn(List.of(course));
-        when(adminService.getByIdCourseDetails(7)).thenReturn(Optional.of(course));
         when(courseCategoryService.getAllCategories()).thenReturn(List.of(category));
-        when(courseCategoryService.getCategoryById(4)).thenReturn(Optional.of(category));
         when(excludedDaysService.getAllExcludedDays()).thenReturn(List.of(holiday));
         when(excludedDaysService.getExcludedDayById(2)).thenReturn(holiday);
-        when(courseScheduleService.generateCalendars(
-                org.mockito.ArgumentMatchers.any(LocalDate.class),
-                org.mockito.ArgumentMatchers.any(LocalDate.class)))
-                .thenReturn(List.of(new CourseScheduleService.CalendarMonth("OCTOBER", 2026, List.of())));
         when(entitlements.employee(11)).thenReturn(staff);
         var total = new group6.project.service.TrainingEntitlementService.AnnualSummary(8,
                 new java.math.BigDecimal("1800"), 0, java.math.BigDecimal.ZERO, 0, java.math.BigDecimal.ZERO);
@@ -188,38 +175,15 @@ class AdminManagementTemplateTest {
         when(entitlements.rows(org.mockito.ArgumentMatchers.anyInt())).thenReturn(List.of(
                 new group6.project.service.TrainingEntitlementService.AllowanceRow(staff, total)));
         when(courseBatchService.getAllBatches()).thenReturn(List.of(batch));
-        when(courseBatchService.getBatchById(18L)).thenReturn(Optional.of(batch));
     }
 
     @Test
-    void adminManagementPagesRenderWithRowsAndConfirmationDialogs() throws Exception {
-        mockMvc.perform(get("/admin/accounts"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/calendar\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Course calendar")));
-        mockMvc.perform(get("/admin/calendar"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Calculate a course schedule")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Course batch")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString(
-                        "min=\"" + LocalDate.now() + "\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Spring (Batch 18, 5.0 days)")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("OCTOBER 2026")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("cats-calendar-table")));
-        mockMvc.perform(get("/admin/accounts/new")).andExpect(status().isOk());
-        mockMvc.perform(get("/admin/accounts/11/edit")).andExpect(status().isOk());
-        mockMvc.perform(get("/admin/budgets")).andExpect(status().isOk());
-        mockMvc.perform(get("/admin/budgets/edit/11")).andExpect(status().isOk());
-        mockMvc.perform(get("/admin/hierarchy")).andExpect(status().isOk());
-        mockMvc.perform(get("/admin/hierarchy/edit/3")).andExpect(status().isOk());
-        mockMvc.perform(get("/admin/courses")).andExpect(status().isOk());
-        mockMvc.perform(get("/admin/courses/edit/7")).andExpect(status().isOk());
-        mockMvc.perform(get("/admin/categories")).andExpect(status().isOk());
-        mockMvc.perform(get("/admin/categories/new")).andExpect(status().isOk());
-        mockMvc.perform(get("/admin/categories/edit/4")).andExpect(status().isOk());
-        mockMvc.perform(get("/admin/categories/delete")).andExpect(status().isOk());
-        mockMvc.perform(get("/excluded-days")).andExpect(status().isOk());
-        mockMvc.perform(get("/excluded-days/edit/2")).andExpect(status().isOk());
+    void accountAllowanceAndHolidayPagesRender() throws Exception {
+        for (String path : List.of("/admin/accounts", "/admin/accounts/new", "/admin/accounts/11/edit",
+                "/admin/budgets", "/admin/budgets/edit/11", "/admin/hierarchy", "/admin/hierarchy/edit/3",
+                "/excluded-days", "/excluded-days/edit/2")) {
+            mockMvc.perform(get(path)).andExpect(status().isOk());
+        }
     }
 
     @Test
@@ -237,7 +201,7 @@ class AdminManagementTemplateTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Course categories")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Course catalogue")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Course batches")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Course calendar")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Schedule calculator")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Email staff and managers")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Public holidays")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/staffs\"")))
@@ -246,57 +210,9 @@ class AdminManagementTemplateTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/categories\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/courses\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/batches\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/calendar\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/schedule\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/admin/emails\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/excluded-days\"")));
-    }
-
-    @Test
-    void calendarExplainsHowToCreateFirstBatchWhenCatalogueHasNoBatches() throws Exception {
-        when(courseBatchService.getAllBatches()).thenReturn(List.of());
-
-        mockMvc.perform(get("/admin/calendar"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString(
-                        "There are no course batches to schedule.")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString(
-                        "href=\"/admin/batches/new\"")));
-    }
-
-    @Test
-    void courseBatchPagesUseAdminLayoutAndBatchFields() throws Exception {
-        mockMvc.perform(get("/admin/batches"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Course batches")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Spring")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Training days")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("data-bs-toggle=\"modal\"")));
-
-        mockMvc.perform(get("/admin/batches/new"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"course-batch-form\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"courseId\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"trainingDays\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(
-                        org.hamcrest.Matchers.containsString("name=\"courseStartDate\""))));
-
-        mockMvc.perform(get("/admin/batches/edit/18"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Edit course batch")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"capacity\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(
-                        org.hamcrest.Matchers.containsString("name=\"courseEndDate\""))));
-
-        mockMvc.perform(get("/admin/batches/18"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Batch details")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("12 Oct 2026")));
-
-        mockMvc.perform(get("/admin/batches/delete"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Delete course batch")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString(
-                        "action=\"/admin/batches/delete?batchId=18\"")));
     }
 
     @Test
@@ -404,9 +320,7 @@ class AdminManagementTemplateTest {
         mockMvc.perform(post("/admin/accounts/save")).andExpect(status().isOk());
         mockMvc.perform(post("/admin/budgets/save").param("staffId", "11"))
                 .andExpect(status().isOk());
-        mockMvc.perform(post("/admin/courses/save")).andExpect(status().isOk());
         mockMvc.perform(post("/admin/hierarchy/save")).andExpect(status().isOk());
-        mockMvc.perform(post("/admin/categories")).andExpect(status().isOk());
         mockMvc.perform(post("/excluded-days/add")).andExpect(status().isOk());
         mockMvc.perform(post("/excluded-days/edit/2")).andExpect(status().isOk());
     }

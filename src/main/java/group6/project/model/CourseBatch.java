@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.EqualsAndHashCode;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +21,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode
 public class CourseBatch {
 
     @Id
@@ -39,4 +38,8 @@ public class CourseBatch {
     private Double trainingDays;
 
     private Integer capacity;
+    private String halfDayPeriod;
+    private boolean active = true;
+    @Version
+    private Long version;
 }

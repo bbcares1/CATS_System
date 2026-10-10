@@ -1,6 +1,6 @@
 package group6.project.controller;
 
-import group6.project.form.CourseBatchForm;
+import group6.project.form.CourseProviderForm;
 import group6.project.service.*;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -11,43 +11,41 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@RequestMapping("/admin/batches")
-public class CourseBatchController {
-    private final CourseBatchService service;
-    private final CourseDetailService courses;
+@RequestMapping("/admin/providers")
+public class CourseProviderController {
+    private final CourseProviderService service;
 
     // Keep HTTP forms here and catalogue rules in the service.
-    public CourseBatchController(CourseBatchService service, CourseDetailService courses) {
+    public CourseProviderController(CourseProviderService service) {
         this.service = service;
-        this.courses = courses;
     }
 
     // Admin can include archived rows when reviewing catalogue data.
     @GetMapping
     public String list(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size, Model model) {
-        var result = PageSupport.page(service.getAllBatches(), page, size);
+        var result = PageSupport.page(service.all(), page, size);
         model.addAttribute("rows", result.getContent());
         model.addAttribute("pageData", result);
-        return "course-batch-list";
+        return "course-provider-list";
     }
 
     // A new form has no database ID supplied by the browser.
     @GetMapping("/new")
     public String create(Model model) {
-        return render(null, new CourseBatchForm(), model);
+        return render(null, new CourseProviderForm(), model);
     }
 
     // Load editable values and the version that was shown to the user.
     @GetMapping("/{id}/edit")
-    public String edit(@PathVariable Long id, Model model) {
+    public String edit(@PathVariable Integer id, Model model) {
         return render(id, service.form(id), model);
     }
 
     // Keep the submitted values when validation or a business rule rejects the form.
     @PostMapping({"/new", "/{id}/edit"})
-    public String save(@PathVariable(required = false) Long id,
-            @Valid @ModelAttribute("form") CourseBatchForm form, BindingResult binding,
+    public String save(@PathVariable(required = false) Integer id,
+            @Valid @ModelAttribute("form") CourseProviderForm form, BindingResult binding,
             Model model, RedirectAttributes redirect) {
         if (binding.hasErrors()) return render(id, form, model);
         try {
@@ -57,29 +55,29 @@ public class CourseBatchController {
             binding.reject("catalogue", error.getReason());
             return render(id, form, model);
         }
-        redirect.addFlashAttribute("success", "Schedule saved.");
-        return "redirect:/admin/batches";
+        redirect.addFlashAttribute("success", "Provider saved.");
+        return "redirect:/admin/providers";
     }
 
     // The service decides whether references require archiving or prevent deletion.
     @PostMapping("/{id}/delete")
-    public String remove(@PathVariable Long id, @RequestParam Long version, RedirectAttributes redirect) {
+    public String remove(@PathVariable Integer id, @RequestParam Long version, RedirectAttributes redirect) {
         try {
             service.remove(id, version);
-            redirect.addFlashAttribute("success", "Schedule removed from active use.");
+            redirect.addFlashAttribute("success", "Provider removed from active use.");
         } catch (ResponseStatusException error) {
             if (error.getStatusCode().value() != 400) throw error;
             redirect.addFlashAttribute("error", error.getReason());
         }
-        return "redirect:/admin/batches";
+        return "redirect:/admin/providers";
     }
 
     // GET and invalid POST requests use the same choices and form action.
-    private String render(Long id, CourseBatchForm form, Model model) {
+    private String render(Integer id, CourseProviderForm form, Model model) {
         model.addAttribute("form", form);
         model.addAttribute("editId", id);
-        model.addAttribute("formAction", id == null ? "/admin/batches/new" : "/admin/batches/" + id + "/edit");
-        model.addAttribute("courses", courses.all());
-        return "course-batch-form";
+        model.addAttribute("formAction", id == null ? "/admin/providers/new" : "/admin/providers/" + id + "/edit");
+        
+        return "course-provider-form";
     }
 }

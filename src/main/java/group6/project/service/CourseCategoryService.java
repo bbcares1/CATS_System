@@ -1,45 +1,73 @@
 package group6.project.service;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.stereotype.Service;
-
+import group6.project.form.CourseCategoryForm;
 import group6.project.model.CourseCategory;
 import group6.project.repo.CourseCategoryRepository;
+import group6.project.repo.CourseDetailRepo;
+import java.util.List;
+import java.util.Objects;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import static org.springframework.http.HttpStatus.*;
 
-@Service 
+@Service
+@Transactional(readOnly = true)
 public class CourseCategoryService {
-  private final CourseCategoryRepository courseCatergoryRepository;
-  public CourseCategoryService(CourseCategoryRepository courseCatergoryRepository){
-    this.courseCatergoryRepository = courseCatergoryRepository;
-  }
+    private final CourseCategoryRepository categories;
+    private final CourseDetailRepo courses;
 
-  public List<CourseCategory> getAllCategories(){
-    return courseCatergoryRepository.findAll();
-  }
-
-  public Optional<CourseCategory> getCategoryById(Integer categoryId){
-    return courseCatergoryRepository.findById(categoryId);
-  }
-
-  public CourseCategory createCategory(CourseCategory courseCategory) {
-    return courseCatergoryRepository.save(courseCategory);
-  }
-  
-  public void deleteCategory(Integer categoryId){
-    courseCatergoryRepository.deleteById(categoryId);
-  }
-
-  public Optional<CourseCategory> updateCategory(CourseCategory courseCategory, Integer categoryId){
-    Optional<CourseCategory> existingCategory = courseCatergoryRepository.findById(categoryId);
-    if (existingCategory.isPresent()){
-      CourseCategory existing = existingCategory.get();
-      existing.setCategoryName(courseCategory.getCategoryName());
-      CourseCategory saved = courseCatergoryRepository.save(existing);
-      return Optional.of(saved);
+    // Categories group the catalogue while kind selects the course's business rules.
+    public CourseCategoryService(CourseCategoryRepository categories, CourseDetailRepo courses) {
+        this.categories = categories;
+        this.courses = courses;
     }
-    return Optional.empty();
-  }
-  
+
+    // Admin and course forms share the same category choices.
+    public List<CourseCategory> getAllCategories() {
+        return categories.findAll(org.springframework.data.domain.Sort.by("categoryName"));
+    }
+
+    // Return one saved category or a clear missing-record error.
+    public CourseCategory get(Integer id) {
+        return categories.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found."));
+    }
+
+    // Copy editable values rather than binding a persistent entity to a request.
+    public CourseCategoryForm form(Integer id) {
+        CourseCategory category = get(id);
+        CourseCategoryForm form = new CourseCategoryForm();
+        form.setVersion(category.getVersion());
+        form.setCategoryName(category.getCategoryName());
+        form.setKind(category.getKind());
+        return form;
+    }
+
+    // Renaming is safe; a used category must keep its type so existing schedules stay valid.
+    @Transactional
+    public void save(Integer id, CourseCategoryForm form) {
+        CourseCategory category = id == null ? new CourseCategory() : get(id);
+        if (id != null && !Objects.equals(form.getVersion(), category.getVersion())) {
+            throw new ResponseStatusException(CONFLICT, "This category changed. Reload it.");
+        }
+        String name = form.getCategoryName().trim();
+        boolean duplicate = id == null ? categories.existsByCategoryNameIgnoreCase(name)
+                : categories.existsByCategoryNameIgnoreCaseAndCategoryIdNot(name, id);
+        if (duplicate) throw new ResponseStatusException(BAD_REQUEST, "That category name is already used.");
+        if (id != null && category.getKind() != form.getKind() && courses.existsByCourseCategory_CategoryId(id)) {
+            throw new ResponseStatusException(BAD_REQUEST, "A category used by courses must keep its type.");
+        }
+        category.setCategoryName(name);
+        category.setKind(form.getKind());
+        categories.save(category);
+    }
+
+    // A referenced category must first be removed from its courses.
+    @Transactional
+    public void delete(Integer id, Long version) {
+        CourseCategory category = get(id);
+        if (!Objects.equals(version, category.getVersion())) throw new ResponseStatusException(CONFLICT, "Reload this category.");
+        if (courses.existsByCourseCategory_CategoryId(id)) throw new ResponseStatusException(BAD_REQUEST, "This category is used by courses.");
+        categories.delete(category);
+    }
 }

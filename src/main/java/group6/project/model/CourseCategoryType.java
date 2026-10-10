@@ -5,7 +5,12 @@ public enum CourseCategoryType {
     EXTERNAL_COURSE,
     PROFESSIONAL_CERTIFICATION;
 
+    // Keep database values stable and use normal labels on forms and reports.
     public String getDisplayName() {
-        return name().replace('_', ' ');
+        return switch (this) {
+            case INTERNAL_TRAINING -> "Internal Training";
+            case EXTERNAL_COURSE -> "External Course";
+            case PROFESSIONAL_CERTIFICATION -> "Professional Certification";
+        };
     }
 }

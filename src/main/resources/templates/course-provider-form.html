@@ -1,0 +1,93 @@
+<!doctype html>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Provider details', 'Admin', 'providers', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <a class="cats-back" th:href="@{/admin/providers}">Back to list</a>
+          <h1 th:text="${editId == null} ? 'Add provider' : 'Edit provider'">
+            Provider
+          </h1>
+          <p class="cats-sub">
+            Inactive providers and their courses are hidden from new
+            applications.
+          </p>
+        </div>
+      </div>
+      <div class="card card-body">
+        <form
+          method="post"
+          th:action="@{${formAction}}"
+          th:object="${form}"
+          class="cats-stack"
+          novalidate
+        >
+          <input type="hidden" th:field="*{version}" />
+          <div
+            th:if="${#fields.hasErrors('*')}"
+            class="alert alert-danger"
+            role="alert"
+          >
+            <ul class="mb-0">
+              <li
+                th:each="error : ${#fields.allErrors()}"
+                th:text="${error}"
+              ></li>
+            </ul>
+          </div>
+          <div class="cats-grid cats-grid-2">
+            <div>
+              <label class="form-label" for="name">Provider name</label
+              ><input
+                class="form-control"
+                type="text"
+                th:field="*{name}"
+                required
+                maxlength="255"
+              />
+              <div class="text-danger" th:errors="*{name}"></div>
+            </div>
+            <div>
+              <label class="form-label" for="website">Website</label
+              ><input
+                class="form-control"
+                type="url"
+                th:field="*{website}"
+                maxlength="255"
+                placeholder="https://"
+              />
+              <div class="text-danger" th:errors="*{website}"></div>
+            </div>
+            <div>
+              <label class="form-label" for="email">Email</label
+              ><input
+                class="form-control"
+                type="email"
+                th:field="*{email}"
+                maxlength="255"
+              />
+              <div class="text-danger" th:errors="*{email}"></div>
+            </div>
+            <label class="form-check"
+              ><input
+                class="form-check-input"
+                type="checkbox"
+                th:field="*{active}"
+              /><span class="form-check-label">Active</span></label
+            >
+          </div>
+          <div class="cats-page-actions">
+            <button class="btn btn-primary">Save</button
+            ><a class="btn btn-outline-secondary" th:href="@{/admin/providers}"
+              >Cancel</a
+            >
+          </div>
+        </form>
+      </div>
+    </section>
+  </body>
+</html>
