@@ -29,7 +29,7 @@ Every signed-in page uses the shared layout:
 | Argument | Meaning |
 | --- | --- |
 | `'Course catalogue'` | Page title. Shown in the browser tab and in the header breadcrumb. |
-| `'Admin'` | Role: `Staff`, `Manager` or `Admin`. Picks the sidebar links. |
+| `'Admin'` | Current workspace: `Staff`, `Manager` or `Admin`. Picks the sidebar links; a Manager can also use the Staff workspace. |
 | `'courses'` | Key of the sidebar link to highlight (section 3). |
 | `~{::#content}` | The page content. |
 
@@ -42,7 +42,8 @@ Login pages do not use the layout (section 17).
 - Below 992 px the sidebar starts collapsed. Below 768 px it is hidden and opens as a drawer from the menu button in the header.
 - Navy sidebar by default. The light variant is `<div class="cats-layout light">`. No other variants.
 - The active link has an orange bar on the left and an orange icon.
-- Header: breadcrumb `Role workspace / Page title` on the left; user menu (initials, name, role, ID) on the right with Log out and, for managers, My staff workspace.
+- Header: breadcrumb `Role workspace / Page title` on the left; user menu (initials, name, role, ID) on the right with Log out.
+- Managers can switch workspaces from both the sidebar and user menu: My staff workspace on Manager pages, Manager workspace on Staff pages. Ordinary Staff do not see Manager links.
 - Log out is also the last item of the sidebar.
 - A link to a page that does not exist yet uses `fragments/ui :: navsoon` and shows a Soon tag. It is not clickable.
 
@@ -50,7 +51,7 @@ Sidebar keys:
 
 | Role | Keys |
 | --- | --- |
-| Staff | `dashboard`, `apply`, `history`, `fees`, `calendar` |
+| Staff | `dashboard`, `apply`, `history`, `fees`, `calendar`; `manager` for Manager accounts only |
 | Manager | `dashboard`, `approvals`, `history`, `staff`, `calendar`, `claims`, `reports` |
 | Admin | `dashboard`, `accounts`, `courses`, `calendar`, `payments`, `reports`, `holidays` |
 

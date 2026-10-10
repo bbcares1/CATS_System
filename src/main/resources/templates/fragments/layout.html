@@ -4,7 +4,8 @@
        <html lang="en" xmlns:th="http://www.thymeleaf.org"
              th:replace="~{fragments/layout :: layout('Page title', 'Staff', 'dashboard', ~{::#content})}">
        <body><section id="content"> ... </section></body></html>
-     role:   'Staff' | 'Manager' | 'Admin'     active: key of the sidebar link to highlight -->
+     role: current workspace ('Staff' | 'Manager' | 'Admin'), not necessarily the account role.
+     active: key of the sidebar link to highlight -->
 <html
   lang="en"
   xmlns:th="http://www.thymeleaf.org"
@@ -59,6 +60,11 @@
             <a
               th:replace="~{fragments/ui :: navlink(@{/staff/fee}, 'fees', 'Fee claims', 'receipt', ${active})}"
             ></a>
+            <th:block th:if="${u instanceof T(group6.project.model.Manager)}">
+              <a
+                th:replace="~{fragments/ui :: navlink(@{/manager/home}, 'manager', 'Manager workspace', 'users', ${active})}"
+              ></a>
+            </th:block>
           </th:block>
           <th:block th:if="${role == 'Manager'}">
             <a
@@ -189,6 +195,14 @@
                     th:replace="~{fragments/icons :: icon('briefcase')}"
                   ></svg
                   >My staff workspace</a
+                >
+              </li>
+              <li th:if="${role == 'Staff' and u instanceof T(group6.project.model.Manager)}">
+                <a class="dropdown-item" th:href="@{/manager/home}"
+                  ><svg
+                    th:replace="~{fragments/icons :: icon('users')}"
+                  ></svg
+                  >Manager workspace</a
                 >
               </li>
               <li>

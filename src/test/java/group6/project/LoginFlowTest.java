@@ -3,6 +3,8 @@ package group6.project;
 
 import static group6.project.TestRequests.post;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -40,7 +42,7 @@ class LoginFlowTest {
         mvc = MockMvcBuilders.webAppContextSetup(context).build();
     }
 
-    // Login identifies a Manager automatically and renews the existing session ID.
+    // Managers can switch workspaces from the sidebar after login renews their session ID.
     @Test
     void managerCanOpenBothWorkspaces() throws Exception {
         User manager = account(new Manager(), Roles.MANAGER);
@@ -53,8 +55,13 @@ class LoginFlowTest {
                                 .param("password", "demo123"))
                 .andExpect(redirectedUrl("/manager/home"));
         assertNotEquals(original, session.getId());
-        for (String path : new String[] {"/manager/home", "/staff/home", "/staff/personal"}) {
-            mvc.perform(get(path).session(session)).andExpect(status().isOk());
+        mvc.perform(get("/manager/home").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-label=\"My staff workspace\"")));
+        for (String path : new String[] {"/staff/home", "/staff/personal", "/staff/courses", "/staff/fee"}) {
+            mvc.perform(get(path).session(session))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("data-label=\"Manager workspace\"")));
         }
     }
 
@@ -64,6 +71,9 @@ class LoginFlowTest {
         User staff = account(new Staff(), Roles.STAFF);
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("user", staff);
+        mvc.perform(get("/staff/home").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("href=\"/manager/home\""))));
         mvc.perform(get("/manager/home").session(session)).andExpect(status().isForbidden());
         mvc.perform(get("/admin/home").session(session)).andExpect(status().isForbidden());
         mvc.perform(
