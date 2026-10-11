@@ -7,7 +7,37 @@ Course applications, Manager decisions, Admin maintenance, fee claims, reports, 
 
 ## Start development
 
-Install Java 21 and Docker Desktop, then run from this repository:
+Install Java 21 and Docker Desktop. Open Docker Desktop before using Compose.
+
+### Get the demo branch
+
+The current demo is on `imran/final-mvc` in [PR #40](https://github.com/bbcares1/CATS_System/pull/40). Stop any running Spring Boot application before updating it.
+
+For an existing clone, run from the folder containing `pom.xml`. Save any local changes shown by `git status` before switching branches:
+
+```sh
+git status --short
+git fetch origin
+git switch imran/final-mvc
+git pull --ff-only origin imran/final-mvc
+git branch --show-current
+git log -1 --oneline
+```
+
+The branch name must be `imran/final-mvc`. Fetching alone does not update a running application.
+
+For a new clone, run from its parent folder:
+
+```sh
+git clone --branch imran/final-mvc https://github.com/bbcares1/CATS_System.git
+cd CATS_System
+```
+
+### Start the application
+
+For a clean rehearsal, follow the [completion, claim and payment demo](docs/demo/README.md). Its reset step starts MySQL and restores the initial examples.
+
+For ordinary development with your saved data, run:
 
 ```sh
 docker compose up -d --wait
@@ -56,6 +86,8 @@ For the 11-12 October rehearsal, log in as `staff` and open **Course history**:
 - Future catalogue dates are 19 October onwards. The 6-10 November Cloud course counts two working days, excluding the weekend and the 9 November public holiday.
 
 Each rehearsal changes the data. Reset explicitly before the next rehearsal; restarting alone keeps those changes.
+
+Pulling a changed `demo-data.sql` does not reload an existing database. Run the reset after updating this branch when you need the new initial examples.
 
 ## Run tests
 
