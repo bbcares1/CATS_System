@@ -7,14 +7,14 @@ We use Java 21, Spring Boot, Thymeleaf, Bootstrap and MySQL.
 
 ## Run locally
 
-Install Java 21 and start Docker Desktop. Use the `imran/final-mvc` branch.
+Install Java 21 and start Docker Desktop. Use the `main` branch.
 
 ### Get the code
 
 For a new clone:
 
 ```sh
-git clone --branch imran/final-mvc https://github.com/bbcares1/CATS_System.git
+git clone --branch main https://github.com/bbcares1/CATS_System.git
 cd CATS_System
 ```
 
@@ -22,8 +22,8 @@ For an existing clone, save your local changes and stop Spring Boot before updat
 
 ```sh
 git fetch origin
-git switch imran/final-mvc
-git pull --ff-only origin imran/final-mvc
+git switch main
+git pull --ff-only origin main
 ```
 
 ### Start the application

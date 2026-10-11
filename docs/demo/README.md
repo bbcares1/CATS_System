@@ -1,6 +1,6 @@
 # Demo: completion, claim and reimbursement
 
-Run these steps on `imran/final-mvc` for the 11-12 October 2026 rehearsal. Use the supplied accounts and course to test steps 9 and 10 of the presentation.
+Run these steps on `main` for the 11-12 October 2026 rehearsal. Use the supplied accounts and course to test steps 9 and 10 of the presentation.
 
 ## 1. Get the branch
 
@@ -9,13 +9,13 @@ Stop Spring Boot in the IDE or terminal. From the repository folder containing `
 ```sh
 git status --short
 git fetch origin
-git switch imran/final-mvc
-git pull --ff-only origin imran/final-mvc
+git switch main
+git pull --ff-only origin main
 git branch --show-current
 git log -1 --oneline
 ```
 
-The branch must be `imran/final-mvc`. For a new clone, use the [README instructions](../../README.md#get-the-code).
+The branch must be `main`. For a new clone, use the [README instructions](../../README.md#get-the-code).
 
 ## 2. Restore the initial demo data
 

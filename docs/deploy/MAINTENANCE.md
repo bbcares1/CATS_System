@@ -26,10 +26,10 @@ Expected: HTTP 200 and `UP`.
 
 ## Update a JAR deployment
 
-1. On your computer, in `CATS_System` on `imran/final-mvc`:
+1. On your computer, in `CATS_System` on `main`:
 
    ```powershell
-   git pull --ff-only origin imran/final-mvc
+   git pull --ff-only origin main
    .\mvnw.cmd -DskipTests package
    ```
 
@@ -64,10 +64,10 @@ sudo systemctl start cats
 
 ## Update a Docker deployment
 
-1. Start Docker Desktop. On your computer, in `CATS_System` on `imran/final-mvc`:
+1. Start Docker Desktop. On your computer, in `CATS_System` on `main`:
 
    ```powershell
-   git pull --ff-only origin imran/final-mvc
+   git pull --ff-only origin main
    docker build --platform linux/amd64 -t cats-system:demo .
    docker save -o cats-image.tar cats-system:demo
    scp -i "YOUR_KEY.pem" cats-image.tar ec2-user@YOUR_EC2_IP:~/cats/

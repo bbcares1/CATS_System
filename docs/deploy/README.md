@@ -1,6 +1,6 @@
 # Deploy CATS to EC2 and RDS
 
-Use the `imran/final-mvc` branch. Choose JAR or Docker; both connect to RDS.
+Use the `main` branch. Choose JAR or Docker; both connect to RDS.
 
 Complete [First setup](#first-setup), then follow one method:
 
