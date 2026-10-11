@@ -279,19 +279,49 @@ class CalendarReportIntegrationTest {
                     ApplicationStatus.DELETED,
                     CourseCategoryType.EXTERNAL_COURSE,
                     "100");
-        mvc.perform(
-                        get("/manager/reports")
-                                .session(session(bob))
-                                .param("from", from.toString())
-                                .param("to", to.toString())
-                                .param("page", "1")
-                                .param("size", "20"))
+        mvc.perform(get("/manager/reports").session(session(bob)))
                 .andExpect(status().isOk())
-                .andExpect(model().attribute("rows", org.hamcrest.Matchers.hasSize(11)));
+                .andExpect(model().attribute("size", 5));
+        for (int size : new int[] {5, 10, 15, 20}) {
+            int expectedSize = size == 20 ? 5 : size;
+            int lastPage = 30 / expectedSize;
+            mvc.perform(
+                            get("/manager/reports")
+                                    .session(session(bob))
+                                    .param("from", from.toString())
+                                    .param("to", to.toString())
+                                    .param("category", "EXTERNAL_COURSE")
+                                    .param("employeeId", sam.getUserId().toString())
+                                    .param("attendanceOnly", "false")
+                                    .param("page", String.valueOf(lastPage))
+                                    .param("size", String.valueOf(size)))
+                    .andExpect(status().isOk())
+                    .andExpect(model().attribute("size", expectedSize))
+                    .andExpect(model().attribute("rows", org.hamcrest.Matchers.hasSize(1)))
+                    .andExpect(model().attribute("employeeId", sam.getUserId()))
+                    .andExpect(
+                            content()
+                                    .string(
+                                            org.hamcrest.Matchers.containsString(
+                                                    "category=EXTERNAL_COURSE&amp;employeeId="
+                                                            + sam.getUserId()
+                                                            + "&amp;attendanceOnly=false&amp;page="
+                                                            + (lastPage - 1)
+                                                            + "&amp;size="
+                                                            + expectedSize)));
+        }
         String csv =
-                new String(
-                        reports.csv(reports.report(bob, from, to, null, null, false)),
-                        java.nio.charset.StandardCharsets.UTF_8);
+                mvc.perform(
+                                get("/manager/reports.csv")
+                                        .session(session(bob))
+                                        .param("from", from.toString())
+                                        .param("to", to.toString())
+                                        .param("category", "EXTERNAL_COURSE")
+                                        .param("employeeId", sam.getUserId().toString()))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         assertEquals(31, csv.lines().filter(line -> line.contains("Training fixture")).count());
         assertTrue(csv.contains("Annual budget"));
     }

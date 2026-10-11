@@ -28,7 +28,7 @@ public class CourseCatalogueController {
             @RequestParam(required = false) CourseCategoryType category,
             @RequestParam(required = false) Integer providerId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             Model model) {
         var result = PageSupport.page(catalogue.search(query, category, providerId), page, size);
         model.addAttribute("courses", result.getContent());

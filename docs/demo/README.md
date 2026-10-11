@@ -122,4 +122,4 @@ During the presentation, explain: **Employees manually confirm attendance with c
 
 For independent checks, the initial data also includes Sam's pending claim, Taylor's paid claim and Jordan's approved but unpaid claim, each with matching TXT evidence. Their short sample contents are written directly in `demo-data.sql` and can be downloaded from the claim details.
 
-History page sizes currently remain **10, 20 and 25**. A 5-row option is a separate proposed change; it is not needed for completion or fee-claim testing.
+All paged lists offer **5, 10 and 15** rows, with **5** selected by default. Sam's seven course applications show five rows on the first history page and two on the next.

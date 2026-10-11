@@ -143,7 +143,7 @@ public class AdminController {
     public String showBudgetList(
             @RequestParam(required = false) Integer year,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             Model model) {
         int selectedYear = year == null ? LocalDate.now().getYear() : year;
         var result = PageSupport.page(entitlements.rows(selectedYear), page, size);
@@ -204,7 +204,7 @@ public class AdminController {
     @GetMapping("/hierarchy")
     public String hierarchy(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             Model model) {
         var employees = accounts.all().stream().filter(u -> u instanceof Staff).toList();
         var result = PageSupport.page(employees, page, size);

@@ -27,7 +27,7 @@ public class ExcludedDaysController {
     @GetMapping
     public String list(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             Model model) {
         var result = PageSupport.page(holidays.getAllExcludedDays(), page, size);
         model.addAttribute("excludedDaysList", result.getContent());

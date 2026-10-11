@@ -43,7 +43,7 @@ public class ClaimController {
     @GetMapping("/staff/fee")
     public String personal(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             HttpSession session,
             Model model) {
         return personalPage((User) session.getAttribute("user"), page, size, model);
@@ -86,14 +86,14 @@ public class ClaimController {
                 "error",
                 binding.getAllErrors().getFirst().getDefaultMessage()
                         + " Please select both files again.");
-        return personalPage(employee, 0, 10, model);
+        return personalPage(employee, 0, 5, model);
     }
 
     // Pending claims are assigned to this Manager, including valid peer-Manager claims.
     @GetMapping("/manager/claims")
     public String queue(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             HttpSession session,
             Model model) {
         var result = claims.pending(((User) session.getAttribute("user")).getUserId(), page, size);
@@ -178,7 +178,7 @@ public class ClaimController {
     @GetMapping("/admin/payments")
     public String payments(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             Model model) {
         var result = claims.approved(page, size);
         model.addAttribute("claims", result.getContent());

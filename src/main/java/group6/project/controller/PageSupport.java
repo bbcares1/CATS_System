@@ -11,7 +11,7 @@ public final class PageSupport {
 
     // Clamp bookmarks and allow only the team's three supported page sizes.
     public static <T> Page<T> page(List<T> rows, int number, int size) {
-        if (size != 10 && size != 20 && size != 25) size = 10;
+        if (size != 5 && size != 10 && size != 15) size = 5;
         number = Math.max(0, Math.min(number, Math.max(0, (rows.size() - 1) / size)));
         int first = number * size;
         return new PageImpl<>(

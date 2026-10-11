@@ -65,7 +65,7 @@ public class CourseApplicationController {
     public String history(
             @RequestParam(required = false) Integer year,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             HttpSession session,
             Model model) {
         int selectedYear = year == null ? LocalDate.now().getYear() : year;

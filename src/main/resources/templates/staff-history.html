@@ -29,7 +29,7 @@
         /><label for="size">Results per page</label
         ><select class="form-select" id="size" name="size">
           <option
-            th:each="count : ${ {10,20,25} }"
+            th:each="count : ${ {5,10,15} }"
             th:value="${count}"
             th:selected="${count == pageData.size}"
             th:text="${count}"

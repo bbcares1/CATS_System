@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
@@ -560,15 +561,78 @@ class StaffWorkflowTest {
         mvc.perform(get("/staff/fee").session(session)).andExpect(status().isOk());
     }
 
-    // Pagination: Check the selected page and number of results.
+    // History keeps the selected year while paging and changing the result count.
     @Test
     void paginationRenders() throws Exception {
-        for (int i = 0; i < 31; i++) saved(ApplicationStatus.DELETED, LocalDate.now());
-        mvc.perform(get("/staff/personal").session(session).param("page", "1").param("size", "20"))
+        int year = LocalDate.now().getYear();
+        for (int i = 0; i < 7; i++) saved(ApplicationStatus.DELETED, LocalDate.now());
+        saved(ApplicationStatus.DELETED, LocalDate.now().minusYears(1));
+        var first =
+                mvc.perform(get("/staff/personal").session(session))
+                        .andExpect(status().isOk())
+                        .andExpect(
+                                model().attribute("applications", org.hamcrest.Matchers.hasSize(5)))
+                        .andReturn();
+        var firstPage = (Page<?>) first.getModelAndView().getModel().get("pageData");
+        assertEquals(5, firstPage.getSize());
+        assertEquals(7, firstPage.getTotalElements());
+        assertTrue(firstPage.hasNext());
+        String html = first.getResponse().getContentAsString();
+        for (int size : List.of(5, 10, 15)) assertTrue(html.contains("value=\"" + size + "\""));
+        assertFalse(html.contains("value=\"20\""));
+        assertFalse(html.contains("value=\"25\""));
+        mvc.perform(
+                        get("/staff/personal")
+                                .session(session)
+                                .param("year", String.valueOf(year))
+                                .param("page", "1")
+                                .param("size", "5"))
                 .andExpect(status().isOk())
-                .andExpect(model().attributeExists("pageData"))
-                .andExpect(model().attribute("applications", org.hamcrest.Matchers.hasSize(11)));
-        assertEquals(31, applications.findForStaffAndYear(staff, LocalDate.now().getYear()).size());
+                .andExpect(model().attribute("year", year))
+                .andExpect(model().attribute("applications", org.hamcrest.Matchers.hasSize(2)))
+                .andExpect(
+                        content()
+                                .string(
+                                        org.hamcrest.Matchers.containsString(
+                                                "/staff/personal?year="
+                                                        + year
+                                                        + "&amp;page=0&amp;size=5")));
+        for (int size : List.of(10, 15)) {
+            var result =
+                    mvc.perform(
+                                    get("/staff/personal")
+                                            .session(session)
+                                            .param("year", String.valueOf(year))
+                                            .param("size", String.valueOf(size)))
+                            .andExpect(status().isOk())
+                            .andExpect(
+                                    model().attribute(
+                                                    "applications",
+                                                    org.hamcrest.Matchers.hasSize(7)))
+                            .andReturn();
+            var page = (Page<?>) result.getModelAndView().getModel().get("pageData");
+            assertEquals(size, page.getSize());
+            assertEquals(0, page.getNumber());
+        }
+        var invalid =
+                mvc.perform(
+                                get("/staff/personal")
+                                        .session(session)
+                                        .param("page", "-1")
+                                        .param("size", "20"))
+                        .andExpect(status().isOk())
+                        .andExpect(
+                                model().attribute("applications", org.hamcrest.Matchers.hasSize(5)))
+                        .andReturn();
+        var page = (Page<?>) invalid.getModelAndView().getModel().get("pageData");
+        assertEquals(5, page.getSize());
+        assertEquals(0, page.getNumber());
+        mvc.perform(get("/staff/personal").session(session).param("page", "99"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("applications", org.hamcrest.Matchers.hasSize(2)));
+        mvc.perform(get("/staff/personal").session(session).param("year", String.valueOf(year - 2)))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("applications", org.hamcrest.Matchers.empty()));
     }
 
     // Allowance and claims: Check completed course totals and invalid claim input.

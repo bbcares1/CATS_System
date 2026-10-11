@@ -121,7 +121,7 @@
           ><label
             >Rows<select name="size" class="form-select">
               <option
-                th:each="n : ${ {10,20,25} }"
+                th:each="n : ${ {5,10,15} }"
                 th:value="${n}"
                 th:selected="${n == pageData.size}"
                 th:text="${n}"

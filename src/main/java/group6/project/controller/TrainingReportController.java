@@ -33,14 +33,14 @@ public class TrainingReportController {
             @RequestParam(required = false) Integer employeeId,
             @RequestParam(defaultValue = "false") boolean attendanceOnly,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             HttpSession session,
             Model model) {
         User actor = actor(session);
         from = from == null ? LocalDate.now().withDayOfYear(1) : from;
         to = to == null ? LocalDate.of(from.getYear(), 12, 31) : to;
         var report = load(actor, from, to, category, employeeId, attendanceOnly);
-        if (size != 10 && size != 20 && size != 25) size = 10;
+        if (size != 5 && size != 10 && size != 15) size = 5;
         int last = Math.max(0, (report.rows().size() - 1) / size);
         page = Math.max(0, Math.min(page, last));
         int start = page * size;

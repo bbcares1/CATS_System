@@ -26,7 +26,7 @@ public class CourseProviderController {
     @GetMapping
     public String list(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             Model model) {
         var result = PageSupport.page(service.all(), page, size);
         model.addAttribute("rows", result.getContent());

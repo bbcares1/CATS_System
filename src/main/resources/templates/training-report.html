@@ -200,7 +200,7 @@
             <label for="size" class="form-label"> Rows </label>
             <select id="size" name="size" class="form-select">
               <option
-                th:each="n : ${ {10,20,25} }"
+                th:each="n : ${ {5,10,15} }"
                 th:value="${n}"
                 th:selected="${size == n}"
                 th:text="${n}"

@@ -14,6 +14,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.mock.web.*;
 import org.springframework.test.web.servlet.*;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -341,6 +342,66 @@ class ClaimWorkflowIntegrationTest {
                         get("/staff/applications/" + course.getCourseId() + "/edit")
                                 .session(session(peer)))
                 .andExpect(status().isNotFound());
+    }
+
+    // All claim workspaces page metadata consistently, including approved payment records.
+    @Test
+    void claimListsUseFiveByDefaultAndSupportTenAndFifteen() throws Exception {
+        var submitted = new java.util.ArrayList<CourseFeeApplication>();
+        for (int i = 0; i < 16; i++) {
+            if (i > 0) course = completed(employee);
+            submitted.add(submit(employee, null));
+        }
+        assertClaimPages("/staff/fee", employee);
+        assertClaimPages("/manager/claims", boss);
+        for (var claim : submitted)
+            service.decide(
+                    claim.getApplicationId(),
+                    boss.getUserId(),
+                    "approve",
+                    "Receipt checked",
+                    claim.getVersion());
+        claims.flush();
+        assertClaimPages("/admin/payments", admin);
+        var invalid =
+                mvc.perform(TestRequests.post("/staff/fee").session(session(employee)))
+                        .andExpect(status().isBadRequest())
+                        .andReturn();
+        var page = (Page<?>) invalid.getModelAndView().getModel().get("claimPage");
+        assertEquals(5, page.getSize());
+    }
+
+    private void assertClaimPages(String route, User user) throws Exception {
+        var first =
+                mvc.perform(get(route).session(session(user)))
+                        .andExpect(status().isOk())
+                        .andExpect(model().attribute("claims", org.hamcrest.Matchers.hasSize(5)))
+                        .andReturn();
+        var firstPage = (Page<?>) first.getModelAndView().getModel().get("claimPage");
+        assertEquals(5, firstPage.getSize());
+        assertEquals(16, firstPage.getTotalElements());
+        for (int size : new int[] {5, 10, 15, 20}) {
+            int expectedSize = size == 20 ? 5 : size;
+            var result =
+                    mvc.perform(
+                                    get(route)
+                                            .session(session(user))
+                                            .param("page", "1")
+                                            .param("size", String.valueOf(size)))
+                            .andExpect(status().isOk())
+                            .andExpect(
+                                    model().attribute(
+                                                    "claims",
+                                                    org.hamcrest.Matchers.hasSize(
+                                                            Math.min(
+                                                                    expectedSize,
+                                                                    16 - expectedSize))))
+                            .andReturn();
+            var page = (Page<?>) result.getModelAndView().getModel().get("claimPage");
+            assertEquals(expectedSize, page.getSize());
+            assertEquals(1, page.getNumber());
+            assertEquals(16, page.getTotalElements());
+        }
     }
 
     // The service accepts only the minimum claim inputs, with identity taken from the account.

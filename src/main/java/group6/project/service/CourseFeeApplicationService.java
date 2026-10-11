@@ -220,7 +220,7 @@ public class CourseFeeApplicationService {
 
     // Keep page sizes small and reject negative offsets without exposing framework errors.
     private Pageable page(int page, int size) {
-        return PageRequest.of(Math.max(0, page), Set.of(10, 20, 25).contains(size) ? size : 10);
+        return PageRequest.of(Math.max(0, page), Set.of(5, 10, 15).contains(size) ? size : 5);
     }
 
     // Both documents must be nonempty and no larger than 5 MB; any file format is accepted.

@@ -61,7 +61,7 @@ public class ManagerController {
     @GetMapping("/approvals")
     public String pending(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             HttpSession session,
             Model model) {
         Manager manager = (Manager) session.getAttribute("user");
@@ -141,7 +141,7 @@ public class ManagerController {
     public String history(
             @RequestParam(required = false) Integer employeeId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             HttpSession session,
             Model model) {
         Integer managerId = ((Manager) session.getAttribute("user")).getUserId();
