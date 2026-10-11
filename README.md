@@ -89,6 +89,10 @@ Each rehearsal changes the data. Reset explicitly before the next rehearsal; res
 
 Pulling a changed `demo-data.sql` does not reload an existing database. Run the reset after updating this branch when you need the new initial examples.
 
+For a live **create course → apply → approve → complete → claim** demonstration, follow [the new-course rehearsal](docs/demo/README.md#7-create-and-complete-a-new-course-live). Every Approved application has the same **Mark completed** action. The owner supplies experience comments; completion does not check the end date or change course dates. This is a classroom demonstration allowance beyond the CA's "once the course has ended" wording. Application date validation remains. All startup profiles use the same completion behavior.
+
+Claims accept any attachment format. A nonempty receipt and certificate are still required, each up to 5 MB. A course can have only one claim.
+
 ## Run tests
 
 ```sh

@@ -64,7 +64,7 @@ The other sample accounts remain available: `manager2`, `staff2` and `staff3` us
 3. Enter a nonempty comment in **What did you learn?**, for example `I learned how to deploy and check a Spring Boot application.`
 4. Click **Mark completed** and show the **Completed** status and saved comments.
 
-CA page 6 says the employee marks attendance with experience comments once an approved course has ended. The current rule requires its end date to be earlier than today. This sample can be completed on either rehearsal day; completion is a manual employee action.
+CA page 6 describes attendance confirmation once an approved course has ended. For this classroom version, **Mark completed does not check the end date**, so the same action can demonstrate a newly approved course immediately. It still requires the owner, Approved status, a current version and nonempty experience comments. Applying for a course still validates its dates. The page has one completion form, and every startup profile behaves the same.
 
 ## 5. Step 9: submit the fee claim
 
@@ -75,6 +75,8 @@ CA page 6 says the employee marks attendance with experience comments once an ap
 5. Submit the claim and show **Applied**, meaning it is waiting for review.
 
 The PDFs are fictitious classroom samples matching Sam, the course, its date and SGD 200 fee.
+
+Any file format is accepted. Both files must be nonempty and no larger than 5 MB each.
 
 Sam's other initially Completed course already has a claim. Only completed, fee-paying External/Certification courses without a claim appear in the selector. Complete the Cloud course first to create a new eligible choice.
 
@@ -90,6 +92,23 @@ Sam's other initially Completed course already has a claim. Only completed, fee-
 
 If you only complete and claim this course, Sam's remaining allowance stays **6.5 days / SGD 1400**. Its fee was already counted when the course was approved; the claim and reimbursement do not deduct it again.
 
+## 7. Create and complete a new course live
+
+Use this instead of section 4 when you want to create everything during the recording. After restoring the initial data, use the same accounts and password as above.
+
+1. As **admin**, open **Courses > Add course**. Enter title `Demo - Manual completion practice`, category **External Course**, provider **SkillWorks Demo** and fee **200**. Leave **Employees may choose their own dates** unchecked. Enter start and end **23 October 2026**, **Full working days** and **10** places. Keep **Available in the catalogue** checked and save.
+2. As **staff**, open **Apply for course**, select the new course and its date option, enter a justification and submit.
+3. As **manager**, open **Approvals**, select Sam's new request and approve with a reason. Show **Approved**.
+4. As **staff**, open this application from **Course history**. Enter `Practised the application, completion and claim flow.` in **What did you learn?** and click **Mark completed**. Show **Completed**, the saved comments and the unchanged course dates. No change to the system date is needed.
+5. Open **Fee claims**, select this new course and confirm personal payment. Upload [sam-manual-receipt.txt](sam-manual-receipt.txt) and [sam-manual-certificate.txt](sam-manual-certificate.txt). They are fictitious documents for this rehearsal. Submit and show **Applied**.
+6. Follow section 6 for this new claim: **manager** reviews the two files and approves with a reason; **admin** records payment reference `DEMO-MANUAL-001`.
+
+The new SGD 200, one-day course reduces Sam's initial remaining allowance to **5.5 days / SGD 1200**. Completion, the claim and payment do not deduct it again. If you also completed and claimed the preset Cloud course, these remaining figures are still the same.
+
+For another run, reset the demo data or create a different course on an available future working day. Completion is a single status change, and each course application permits one claim. Manual completion does not undo earlier completion or allow duplicate claims. If you choose different dates, fees or accounts, prepare matching sample documents.
+
+During the presentation, explain: **Employees manually confirm attendance with comments. For our classroom demo, an Approved course can be marked Completed immediately; the CA describes doing this after the course ends.**
+
 ## If your screen differs
 
 | What you see | Check |
@@ -97,8 +116,8 @@ If you only complete and claim this course, Sam's remaining allowance stays **6.
 | `ryan_staff` or `ryan_staff2` instead of Sam | Use the supplied `staff` account for this flow |
 | The Cloud course is missing or has different dates | Check the branch, run the reset, then restart Spring Boot from that checkout |
 | The Cloud course is already Completed or already claimed | A previous rehearsal changed it; reset before repeating |
-| Mark completed is absent | Check that the course is Approved and ended before today; use the 9 October sample |
-| No new course appears in Fee claims | Complete the Cloud course and ensure it has no existing claim |
+| Mark completed is absent | Use the application owner's account and check that its status is Approved; course dates do not hide the button |
+| No new course appears in Fee claims | Complete the selected fee-paying External/Certification course and ensure it has no existing claim |
 | An old page remains after pulling | Stop the old Spring Boot instance and start it from this updated branch |
 
 For independent checks, the initial data also includes Sam's pending claim, Taylor's paid claim and Jordan's approved but unpaid claim, each with matching evidence.

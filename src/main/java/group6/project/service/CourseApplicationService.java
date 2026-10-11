@@ -240,16 +240,15 @@ public class CourseApplicationService {
         application.setUpdatedAt(LocalDateTime.now());
     }
 
-    // Completion needs learning comments and does not release the year's used allowance.
+    // Manual attendance confirmation keeps the year's used allowance; demos may complete early.
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void complete(Integer id, Long version, String comments, User actor) {
         CourseApplication application = lockApplication(id, actor);
         requireOwner(application, actor);
         checkVersion(version, application.getVersion());
-        if (application.getStatus() != ApplicationStatus.APPROVED
-                || !application.getCourseEndDate().isBefore(LocalDate.now())) {
+        if (application.getStatus() != ApplicationStatus.APPROVED) {
             throw new ResponseStatusException(
-                    BAD_REQUEST, "Complete an approved course after its end date.");
+                    BAD_REQUEST, "Only approved courses can be completed.");
         }
         application.setExperienceComments(required(comments, "Experience comments", 2000));
         application.setStatus(ApplicationStatus.COMPLETED);

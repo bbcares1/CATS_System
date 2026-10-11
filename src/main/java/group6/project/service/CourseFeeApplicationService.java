@@ -14,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -224,8 +223,7 @@ public class CourseFeeApplicationService {
         return PageRequest.of(Math.max(0, page), Set.of(10, 20, 25).contains(size) ? size : 10);
     }
 
-    // Filename, declared type and file signature must agree, and each attachment is limited to 5
-    // MB.
+    // Both documents must be nonempty and no larger than 5 MB; any file format is accepted.
     private Upload read(MultipartFile file) {
         if (file == null || file.isEmpty() || file.getSize() > 5 * 1024 * 1024)
             throw new ResponseStatusException(
@@ -242,29 +240,9 @@ public class CourseFeeApplicationService {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
                         "Use a document filename of at most 255 characters.");
-            String lower = name.toLowerCase(Locale.ROOT), type = file.getContentType();
-            boolean pdf =
-                    bytes.length >= 5
-                            && new String(bytes, 0, 5, StandardCharsets.US_ASCII).equals("%PDF-");
-            boolean png =
-                    bytes.length >= 8
-                            && Arrays.equals(
-                                    Arrays.copyOf(bytes, 8),
-                                    new byte[] {(byte) 137, 80, 78, 71, 13, 10, 26, 10});
-            boolean jpg =
-                    bytes.length >= 4
-                            && bytes[0] == (byte) 255
-                            && bytes[1] == (byte) 216
-                            && bytes[2] == (byte) 255;
-            if (!(pdf && lower.endsWith(".pdf") && "application/pdf".equals(type)
-                    || png && lower.endsWith(".png") && "image/png".equals(type)
-                    || jpg
-                            && (lower.endsWith(".jpg") || lower.endsWith(".jpeg"))
-                            && "image/jpeg".equals(type))) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Documents must be PDF, JPEG or PNG files with a matching file type.");
-            }
+            String type = file.getContentType();
+            if (type == null || type.isBlank() || type.length() > 255)
+                type = "application/octet-stream";
             return new Upload(bytes, name, type);
         } catch (java.io.IOException e) {
             throw new ResponseStatusException(

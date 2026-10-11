@@ -222,7 +222,6 @@ public class CourseApplicationController {
     public String details(@PathVariable Integer id, HttpSession session, Model model) {
         model.addAttribute(
                 "course", applications.getOwned(id, (User) session.getAttribute("user")));
-        model.addAttribute("today", LocalDate.now());
         return "staff-application-detail";
     }
 

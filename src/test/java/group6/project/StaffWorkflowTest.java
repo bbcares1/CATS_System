@@ -14,6 +14,9 @@ import group6.project.service.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpSession;
@@ -223,13 +226,6 @@ class StaffWorkflowTest {
                 org.springframework.web.server.ResponseStatusException.class,
                 () -> saveApplication(course.getCourseId(), form(), staff));
         CourseApplication approved = saved(ApplicationStatus.APPROVED, futureDay());
-        assertThrows(
-                org.springframework.web.server.ResponseStatusException.class,
-                () ->
-                        completeApplication(
-                                approved.getCourseId(),
-                                "Learned to build Java web applications",
-                                staff));
         mvc.perform(
                         post("/staff/applications/" + approved.getCourseId() + "/cancel")
                                 .session(session)
@@ -249,6 +245,7 @@ class StaffWorkflowTest {
                                         "Learned to build Java web applications"))
                 .andExpect(redirectedUrl("/staff/applications/" + ended.getCourseId()));
         assertEquals(ApplicationStatus.COMPLETED, ended.getStatus());
+        assertEquals("Learned to build Java web applications", ended.getExperienceComments());
         assertEquals(1, allowances.summary(staff, LocalDate.now().getYear(), null).usedDays());
         assertEquals(
                 0,
@@ -267,6 +264,139 @@ class StaffWorkflowTest {
         assertThrows(
                 org.springframework.web.server.ResponseStatusException.class,
                 () -> applications.getOwned(ended.getCourseId(), another));
+    }
+
+    // Manual completion and claims use the same flow before, on or after the course end date.
+    @ParameterizedTest
+    @ValueSource(ints = {-2, 0, 7})
+    void manualCompletionAllowsAnyApprovedCourseAndAClaim(int daysAhead) throws Exception {
+        LocalDate date = LocalDate.now().plusDays(daysAhead);
+        CourseApplication course = saved(ApplicationStatus.APPROVED, date);
+        String path = "/staff/applications/" + course.getCourseId();
+        var before = allowances.summary(staff, LocalDate.now().getYear(), null);
+        mvc.perform(get(path).session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(
+                        org.hamcrest.Matchers.containsString("Mark completed</button>")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("complete-demo"))));
+        mvc.perform(
+                        post(path + "/complete")
+                                .session(session)
+                                .param("version", version(course.getCourseId()).toString())
+                                .param("experienceComments", "  Practised the completion and claim flow.  "))
+                .andExpect(redirectedUrl(path))
+                .andExpect(flash().attribute("success", "Application updated."));
+        applicationRepo.flush();
+        assertEquals(ApplicationStatus.COMPLETED, course.getStatus());
+        assertEquals("Practised the completion and claim flow.", course.getExperienceComments());
+        assertEquals(date, course.getCourseStartDate());
+        assertEquals(date, course.getCourseEndDate());
+        mvc.perform(get(path).session(session))
+                .andExpect(content().string(
+                        org.hamcrest.Matchers.containsString("Practised the completion")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("Mark completed</button>"))));
+        mvc.perform(get("/staff/fee").session(session))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("accept="))));
+        mvc.perform(
+                        multipart("/staff/fee")
+                                .file(new MockMultipartFile(
+                                        "receipt", "receipt.txt", "text/plain", "Demo receipt".getBytes()))
+                                .file(new MockMultipartFile(
+                                        "certificate", "certificate.docx", "application/octet-stream",
+                                        "Demo certificate".getBytes()))
+                                .session(session)
+                                .param("courseId", course.getCourseId().toString())
+                                .param("paidPersonally", "true"))
+                .andExpect(redirectedUrl("/staff/fee"));
+        assertTrue(claimRepo.existsByCourseApplication_CourseId(course.getCourseId()));
+        var after = allowances.summary(staff, LocalDate.now().getYear(), null);
+        assertEquals(before.usedDays(), after.usedDays());
+        assertEquals(0, before.usedBudget().compareTo(after.usedBudget()));
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = ApplicationStatus.class,
+            names = "APPROVED",
+            mode = EnumSource.Mode.EXCLUDE)
+    void manualCompletionRequiresApproval(ApplicationStatus state) throws Exception {
+        CourseApplication course = saved(state, futureDay());
+        String path = "/staff/applications/" + course.getCourseId();
+        mvc.perform(get(path).session(session))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("Mark completed</button>"))));
+        mvc.perform(
+                        post(path + "/complete")
+                                .session(session)
+                                .param("version", version(course.getCourseId()).toString())
+                                .param("experienceComments", "Attendance comments"))
+                .andExpect(redirectedUrl(path))
+                .andExpect(flash().attribute(
+                        "error", "Only approved courses can be completed."));
+        assertEquals(state, course.getStatus());
+        assertNull(course.getExperienceComments());
+    }
+
+    @Test
+    void manualCompletionRequiresNotesAndKeepsInvalidInput() throws Exception {
+        CourseApplication course = saved(ApplicationStatus.APPROVED, futureDay());
+        String path = "/staff/applications/" + course.getCourseId();
+        for (String comments : List.of(" ", "x".repeat(2001))) {
+            mvc.perform(
+                            post(path + "/complete")
+                                    .session(session)
+                                    .param("version", version(course.getCourseId()).toString())
+                                    .param("experienceComments", comments))
+                    .andExpect(redirectedUrl(path))
+                    .andExpect(flash().attributeExists("error"))
+                    .andExpect(flash().attribute("experienceComments", comments));
+            assertEquals(ApplicationStatus.APPROVED, course.getStatus());
+            assertNull(course.getExperienceComments());
+        }
+        applications.complete(course.getCourseId(), version(course.getCourseId()), "x".repeat(2000), staff);
+        applicationRepo.flush();
+        assertEquals(2000, course.getExperienceComments().length());
+    }
+
+    // Another owner, stale forms and repeat completion must still be rejected.
+    @Test
+    void manualCompletionChecksOwnerVersionAndRepeatRequests() throws Exception {
+        CourseApplication course = saved(ApplicationStatus.APPROVED, futureDay());
+        String path = "/staff/applications/" + course.getCourseId();
+        Long originalVersion = version(course.getCourseId());
+        MockHttpSession otherSession = new MockHttpSession();
+        otherSession.setAttribute("user", staff.getManager());
+        mvc.perform(
+                        post(path + "/complete")
+                                .session(otherSession)
+                                .param("version", originalVersion.toString())
+                                .param("experienceComments", "Attendance comments"))
+                .andExpect(status().isNotFound());
+        mvc.perform(
+                        post(path + "/complete")
+                                .session(session)
+                                .param("version", Long.toString(originalVersion + 1))
+                                .param("experienceComments", "Attendance comments"))
+                .andExpect(status().isConflict());
+        assertEquals(ApplicationStatus.APPROVED, course.getStatus());
+        applications.complete(course.getCourseId(), originalVersion, "Attendance comments", staff);
+        applicationRepo.flush();
+        mvc.perform(
+                        post(path + "/complete")
+                                .session(session)
+                                .param("version", originalVersion.toString())
+                                .param("experienceComments", "Changed"))
+                .andExpect(status().isConflict());
+        mvc.perform(
+                        post(path + "/complete")
+                                .session(session)
+                                .param("version", version(course.getCourseId()).toString())
+                                .param("experienceComments", "Changed"))
+                .andExpect(flash().attributeExists("error"));
+        assertEquals("Attendance comments", course.getExperienceComments());
     }
 
     // Application rules: Check dates, holidays, budget and overlapping courses.

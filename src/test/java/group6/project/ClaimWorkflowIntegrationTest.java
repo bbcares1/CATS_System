@@ -145,18 +145,12 @@ class ClaimWorkflowIntegrationTest {
         assertEquals(1, claims.count());
     }
 
-    // Declared images cannot hide PDFs or executable content, and oversized uploads are rejected.
+    // Removing format checks does not allow missing, empty or oversized evidence.
     @Test
     void invalidUploadsAreRejected() {
         for (MockMultipartFile bad :
                 java.util.List.of(
-                        new MockMultipartFile(
-                                "receipt", "fake.jpg", "image/jpeg", "%PDF-1.4".getBytes()),
-                        new MockMultipartFile(
-                                "receipt",
-                                "script.pdf",
-                                "application/pdf",
-                                "<script>bad</script>".getBytes()),
+                        new MockMultipartFile("receipt", "empty.txt", "text/plain", new byte[0]),
                         new MockMultipartFile(
                                 "receipt",
                                 "large.pdf",
@@ -166,7 +160,37 @@ class ClaimWorkflowIntegrationTest {
                     ResponseStatusException.class,
                     () -> service.submit(course.getCourseId(), true, bad, pdf(), employee, null));
         }
+        assertThrows(
+                ResponseStatusException.class,
+                () -> service.submit(course.getCourseId(), true, null, pdf(), employee, null));
+        assertThrows(
+                ResponseStatusException.class,
+                () -> service.submit(course.getCourseId(), true, pdf(), null, employee, null));
         assertEquals(0, claims.count());
+    }
+
+    // Extensions, declared types and bytes need not match; downloads retain the original bytes.
+    @ParameterizedTest
+    @ValueSource(strings = {"receipt.docx", "receipt.heic", "receipt.txt", "receipt", "receipt.pdf"})
+    void anyDocumentFormatCanBeSubmittedAndDownloaded(String filename) throws Exception {
+        byte[] bytes = "Classroom receipt sample".getBytes();
+        var receipt = new MockMultipartFile("receipt", filename, "image/jpeg", bytes);
+        var certificate =
+                new MockMultipartFile("certificate", "certificate.zip", null, new byte[] {1, 2});
+        var claim =
+                service.submit(course.getCourseId(), true, receipt, certificate, employee, null);
+        claims.flush();
+        assertEquals(filename, claim.getReceiptFileName());
+        assertEquals("application/octet-stream", claim.getCertificateContentType());
+        mvc.perform(
+                        get("/manager/claims/" + claim.getApplicationId() + "/receipt")
+                                .session(session(boss)))
+                .andExpect(status().isOk())
+                .andExpect(content().bytes(bytes))
+                .andExpect(content().contentType("application/octet-stream"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string(
+                        "Content-Disposition", org.hamcrest.Matchers.startsWith("attachment;")));
     }
 
     // Review reasons, current versions and actor scope all apply before a decision is saved.

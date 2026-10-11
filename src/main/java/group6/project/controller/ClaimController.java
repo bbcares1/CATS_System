@@ -153,8 +153,7 @@ public class ClaimController {
         return detailPage("manager", claim, actor, model);
     }
 
-    // Downloads use an attachment response even for PDF and images, so uploads cannot execute
-    // inline.
+    // Uploaded documents download as attachments rather than rendering inline.
     @GetMapping("/{workspace:staff|manager|admin}/claims/{id}/{document:receipt|certificate}")
     public ResponseEntity<byte[]> document(
             @PathVariable Integer id, @PathVariable String document, HttpSession session) {

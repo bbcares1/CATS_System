@@ -78,6 +78,34 @@
           </div>
         </div>
       </div>
+      <div
+        class="card card-body"
+        th:if="${course.status.name() == 'APPROVED'}"
+      >
+        <form
+          class="cats-stack"
+          method="post"
+          th:action="@{/staff/applications/{id}/complete(id=${course.courseId})}"
+        >
+          <input th:replace="~{fragments/csrf :: token}" />
+          <input
+            type="hidden"
+            name="version"
+            th:value="${course.version}"
+          /><label class="form-label cats-req" for="experienceComments"
+            >What did you learn?</label
+          ><textarea
+            class="form-control"
+            id="experienceComments"
+            name="experienceComments"
+            rows="4"
+            maxlength="2000"
+            required
+            th:text="${experienceComments}"
+          ></textarea
+          ><button class="btn btn-primary">Mark completed</button>
+        </form>
+      </div>
       <div th:if="${course.status.name() == 'APPROVED'}">
         <button
           type="button"
@@ -134,33 +162,6 @@
             </div>
           </div>
         </div>
-      </div>
-      <div
-        class="card card-body"
-        th:if="${course.status.name() == 'APPROVED' and course.courseEndDate.isBefore(today)}"
-      >
-        <form
-          class="cats-stack"
-          method="post"
-          th:action="@{/staff/applications/{id}/complete(id=${course.courseId})}"
-        >
-          <input th:replace="~{fragments/csrf :: token}" />
-          <input
-            type="hidden"
-            name="version"
-            th:value="${course.version}"
-          /><label class="form-label cats-req" for="experienceComments"
-            >What did you learn?</label
-          ><textarea
-            class="form-control"
-            id="experienceComments"
-            name="experienceComments"
-            rows="4"
-            maxlength="2000"
-            th:text="${experienceComments}"
-          ></textarea
-          ><button class="btn btn-primary">Mark completed</button>
-        </form>
       </div>
     </section>
   </body>

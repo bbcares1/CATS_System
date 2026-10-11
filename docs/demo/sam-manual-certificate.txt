@@ -1,0 +1,10 @@
+Classroom demo completion certificate
+
+Employee: Sam Staff
+Staff ID: S001
+Course: Demo - Manual completion practice
+Provider: SkillWorks Demo
+Course date: 23 October 2026
+Completion: Manually marked Completed for this classroom rehearsal
+
+This fictitious certificate is used to rehearse a fee claim before the course ends.
