@@ -39,6 +39,7 @@ build/
 .env
 .env.*
 !.env.prod.example
+cats.env
 backups/
 *.log
 

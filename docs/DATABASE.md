@@ -1,62 +1,50 @@
-# Database and deployment
+# Database
 
-## One schema source
+## Schema and demo data
 
-`src/main/resources/db/schema.sql` defines the final tables, indexes, constraints and required reference data. `demo-data.sql` contains the complete, fictitious October 2026 rehearsal data. There is no development migration history to apply or repair.
+[src/main/resources/db/schema.sql](../src/main/resources/db/schema.sql) defines the tables, indexes, constraints and required categories. [demo-data.sql](../src/main/resources/db/demo-data.sql) contains the fictitious October 2026 demo accounts and business examples.
+
+These are the SQL files used by local development and RDS. There is no development migration history to apply.
 
 | Environment | Schema initialization | Demo data | Storage |
 |---|---|---|---|
-| `cats-dev` | MySQL first initialization | Yes | Persistent named volume |
-| `cats-tests` | MySQL first initialization | No | Disposable tmpfs |
-| H2 tests | Spring initializes a fresh database per context | No | Isolated in memory |
-| `cats-prod` | MySQL first initialization | No | Own persistent named volume |
+| Local development (`cats-dev`) | MySQL first initialization | Yes | Persistent Docker volume |
+| MySQL tests (`cats-tests`) | MySQL first initialization | No | Disposable Docker storage |
+| H2 tests | Spring initializes a fresh database | No | Isolated in memory |
+| EC2 demo (your RDS database) | Manual Workbench import | Yes | RDS |
 
-Compose mounts SQL files into MySQL's `/docker-entrypoint-initdb.d` in schema/data order. They run only when the data directory is empty. Changing a SQL file does not alter an existing database on restart.
-Spring Boot uses `ddl-auto=validate`; normal MySQL profiles disable Spring SQL initialization. Do not use `create-drop` or reload demo rows on every application start.
+Local Compose loads the SQL only when its database storage is empty. RDS uses the manual import in the deployment guide. Spring Boot validates the schema and does not recreate tables or reload demo data on restart.
 
 ## Development restart and reset
 
-Ordinary restarts and `docker compose down` / `up` preserve the named volume. Reset before a new rehearsal if you want the original states again.
-Stop Spring Boot, then run `powershell -ExecutionPolicy Bypass -File .\scripts\reset-demo.ps1` on Windows, or `bash scripts/reset-demo.sh` on macOS/Linux. Confirm with `RESET`, then restart Spring Boot.
-The script pins `compose.yml` and the `cats-dev` project, verifies volume ownership, exports a private backup, removes only that development volume, initializes the two SQL files and checks the starting data. `-Yes` / `--yes` skips the prompt for automated verification; it still performs the checks and backup.
+Ordinary Spring Boot and Docker restarts keep your saved work. `docker compose down` followed by `docker compose up` also keeps it; do not add `-v` when stopping normally.
 
-This reset is for the classroom development database. Never use it to change a saved production database. Back up a production database and plan its schema changes separately. There is no old-schema import step for the final development baseline.
+To restore the local demo, stop Spring Boot and run one command from the project folder:
 
-## Deploy on the server
-
-1. Copy `.env.prod.example` to `.env.prod` and replace its database and first-Admin credentials.
-2. Set `CATS_PUBLIC_URL` to the intended URL, including a context path if used.
-3. If email is available, set `CATS_PROFILES=prod,mail` (or `prod,qqmail`) and its SMTP values.
-4. Run:
-
-```sh
-docker compose --env-file .env.prod -f compose.prod.yml up -d --build --wait
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\reset-demo.ps1
 ```
 
-The application listens on localhost:8081 by default. The database has no host-published port.
-For a server, keep localhost binding behind the team's HTTPS reverse proxy. Change the public URL and access configuration for that environment.
+```sh
+bash scripts/reset-demo.sh
+```
 
-On its first start, the application creates only the Admin specified in `.env.prod`. Later restarts do not reset that account.
-Create employee accounts and annual allowances through Admin. No known development password is inserted into the deployment database.
-Use `docker compose --env-file .env.prod -f compose.prod.yml down` to stop it while keeping its volume. Do not add `-v` to ordinary stop commands.
+Confirm with `RESET`, then start Spring Boot again. The script backs up the current database in the ignored `backups/` folder and restores only `cats-dev`. It does not reset RDS.
+
+## EC2 and RDS
+
+Follow the [six-step deployment guide](deploy/README.md). It uses the existing SQL and the environment and service templates in `docs/deploy`.
+
+Import `schema.sql`, then `demo-data.sql`, into an empty application database before starting the JAR. Use your own database name; leave MySQL's `sys` database unchanged. The imported demo data provides the original `demo123` accounts.
+
+The template selects `prod` and supplies the RDS connection. Replacing the JAR or restarting the service keeps the RDS data. These actions do not run the SQL again.
+
+`compose.prod.yml` remains an optional Docker setup with its own `cats-prod` database and no demo data.
 
 ## Backup and restore
 
-Take a backup before schema changes. The following works from PowerShell or a shell without piping SQL through a text encoding conversion:
+In Workbench, use **Server → Data Export**, select your application database, choose **Dump Structure and Data** and **Export to Self-Contained File**, then start the export.
 
-```sh
-mkdir backups
-docker compose --env-file .env.prod -f compose.prod.yml exec -T db sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysqldump -u "$MYSQL_USER" --single-transaction --no-tablespaces --hex-blob --result-file=/tmp/cats-backup.sql "$MYSQL_DATABASE"'
-docker compose --env-file .env.prod -f compose.prod.yml cp db:/tmp/cats-backup.sql ./backups/cats-backup.sql
-```
+Keep the export outside Git. It contains account passwords and uploaded claim documents.
 
-Move the export to a private backup location outside Git. It includes account credentials and uploaded claim documents.
-To prove a backup is usable, restore it to a **new empty database**, then run the matching application version with `ddl-auto=validate`.
-Use the database name and credentials of that isolated restore environment; do not test a restore against the running deployment.
-
-```sh
-docker cp ./backups/cats-backup.sql RESTORE_CONTAINER:/tmp/cats-restore.sql
-docker exec RESTORE_CONTAINER sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -u "$MYSQL_USER" "$MYSQL_DATABASE" < /tmp/cats-restore.sql'
-```
-
-`RESTORE_CONTAINER` means an explicitly created isolated MySQL container. Compare account, application, claim and attachment counts and check login after restoring.
+To restore, create a new empty database and use **Server → Data Import → Import from Self-Contained File**. Select that new database as the target. Use the matching application version when opening the restored data.

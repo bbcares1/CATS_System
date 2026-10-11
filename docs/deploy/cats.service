@@ -1,0 +1,18 @@
+# Runs the uploaded CATS JAR as the ec2-user account.
+[Unit]
+Description=CATS application
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=exec
+User=ec2-user
+WorkingDirectory=/home/ec2-user/cats
+EnvironmentFile=/home/ec2-user/cats/cats.env
+ExecStart=/usr/bin/java -Xms64m -Xmx384m -Duser.timezone=Asia/Singapore -jar /home/ec2-user/cats/app.jar
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

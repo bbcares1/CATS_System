@@ -5,7 +5,7 @@ Java 21, Spring Boot, MVC, Thymeleaf, Bootstrap and MySQL.
 
 Course applications, Manager decisions, Admin maintenance, fee claims, reports, a shared calendar and email use ordinary server-rendered pages.
 
-## Start development
+## Start local development
 
 Install Java 21 and Docker Desktop. Open Docker Desktop before using Compose.
 
@@ -59,7 +59,7 @@ These are fictitious accounts with `example.test` email addresses. Development d
 `staff` and `staff2` report to `manager`; `staff3` reports to `manager2`.
 The fixed October 2026 samples include all seven course application statuses, future course dates, public holidays, three claim stages and a Manager request assigned to another Manager.
 
-## Restart or reset the demo
+## Restart or reset the local demo
 
 Ordinary Spring Boot restarts and Docker restarts keep your saved work. `docker compose down` followed by `docker compose up -d --wait` also keeps it. Do not add `-v` when stopping normally.
 
@@ -93,6 +93,11 @@ For a live **create course → apply → approve → complete → claim** demons
 
 Claims accept any attachment format. A nonempty receipt and certificate are still required, each up to 5 MB. A course can have only one claim.
 
+## Deploy to EC2 and RDS
+
+Follow the [six-step deployment guide](docs/deploy/README.md): build the JAR on your computer, import the existing SQL into RDS, upload the JAR and templates, then start CATS on EC2.
+The guide includes the original demo accounts. Updating the JAR or restarting EC2 keeps the RDS data.
+
 ## Run tests
 
 ```sh
@@ -121,11 +126,11 @@ docker compose -f compose.test.yml up -d --wait
 |---|---|---|---|
 | Development | `cats-dev` | 3307 | Fixed sample accounts, persistent Docker volume |
 | Automated tests | `cats-tests` | 3308 | Test fixtures, disposable Docker storage |
-| Deployment | `cats-prod` | Internal Docker network | Own persistent volume, no demo accounts |
+| EC2 demo | Your RDS database, e.g. `cats-demo` | RDS 3306 | Demo accounts and saved work |
 
-Only the development and test databases run locally. The production database runs separately on the deployment server.
-Containers use Singapore time for course dates and yearly allowances. `src/main/resources/db/schema.sql` defines the final schema; `demo-data.sql` holds the complete development samples. MySQL loads them only into an empty development volume. Hibernate validates the schema; application startup does not drop tables or reload demo records.
-Details for deployment and backup are in [docs/DATABASE.md](docs/DATABASE.md).
+Local development and automated tests use Docker MySQL. The EC2 application connects to RDS.
+`src/main/resources/db/schema.sql` defines the tables; `demo-data.sql` holds the complete demo data. Docker initializes an empty development volume automatically; RDS is initialized manually in Workbench. Hibernate validates the schema; application startup does not drop tables or reload demo records.
+See [docs/DATABASE.md](docs/DATABASE.md) for database setup, persistence and backup.
 
 ## Email
 
@@ -134,7 +139,7 @@ Enable `dev,mail` for normal STARTTLS SMTP or `dev,qqmail` for QQ, and supply `C
 `CATS_MAIL_PORT` defaults to 587. `CATS_MAIL_FROM` can override the sender address.
 Set `CATS_PUBLIC_URL` to the URL recipients should open. Use local test addresses or a mail capture server when developing.
 
-Never commit SMTP credentials or a populated `.env.prod`. This classroom application intentionally uses simple login passwords and is intended for controlled course access.
+Never commit SMTP credentials or a populated `.env.prod` or `cats.env`. This classroom application intentionally uses simple login passwords and is intended for controlled course access.
 
 ## Windows startup note
 
