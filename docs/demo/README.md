@@ -70,11 +70,11 @@ CA page 6 describes attendance confirmation once an approved course has ended. F
 
 1. Stay logged in as **staff** and open **Fee claims**.
 2. Select **Demo - Cloud deployment basics** and tick **I paid this course fee personally**.
-3. Upload [sam-cloud-receipt.pdf](sam-cloud-receipt.pdf) in the receipt field.
-4. Upload [sam-cloud-certificate.pdf](sam-cloud-certificate.pdf) in the certificate field.
+3. Upload [sam-cloud-receipt.txt](sam-cloud-receipt.txt) in the receipt field.
+4. Upload [sam-cloud-certificate.txt](sam-cloud-certificate.txt) in the certificate field.
 5. Submit the claim and show **Applied**, meaning it is waiting for review.
 
-The PDFs are fictitious classroom samples matching Sam, the course, its date and SGD 200 fee.
+The text files are fictitious classroom samples matching Sam, the course, its date and SGD 200 fee.
 
 Any file format is accepted. Both files must be nonempty and no larger than 5 MB each.
 
@@ -120,6 +120,6 @@ During the presentation, explain: **Employees manually confirm attendance with c
 | No new course appears in Fee claims | Complete the selected fee-paying External/Certification course and ensure it has no existing claim |
 | An old page remains after pulling | Stop the old Spring Boot instance and start it from this updated branch |
 
-For independent checks, the initial data also includes Sam's pending claim, Taylor's paid claim and Jordan's approved but unpaid claim, each with matching evidence.
+For independent checks, the initial data also includes Sam's pending claim, Taylor's paid claim and Jordan's approved but unpaid claim, each with matching TXT evidence. Their short sample contents are written directly in `demo-data.sql` and can be downloaded from the claim details.
 
 History page sizes currently remain **10, 20 and 25**. A 5-row option is a separate proposed change; it is not needed for completion or fee-claim testing.

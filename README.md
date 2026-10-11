@@ -79,7 +79,7 @@ Type `RESET` when asked, then start Spring Boot again. The script backs up the c
 
 For the 11-12 October rehearsal, log in as `staff` and open **Course history**:
 
-- **Demo - Cloud deployment basics** is the only initial Approved course. It ended on **9 October 2026**, has no experience comments and has no claim. Enter comments and click **Mark completed**, then submit a claim using the two [sample PDFs](docs/demo/README.md).
+- **Demo - Cloud deployment basics** is the only initial Approved course. It ended on **9 October 2026**, has no experience comments and has no claim. Enter comments and click **Mark completed**, then submit a claim using the two [sample TXT files](docs/demo/README.md).
 - Sam also has Applied, Updated, Completed, Rejected, Deleted and Cancelled examples. Sam's initial 2026 balance is **6.5 days / SGD 1400**; Taylor's is **3 days / SGD 1750**.
 - As `manager`, approve Taylor's **Demo - Team reporting** first. Sam's **Demo - Java testing workshop** then shows the colleague attending on the same date, 20 October.
 - Claims start as Sam's pending claim, Taylor's paid claim and Jordan's approved but unpaid claim. Admin can record Jordan's payment. Course approval and actual reimbursement are separate.
