@@ -33,11 +33,13 @@ Confirm with `RESET`, then start Spring Boot again. The script backs up the curr
 
 ## EC2 and RDS
 
-Follow the [six-step deployment guide](deploy/README.md). It uses the existing SQL and the environment and service templates in `docs/deploy`.
+Follow the [deployment guide](deploy/README.md) for JAR or Docker. Both use the existing SQL and the same RDS database.
 
-Import `schema.sql`, then `demo-data.sql`, into an empty application database before starting the JAR. Use your own database name; leave MySQL's `sys` database unchanged. The imported demo data provides the original `demo123` accounts.
+Import `schema.sql`, then `demo-data.sql`, into an empty application database before the first deployment. Use your own database name; leave MySQL's `sys` database unchanged. The imported demo data provides the original `demo123` accounts.
 
-The template selects `prod` and supplies the RDS connection. Replacing the JAR or restarting the service keeps the RDS data. These actions do not run the SQL again.
+Use `cats.env.example` for JAR or `docker.env.example` for Docker; both select `prod` and supply the RDS connection. Replacing the JAR, replacing the application container or restarting keeps RDS data. These actions do not run the SQL again.
+
+To restore the initial RDS demo examples, follow [Reset the RDS demo data](deploy/MAINTENANCE.md#reset-the-rds-demo-data). Back up first, stop CATS, recreate only your demo database, import the original SQL and start CATS again.
 
 `compose.prod.yml` remains an optional Docker setup with its own `cats-prod` database and no demo data.
 
@@ -48,3 +50,12 @@ In Workbench, use **Server → Data Export**, select your application database, 
 Keep the export outside Git. It contains account passwords and uploaded claim documents.
 
 To restore, create a new empty database and use **Server → Data Import → Import from Self-Contained File**. Select that new database as the target. Use the matching application version when opening the restored data.
+
+## Windows startup error
+
+If Tomcat reports `Unable to establish loopback connection`, run:
+
+```powershell
+New-Item -ItemType Directory -Force .local-tmp
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.jvmArguments=-Djdk.net.unixdomain.tmpdir=./.local-tmp"
+```

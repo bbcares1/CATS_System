@@ -1,53 +1,49 @@
 # CATS
 
-Course Application Tracking System for the SA63 Java Web Development CA.
-Java 21, Spring Boot, MVC, Thymeleaf, Bootstrap and MySQL.
+CATS is our Course Application Tracking System for the SA63 Java Web Development CA.
+Employees apply for courses and submit fee claims. Managers review applications and claims. Admins maintain accounts and courses and record reimbursements.
 
-Course applications, Manager decisions, Admin maintenance, fee claims, reports, a shared calendar and email use ordinary server-rendered pages.
+We use Java 21, Spring Boot, Thymeleaf, Bootstrap and MySQL.
 
-## Start local development
+## Run locally
 
-Install Java 21 and Docker Desktop. Open Docker Desktop before using Compose.
+Install Java 21 and start Docker Desktop. Use the `imran/final-mvc` branch.
 
-### Get the demo branch
+### Get the code
 
-The current demo is on `imran/final-mvc` in [PR #40](https://github.com/bbcares1/CATS_System/pull/40). Stop any running Spring Boot application before updating it.
-
-For an existing clone, run from the folder containing `pom.xml`. Save any local changes shown by `git status` before switching branches:
-
-```sh
-git status --short
-git fetch origin
-git switch imran/final-mvc
-git pull --ff-only origin imran/final-mvc
-git branch --show-current
-git log -1 --oneline
-```
-
-The branch name must be `imran/final-mvc`. Fetching alone does not update a running application.
-
-For a new clone, run from its parent folder:
+For a new clone:
 
 ```sh
 git clone --branch imran/final-mvc https://github.com/bbcares1/CATS_System.git
 cd CATS_System
 ```
 
-### Start the application
-
-For a clean rehearsal, follow the [completion, claim and payment demo](docs/demo/README.md). Its reset step starts MySQL and restores the initial examples.
-
-For ordinary development with your saved data, run:
+For an existing clone, save your local changes and stop Spring Boot before updating:
 
 ```sh
-docker compose up -d --wait
-./mvnw spring-boot:run
+git fetch origin
+git switch imran/final-mvc
+git pull --ff-only origin imran/final-mvc
 ```
 
-On Windows, use `./mvnw.cmd` instead of `./mvnw`. Open **http://localhost:8081**.
-The repository Maven Wrapper downloads the matching Maven version; a separate Maven installation is not needed.
+### Start the application
 
-All local sample passwords are `demo123`:
+Run from the project folder in PowerShell:
+
+```powershell
+docker compose up -d --wait
+.\mvnw.cmd spring-boot:run
+```
+
+On macOS or Linux, use `./mvnw` instead of `.\mvnw.cmd`.
+Open [http://localhost:8081](http://localhost:8081).
+
+Restarting keeps your data. To restore the initial data, stop Spring Boot and follow the [local reset steps](docs/DATABASE.md#development-restart-and-reset).
+For the Windows loopback error, see the [startup workaround](docs/DATABASE.md#windows-startup-error).
+
+## Demo accounts
+
+All demo passwords are `demo123`.
 
 | Login | Workspace |
 |---|---|
@@ -55,115 +51,64 @@ All local sample passwords are `demo123`:
 | `manager`, `manager2` | Employee login, Manager and own Staff pages |
 | `staff`, `staff2`, `staff3` | Employee login, Staff pages |
 
-These are fictitious accounts with `example.test` email addresses. Development does not send email unless SMTP is configured.
-`staff` and `staff2` report to `manager`; `staff3` reports to `manager2`.
-The fixed October 2026 samples include all seven course application statuses, future course dates, public holidays, three claim stages and a Manager request assigned to another Manager.
+## Project structure
 
-## Restart or reset the local demo
+```text
+CATS_System/
+├── src/
+│   ├── main/
+│   │   ├── java/group6/project/
+│   │   │   ├── config/
+│   │   │   ├── controller/
+│   │   │   ├── form/
+│   │   │   ├── model/
+│   │   │   ├── repo/
+│   │   │   └── service/
+│   │   └── resources/
+│   │       ├── db/
+│   │       ├── static/
+│   │       └── templates/
+│   └── test/
+├── docs/
+│   ├── DATABASE.md
+│   ├── DESIGN.md
+│   ├── demo/
+│   └── deploy/
+├── scripts/
+├── Dockerfile
+├── compose.yml
+├── compose.test.yml
+├── compose.prod.yml
+├── pom.xml
+└── README.md
+```
 
-Ordinary Spring Boot restarts and Docker restarts keep your saved work. `docker compose down` followed by `docker compose up -d --wait` also keeps it. Do not add `-v` when stopping normally.
+Controllers handle requests, services apply business rules, repositories query the database, and models represent stored records. Forms hold user input; templates render the pages. `db` contains the schema and demo data; `test` contains automated tests.
 
-To start a rehearsal again, stop Spring Boot and run **one** reset command from the repository:
+## Tests
+
+Run the tests with H2:
 
 ```powershell
-# Windows
-powershell -ExecutionPolicy Bypass -File .\scripts\reset-demo.ps1
+.\mvnw.cmd test
 ```
 
-```sh
-# macOS / Linux
-bash scripts/reset-demo.sh
-```
+Or run them with a separate MySQL test database:
 
-Type `RESET` when asked, then start Spring Boot again. The script backs up the current database into the ignored `backups/` folder and rebuilds only `cats-dev` with the same initial data. Automated test and production databases are separate.
-
-For the 11-12 October rehearsal, log in as `staff` and open **Course history**:
-
-- **Demo - Cloud deployment basics** is the only initial Approved course. It ended on **9 October 2026**, has no experience comments and has no claim. Enter comments and click **Mark completed**, then submit a claim using the two [sample TXT files](docs/demo/README.md).
-- Sam also has Applied, Updated, Completed, Rejected, Deleted and Cancelled examples. Sam's initial 2026 balance is **6.5 days / SGD 1400**; Taylor's is **3 days / SGD 1750**.
-- As `manager`, approve Taylor's **Demo - Team reporting** first. Sam's **Demo - Java testing workshop** then shows the colleague attending on the same date, 20 October.
-- Claims start as Sam's pending claim, Taylor's paid claim and Jordan's approved but unpaid claim. Admin can record Jordan's payment. Course approval and actual reimbursement are separate.
-- Future catalogue dates are 19 October onwards. The 6-10 November Cloud course counts two working days, excluding the weekend and the 9 November public holiday.
-
-Each rehearsal changes the data. Reset explicitly before the next rehearsal; restarting alone keeps those changes.
-
-Pulling a changed `demo-data.sql` does not reload an existing database. Run the reset after updating this branch when you need the new initial examples.
-
-For a live **create course → apply → approve → complete → claim** demonstration, follow [the new-course rehearsal](docs/demo/README.md#7-create-and-complete-a-new-course-live). Every Approved application has the same **Mark completed** action. The owner supplies experience comments; completion does not check the end date or change course dates. This is a classroom demonstration allowance beyond the CA's "once the course has ended" wording. Application date validation remains. All startup profiles use the same completion behavior.
-
-Claims accept any attachment format. A nonempty receipt and certificate are still required, each up to 5 MB. A course can have only one claim.
-
-## Deploy to EC2 and RDS
-
-Follow the [six-step deployment guide](docs/deploy/README.md): build the JAR on your computer, import the existing SQL into RDS, upload the JAR and templates, then start CATS on EC2.
-The guide includes the original demo accounts. Updating the JAR or restarting EC2 keeps the RDS data.
-
-## Run tests
-
-```sh
-./mvnw -B -ntp -DskipTests compile
-./mvnw -B -ntp "-Dtest=*ServiceTest,*ControllerTest" test
-./mvnw -B -ntp test
-```
-
-The complete suite uses an isolated in-memory H2 database. To run the same suite on MySQL:
-
-```sh
+```powershell
 docker compose -f compose.test.yml up -d --wait
-./mvnw -B -ntp "-Dspring.profiles.active=mysql-test" test
+.\mvnw.cmd "-Dspring.profiles.active=mysql-test" test
 ```
-
-The MySQL test container has disposable storage. To reset **only automated test data**:
-
-```sh
-docker compose -f compose.test.yml down
-docker compose -f compose.test.yml up -d --wait
-```
-
-## Database environments
-
-| Purpose | Database | Port | Data |
-|---|---|---|---|
-| Development | `cats-dev` | 3307 | Fixed sample accounts, persistent Docker volume |
-| Automated tests | `cats-tests` | 3308 | Test fixtures, disposable Docker storage |
-| EC2 demo | Your RDS database, e.g. `cats-demo` | RDS 3306 | Demo accounts and saved work |
-
-Local development and automated tests use Docker MySQL. The EC2 application connects to RDS.
-`src/main/resources/db/schema.sql` defines the tables; `demo-data.sql` holds the complete demo data. Docker initializes an empty development volume automatically; RDS is initialized manually in Workbench. Hibernate validates the schema; application startup does not drop tables or reload demo records.
-See [docs/DATABASE.md](docs/DATABASE.md) for database setup, persistence and backup.
 
 ## Email
 
-Owen's manual email page is under **Admin > Accounts and managers > Email**, with a shortcut beside each employee account. Application and claim submissions notify the assigned Manager; decisions notify the employee with the saved reason and login link. Mail failure keeps the saved business result and shows a warning.
-Enable `dev,mail` for normal STARTTLS SMTP or `dev,qqmail` for QQ, and supply `CATS_MAIL_USER`, `CATS_MAIL_PASSWORD` and, for normal SMTP, `CATS_MAIL_HOST`.
-`CATS_MAIL_PORT` defaults to 587. `CATS_MAIL_FROM` can override the sender address.
-Set `CATS_PUBLIC_URL` to the URL recipients should open. Use local test addresses or a mail capture server when developing.
+Manual email is under **Admin > Accounts and managers > Email**. Submissions and decisions also send notifications when SMTP is configured.
+For SMTP, use `dev,mail` or `dev,qqmail` and set `CATS_MAIL_USER` and `CATS_MAIL_PASSWORD`. The `mail` profile also needs `CATS_MAIL_HOST`. Set `CATS_PUBLIC_URL` to the application's address. Without SMTP, the application still runs. Keep credentials outside Git.
 
-Never commit SMTP credentials or a populated `.env.prod` or `cats.env`. This classroom application intentionally uses simple login passwords and is intended for controlled course access.
+## Guides
 
-## Windows startup note
-
-If Java reports `Unable to establish loopback connection` while Tomcat starts, use a short local socket directory:
-
-```powershell
-New-Item -ItemType Directory -Force .local-tmp
-./mvnw.cmd spring-boot:run "-Dspring-boot.run.jvmArguments=-Djdk.net.unixdomain.tmpdir=./.local-tmp"
-```
-
-This is a local JDK/Windows path workaround. It does not change database or application code. Docker startup does not need it.
-
-## Try the application
-
-1. Log in as `staff`: browse courses or choose **Apply for another course**. Open personal history to edit a pending request, cancel an approved request or read a decision.
-2. Log in as `manager`: open **Approvals**, check annual usage and overlapping approved absences, then approve or reject with a reason. Use **My courses** for personal applications.
-3. Open **Claim approvals** as `manager` to review Sam's demo claim. As `admin`, open **Reimbursements** and record a payment reference after payment.
-4. Open **Training calendar** in any workspace. Manager and Admin **Reports** filter by date, employee and category and export CSV, including annual allowances.
-5. As `admin`, use **Accounts and managers** for accounts, reporting managers, annual allowances and email. Use **Courses** for courses, providers and categories. Add course dates in the same form, or let employees choose their own dates. The end-date calculator is part of that form; saved dates can be edited from the course. Public holidays remain a separate menu. An unused record can be deleted; referenced records retain history.
-
-Pending applications reserve days and fees. Approved and Completed applications use them; Deleted, Cancelled and Rejected requests release them. Actual reimbursements are shown separately and never spend the course budget twice.
-Applications stay within one calendar year. A half-day is a single-day Internal Training session; multi-day courses use full working days. Missing annual allowances must be set by Admin before applying.
-
-## Read the code
-
-Follow a form action from `src/main/resources/templates` to `controller`, then the named use case in `service`, then queries in `repo`. `form` contains permitted input fields; `model` contains the stored records. Services calculate dates, allowances, ownership and state changes; templates display their results.
-The final PR explains each member's module changes and the relevant classroom examples. No separate handover document is required.
+- [UI design](docs/DESIGN.md)
+- [Database and local reset](docs/DATABASE.md)
+- [Completion, claim and reimbursement demo](docs/demo/README.md)
+- [EC2 and RDS deployment: JAR or Docker](docs/deploy/README.md)
+- [Deployment maintenance and RDS reset](docs/deploy/MAINTENANCE.md)

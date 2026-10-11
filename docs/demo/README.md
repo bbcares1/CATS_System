@@ -15,7 +15,7 @@ git branch --show-current
 git log -1 --oneline
 ```
 
-The branch must be `imran/final-mvc`. For a new clone, use the [README instructions](../../README.md#get-the-demo-branch).
+The branch must be `imran/final-mvc`. For a new clone, use the [README instructions](../../README.md#get-the-code).
 
 ## 2. Restore the initial demo data
 

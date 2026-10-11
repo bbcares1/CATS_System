@@ -1,40 +1,41 @@
 # Deploy CATS to EC2 and RDS
 
-Use the `imran/final-mvc` branch.
+Use the `imran/final-mvc` branch. Choose JAR or Docker; both connect to RDS.
 
-## 1. Build the JAR on your computer
+Complete [First setup](#first-setup), then follow one method:
 
-Open PowerShell in your `CATS_System` project folder and run:
+| Method | Runs on EC2 |
+|---|---|
+| [Deploy with JAR (No Docker)](#deploy-with-jar-no-docker) | Java 21 and systemd |
+| [Deploy with Docker](#deploy-with-docker) | Docker |
 
-```powershell
-.\mvnw.cmd -DskipTests package
-```
+## First setup
 
-The JAR is `target/project-0.0.1-SNAPSHOT.jar`.
+Complete this setup before following either deployment method.
 
-## 2. Load the database in Workbench
+### Load the RDS database
 
-Open your RDS connection in MySQL Workbench. Use an empty application database. If you have no application database yet, run ``CREATE DATABASE `cats-demo`;`` first. Leave the MySQL `sys` database unchanged.
+Open your RDS connection in Workbench. Use an empty application database. If needed, run ``CREATE DATABASE `cats-demo`;``. Leave `sys` unchanged.
 
-With **File → Open SQL Script**, open these repository files in order:
+With **File → Open SQL Script**, open these files in order:
 
-1. [src/main/resources/db/schema.sql](../../src/main/resources/db/schema.sql)
-2. [src/main/resources/db/demo-data.sql](../../src/main/resources/db/demo-data.sql)
+1. [schema.sql](../../src/main/resources/db/schema.sql)
+2. [demo-data.sql](../../src/main/resources/db/demo-data.sql)
 
-At the top of each opened script, add these two lines, replacing `cats-demo` with your database name:
+At the top of each opened script, temporarily add:
 
 ```sql
 USE `cats-demo`;
 SET SESSION time_zone = '+08:00';
 ```
 
-Then click the first lightning button to run the whole script. These lines are for the import; you do not need to save changes to the repository SQL files. Use the database name under **SCHEMAS**; the RDS instance name may differ.
+Replace `cats-demo` with your database name under **SCHEMAS**, then click the first lightning button to run the whole script. The RDS instance name may differ from the database name. Do not save these extra lines to the repository SQL files.
 
-Run these files only for the first setup. Restarting or updating the application keeps your data.
+Import only for the first setup. Restarts and updates keep the RDS data.
 
-## 3. Prepare EC2
+### Connect to EC2
 
-In PowerShell, replace `YOUR_KEY.pem` with your key file path and `YOUR_EC2_IP` with your EC2 public IPv4 address:
+In your computer's PowerShell, replace `YOUR_KEY.pem` with your key path and `YOUR_EC2_IP` with the current EC2 public IPv4 address:
 
 ```powershell
 ssh -i "YOUR_KEY.pem" ec2-user@YOUR_EC2_IP
@@ -43,22 +44,46 @@ ssh -i "YOUR_KEY.pem" ec2-user@YOUR_EC2_IP
 In the EC2 terminal:
 
 ```bash
+mkdir -p ~/cats
+```
+
+Keep this terminal open. Upload commands below run in another PowerShell window in your local `CATS_System` folder.
+
+### Allow access to CATS
+
+In AWS, open **EC2 → your instance → Security → its security group → Edit inbound rules**. For a shared demo link, add **Custom TCP**, port **8081**, source **Anywhere-IPv4** (`0.0.0.0/0`). **My IP** allows only your current public IP.
+
+## Deploy with JAR (No Docker)
+
+### 1. Build on your computer
+
+In PowerShell in `CATS_System`:
+
+```powershell
+.\mvnw.cmd -DskipTests package
+```
+
+Continue after `BUILD SUCCESS`.
+
+### 2. Prepare EC2
+
+In the EC2 terminal:
+
+```bash
 sudo dnf install -y java-21-amazon-corretto-headless nano
 mkdir -p ~/cats
 ```
 
-## 4. Upload the files
-
-Keep the EC2 terminal open. Open another PowerShell window in your `CATS_System` folder:
+### 3. Upload from your computer
 
 ```powershell
 scp -i "YOUR_KEY.pem" target/project-0.0.1-SNAPSHOT.jar ec2-user@YOUR_EC2_IP:~/cats/app.jar
 scp -i "YOUR_KEY.pem" docs/deploy/cats.env.example docs/deploy/cats.service ec2-user@YOUR_EC2_IP:~/cats/
 ```
 
-## 5. Start the application
+Wait for SCP to finish.
 
-In the EC2 terminal:
+### 4. Configure and start on EC2
 
 ```bash
 cd ~/cats
@@ -66,9 +91,7 @@ cp cats.env.example cats.env
 nano cats.env
 ```
 
-Replace the placeholders with your RDS endpoint, RDS username, RDS password and EC2 public IP. The database name in `CATS_DB_URL` must match the database used in step 2; the template uses `cats-demo`.
-
-Save with **Ctrl+O**, **Enter**, then exit with **Ctrl+X**.
+Fill in your RDS endpoint, database name, RDS username, RDS password and EC2 public IP. Save with **Ctrl+O**, **Enter**, then **Ctrl+X**.
 
 ```bash
 chmod 600 cats.env
@@ -77,15 +100,93 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now cats
 ```
 
-The application stays running after you close the SSH terminal.
+After Spring Boot starts:
 
-## 6. Open CATS
+```bash
+sudo systemctl status cats --no-pager -l
+curl -i --max-time 10 http://127.0.0.1:8081/health
+```
 
-In AWS, open **EC2 → Security Groups → your EC2 security group → Edit inbound rules**. Add **Custom TCP**, port **8081**, source **My IP**. Each teammate can add their own IP to use the link.
+Expected: **active (running)** and **HTTP 200** with **UP**.
 
-Open `http://YOUR_EC2_IP:8081` in your browser.
+## Deploy with Docker
 
-All demo passwords are `demo123`.
+### 1. Build and save on your computer
+
+Start Docker Desktop. In PowerShell in `CATS_System`:
+
+```powershell
+docker build --platform linux/amd64 -t cats-system:demo .
+docker save -o cats-image.tar cats-system:demo
+```
+
+The existing Dockerfile builds the JAR and includes Java. No separate Maven command is needed. The image matches the team's x86_64 EC2 instances.
+
+### 2. Prepare EC2
+
+Connect using the SSH command above. In the EC2 terminal:
+
+```bash
+sudo dnf install -y docker nano
+sudo systemctl enable --now docker
+mkdir -p ~/cats
+```
+
+### 3. Upload and load
+
+In your computer's PowerShell:
+
+```powershell
+scp -i "YOUR_KEY.pem" cats-image.tar docs/deploy/docker.env.example ec2-user@YOUR_EC2_IP:~/cats/
+```
+
+Wait for SCP to finish. In the EC2 terminal:
+
+```bash
+sudo docker load -i ~/cats/cats-image.tar
+cd ~/cats
+```
+
+Expected: `Loaded image: cats-system:demo`.
+
+### 4. Configure Docker
+
+```bash
+cd ~/cats
+cp docker.env.example docker.env
+nano docker.env
+```
+
+Fill in your RDS endpoint, database name, username, password and EC2 public IP. Do not put enclosing quotes around Docker values. Keep `CATS_HTTP_PORT=8080`; `CATS_PUBLIC_URL` uses port **8081**.
+
+Save with **Ctrl+O**, **Enter**, then **Ctrl+X**.
+
+```bash
+chmod 600 docker.env
+```
+
+### 5. Start the Docker container
+
+In the EC2 terminal:
+
+```bash
+sudo docker run -d --name cats --restart unless-stopped \
+  --env-file /home/ec2-user/cats/docker.env \
+  -p 8081:8080 cats-system:demo
+```
+
+After Spring Boot starts:
+
+```bash
+sudo docker ps --filter name=cats
+curl -i --max-time 10 http://127.0.0.1:8081/health
+```
+
+Expected: the container is **Up**, and `/health` returns **HTTP 200** with **UP**. Docker runs the application; the database stays in RDS.
+
+## Open CATS
+
+Both methods use `http://YOUR_EC2_IP:8081/employee/login`. Admin uses `/admin/login`. All demo passwords are `demo123`.
 
 | Login | Page |
 |---|---|
@@ -93,12 +194,15 @@ All demo passwords are `demo123`.
 | `manager`, `manager2` | `/employee/login`, Manager and own Staff pages |
 | `staff`, `staff2`, `staff3` | `/employee/login`, Staff pages |
 
-## Update later
+## Maintenance
 
-Build the new JAR with step 1, upload it with the first command in step 4, then run on EC2:
+See the [maintenance guide](MAINTENANCE.md) for service commands, updates, RDS demo reset and AWS Labs IP changes.
 
-```bash
-sudo systemctl restart cats
-```
+## If the page does not open
 
-Do not run the SQL files again. Your existing data stays in RDS.
+| Check | JAR | Docker |
+|---|---|---|
+| Recent logs on EC2 | `sudo journalctl -u cats -n 60 --no-pager` | `sudo docker logs --tail 60 cats` |
+| Running state | `sudo systemctl status cats --no-pager -l` | `sudo docker ps -a --filter name=cats` |
+
+If local `/health` is `UP` but the browser cannot connect, check the current EC2 public IP and its TCP 8081 source rule. If `/health` returns `DOWN`, check the RDS settings and application logs.

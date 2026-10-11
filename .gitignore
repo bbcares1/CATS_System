@@ -40,6 +40,8 @@ build/
 .env.*
 !.env.prod.example
 cats.env
+docker.env
+/cats-image.tar
 backups/
 *.log
 
