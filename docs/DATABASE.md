@@ -4,14 +4,14 @@
 
 [src/main/resources/db/schema.sql](../src/main/resources/db/schema.sql) defines the tables, indexes, constraints and required categories. [demo-data.sql](../src/main/resources/db/demo-data.sql) contains the fictitious October 2026 demo accounts and business examples.
 
-These are the SQL files used by local development and RDS. There is no development migration history to apply.
+Local development and RDS use these two files.
 
 | Environment | Schema initialization | Demo data | Storage |
 |---|---|---|---|
 | Local development (`cats-dev`) | MySQL first initialization | Yes | Persistent Docker volume |
 | MySQL tests (`cats-tests`) | MySQL first initialization | No | Disposable Docker storage |
 | H2 tests | Spring initializes a fresh database | No | Isolated in memory |
-| EC2 demo (your RDS database) | Manual Workbench import | Yes | RDS |
+| EC2 demo (RDS database) | Manual Workbench import | Yes | RDS |
 
 Local Compose loads the SQL only when its database storage is empty. RDS uses the manual import in the deployment guide. Spring Boot validates the schema and does not recreate tables or reload demo data on restart.
 
@@ -41,7 +41,7 @@ Use `cats.env.example` for JAR or `docker.env.example` for Docker; both select `
 
 To restore the initial RDS demo examples, follow [Reset the RDS demo data](deploy/MAINTENANCE.md#reset-the-rds-demo-data). Back up first, stop CATS, recreate only your demo database, import the original SQL and start CATS again.
 
-`compose.prod.yml` remains an optional Docker setup with its own `cats-prod` database and no demo data.
+For a deployment without demo data, [compose.prod.yml](deploy/PRODUCTION.md) runs CATS with its own `cats-prod` database.
 
 ## Backup and restore
 

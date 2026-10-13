@@ -2,6 +2,8 @@
 
 Use the `main` branch. Choose JAR or Docker; both connect to RDS.
 
+This guide sets up our shared classroom demo with the `demo123` accounts. We store passwords in plain text, so do not enter real passwords or personal data. For a deployment without demo data, see [Production deployment](PRODUCTION.md).
+
 Complete [First setup](#first-setup), then follow one method:
 
 | Method | Runs on EC2 |

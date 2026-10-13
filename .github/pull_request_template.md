@@ -9,7 +9,7 @@
 -
 
 ## Result
-<!-- How did you check it works? e.g. app starts, tested an API in Postman, screenshot of the page -->
+<!-- How did you check it works? e.g. app starts, tests pass, screenshot of the page -->
 
 
 ## Checklist
