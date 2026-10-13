@@ -86,9 +86,6 @@ public class AdminController {
                                     user ->
                                             user.getRole() == Roles.MANAGER
                                                     || user.getRole() == Roles.STAFF)
-                            .sorted(
-                                    Comparator.comparing(
-                                            User::getName, String.CASE_INSENSITIVE_ORDER))
                             .toList();
             model.addAttribute("recipients", recipients);
         }

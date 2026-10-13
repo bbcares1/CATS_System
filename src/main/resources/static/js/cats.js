@@ -51,38 +51,6 @@
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") layout.classList.remove("open");
   });
-  var accountRole = document.querySelector("[data-account-role]");
-  var accountFields = document.querySelector("[data-account-fields]");
-  if (accountRole && accountFields) {
-    var updateAccountFields = function () {
-      var isAdmin = accountRole.value === "ADMIN";
-      accountFields.hidden = isAdmin;
-      accountFields.querySelectorAll("input, select").forEach(function (field) {
-        field.disabled = isAdmin;
-        field.required = !isAdmin && field.hasAttribute("data-required");
-      });
-    };
-    accountFields.querySelectorAll("[required]").forEach(function (field) {
-      field.setAttribute("data-required", "true");
-    });
-    accountRole.addEventListener("change", updateAccountFields);
-    updateAccountFields();
-  }
-
-  var courseCategory = document.querySelector("[data-course-category]");
-  var courseFee = document.querySelector("[data-course-fee]");
-  if (courseCategory && courseFee) {
-    var updateCourseFee = function () {
-      var option = courseCategory.options[courseCategory.selectedIndex];
-      var isInternalTraining =
-        option &&
-        option.textContent.trim().toLowerCase() === "internal training";
-      courseFee.readOnly = Boolean(isInternalTraining);
-      if (isInternalTraining) courseFee.value = "0";
-    };
-    courseCategory.addEventListener("change", updateCourseFee);
-    updateCourseFee();
-  }
 })();
 
 // Confirm sensitive changes, keeping the clicked decision button in the normal POST.
