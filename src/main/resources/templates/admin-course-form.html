@@ -195,10 +195,10 @@
             <thead>
               <tr>
                 <th>Dates</th>
-                <th>Training days</th>
-                <th>Places</th>
+                <th class="cats-num">Training days</th>
+                <th class="cats-num">Places</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th class="cats-row-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -209,10 +209,10 @@
                   ></span>
                   <span th:text="${row.halfDayPeriod}"></span>
                 </td>
-                <td th:text="${row.trainingDays}"></td>
-                <td th:text="${row.capacity}"></td>
+                <td class="cats-num" th:text="${row.trainingDays}"></td>
+                <td class="cats-num" th:text="${row.capacity}"></td>
                 <td th:text="${row.active} ? 'Active' : 'Archived'"></td>
-                <td>
+                <td class="cats-row-actions">
                   <div class="cats-page-actions">
                     <a
                       class="btn btn-sm btn-quiet"

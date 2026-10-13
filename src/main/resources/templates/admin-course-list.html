@@ -26,9 +26,9 @@
                 <th scope="col">Course</th>
                 <th scope="col">Category</th>
                 <th scope="col">Provider</th>
-                <th scope="col">Fee</th>
+                <th scope="col" class="cats-num">Fee</th>
                 <th scope="col">Status</th>
-                <th scope="col">Actions</th>
+                <th scope="col" class="cats-row-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -38,7 +38,7 @@
                   <span th:text="${row.courseCategory.categoryName}"></span>
                 </td>
                 <td><span th:text="${row.provider.name}"></span></td>
-                <td>
+                <td class="cats-num">
                   <span
                     th:text="${#numbers.formatDecimal(row.courseFee,1,'COMMA',2,'POINT')}"
                   ></span>
@@ -48,7 +48,7 @@
                     th:text="${row.active} ? 'Published' : 'Archived'"
                   ></span>
                 </td>
-                <td>
+                <td class="cats-row-actions">
                   <div class="cats-page-actions">
                     <a th:href="@{/admin/courses/{id}/edit(id=${row.courseId})}"
                       >Edit</a

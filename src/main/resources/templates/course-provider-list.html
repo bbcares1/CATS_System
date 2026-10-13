@@ -27,7 +27,7 @@
                 <th scope="col">Website</th>
                 <th scope="col">Email</th>
                 <th scope="col">Status</th>
-                <th scope="col">Actions</th>
+                <th scope="col" class="cats-row-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -46,7 +46,7 @@
                 <td>
                   <span th:text="${row.active} ? 'Active' : 'Archived'"></span>
                 </td>
-                <td>
+                <td class="cats-row-actions">
                   <div class="cats-page-actions">
                     <a
                       th:href="@{/admin/providers/{id}/edit(id=${row.providerId})}"

@@ -5,9 +5,9 @@
     <nav
       th:fragment="pager(page,route,pageParameter)"
       th:attr="aria-label=${pageParameter} + ' pagination'"
-      class="card-footer"
+      class="card card-body"
     >
-      <form method="get" th:action="@{${route}}" class="cats-page-actions">
+      <form method="get" th:action="@{${route}}" class="cats-page-actions cats-pagination">
         <button
           class="btn btn-outline-secondary"
           th:name="${pageParameter}"

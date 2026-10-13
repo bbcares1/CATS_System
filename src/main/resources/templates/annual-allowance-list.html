@@ -5,9 +5,9 @@
   th:replace="~{fragments/layout :: layout('Annual allowances', 'Admin', 'accounts', ~{::#content})}"
 >
   <body>
-    <section id="content">
+    <section id="content" class="cats-stack">
       <nav th:replace="~{fragments/ui :: accountTabs('allowances')}"></nav>
-      <div class="cats-page-header">
+      <div class="cats-page-header mb-0">
         <div>
           <h1>Annual allowances</h1>
         </div>
@@ -15,10 +15,11 @@
       <form
         method="get"
         th:action="@{/admin/entitlements}"
-        class="cats-filter-bar mb-3"
+        class="cats-allowance-filter"
       >
         <label for="year" class="form-label">Year</label
         ><input
+          class="form-control"
           id="year"
           name="year"
           type="number"
@@ -36,11 +37,11 @@
               <tr>
                 <th>Employee</th>
                 <th>Designation</th>
-                <th>Days limit</th>
-                <th>Days reserved / used</th>
-                <th>Budget</th>
-                <th>Fees reserved / used</th>
-                <th>Action</th>
+                <th class="cats-num">Days limit</th>
+                <th class="cats-num">Days reserved / used</th>
+                <th class="cats-num">Budget</th>
+                <th class="cats-num">Fees reserved / used</th>
+                <th class="cats-row-actions">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -60,8 +61,9 @@
                   class="cats-num"
                   th:text="${'$' + #numbers.formatDecimal(row.summary.reservedBudget,1,'COMMA',2,'POINT') + ' / $' + #numbers.formatDecimal(row.summary.usedBudget,1,'COMMA',2,'POINT')}"
                 ></td>
-                <td>
+                <td class="cats-row-actions">
                   <a
+                    class="btn btn-sm btn-quiet"
                     th:href="@{/admin/entitlements/{id}(id=${row.staff.userId},year=${year})}"
                     >Edit allowance</a
                   >

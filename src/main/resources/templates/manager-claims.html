@@ -19,9 +19,9 @@
               <tr>
                 <th>Employee</th>
                 <th>Course</th>
-                <th>Amount</th>
+                <th class="cats-num">Amount</th>
                 <th>Submitted</th>
-                <th>Actions</th>
+                <th class="cats-row-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -32,12 +32,13 @@
                 </td>
                 <td th:text="${c.courseTitle}"></td>
                 <td
+                  class="cats-num"
                   th:text="'$' + ${#numbers.formatDecimal(c.amount,1,'COMMA',2,'POINT')}"
                 ></td>
                 <td
                   th:text="${#temporals.format(c.submittedAt,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
                 ></td>
-                <td>
+                <td class="cats-row-actions">
                   <a th:href="@{/manager/claims/{id}(id=${c.applicationId})}">
                     Review claim
                   </a>

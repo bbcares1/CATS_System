@@ -130,16 +130,17 @@
             <thead>
               <tr>
                 <th>Course</th>
-                <th>Amount</th>
+                <th class="cats-num">Amount</th>
                 <th>Status</th>
                 <th>Payment</th>
-                <th>Actions</th>
+                <th class="cats-row-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr th:each="c : ${claims}">
                 <td th:text="${c.courseTitle}"></td>
                 <td
+                  class="cats-num"
                   th:text="'$' + ${#numbers.formatDecimal(c.amount,1,'COMMA',2,'POINT')}"
                 ></td>
                 <td>
@@ -151,7 +152,7 @@
                 <td
                   th:text="${c.reimbursedAt == null ? 'Not recorded' : 'Reimbursed'}"
                 ></td>
-                <td>
+                <td class="cats-row-actions">
                   <a th:href="@{/staff/claims/{id}(id=${c.applicationId})}">
                     View details
                   </a>

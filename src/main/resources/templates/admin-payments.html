@@ -19,7 +19,7 @@
             <thead>
               <tr>
                 <th>Employee / course</th>
-                <th>Amount</th>
+                <th class="cats-num">Amount</th>
                 <th>Approved by</th>
                 <th>Payment</th>
               </tr>
@@ -31,6 +31,7 @@
                   <div th:text="${c.courseTitle}"></div>
                 </td>
                 <td
+                  class="cats-num"
                   th:text="'$' + ${#numbers.formatDecimal(c.amount,1,'COMMA',2,'POINT')}"
                 ></td>
                 <td th:text="${c.reviewerName}"></td>

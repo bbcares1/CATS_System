@@ -183,9 +183,17 @@ h1, h2, h3 { text-wrap: balance; }
 .cats-page-header .cats-sub { color: var(--cats-muted); margin: 4px 0 0; max-width: 70ch; }
 .cats-page-header .cats-status { vertical-align: middle; margin-left: 8px; }
 .cats-page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+/* Keep allowance filters and pagination controls on a shared center line. */
+.cats-allowance-filter { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cats-allowance-filter .form-label { margin: 0; }
+.cats-allowance-filter .form-control { width: 120px; }
+.cats-pagination { align-items: center; }
+.cats-pagination label { display: flex; align-items: center; gap: 8px; margin: 0; }
+.cats-pagination .form-select { width: auto; min-width: 70px; }
 .cats-back { display: inline-flex; align-items: center; gap: 4px; font-size: .85rem; margin-bottom: 8px; color: var(--cats-muted); }
 .cats-back .cats-icon { width: 16px; height: 16px; }
-.cats-stack { display: grid; gap: 20px; }
+.cats-stack { display: grid; gap: 20px; min-width: 0; }
+.cats-stack > .cats-page-header { margin-bottom: 0; }
 .cats-grid { display: grid; gap: 16px; }
 .cats-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .cats-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -220,6 +228,7 @@ h1, h2, h3 { text-wrap: balance; }
 .cats-row-actions { text-align: right; white-space: nowrap; }
 .cats-row-actions > * + * { margin-left: 2px; }
 .cats-row-actions form { display: inline; margin: 0; }
+.cats-row-actions .cats-page-actions { justify-content: flex-end; align-items: center; }
 .cats-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--cats-border); }
 .cats-toolbar .form-control, .cats-toolbar .form-select { width: auto; min-width: 170px; }
 .cats-search { position: relative; }

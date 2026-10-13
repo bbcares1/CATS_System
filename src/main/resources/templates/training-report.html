@@ -118,9 +118,9 @@
                 <th>Employee / course</th>
                 <th>Category</th>
                 <th>Dates</th>
-                <th>Full course days / fee</th>
+                <th class="cats-num">Full course days / fee</th>
                 <th>Status</th>
-                <th>Claim approved / paid</th>
+                <th class="cats-num">Claim approved / paid</th>
               </tr>
             </thead>
             <tbody>
@@ -142,7 +142,7 @@
                   >
                   </span>
                 </td>
-                <td>
+                <td class="cats-num">
                   <span th:text="${r.days ?: '—'}"> </span>
                   days
                   <div
@@ -153,7 +153,7 @@
                   <span th:replace="~{fragments/ui :: status(${r.status})}">
                   </span>
                 </td>
-                <td>
+                <td class="cats-num">
                   <span
                     th:text="'$' + ${#numbers.formatDecimal(r.approvedClaim,1,'COMMA',2,'POINT')}"
                   >
@@ -173,7 +173,7 @@
             </tbody>
           </table>
         </div>
-        <div class="card-footer cats-page-actions">
+        <div class="card-footer cats-page-actions cats-pagination">
           <a
             th:if="${page > 0}"
             th:href="@{${route}(from=${from},to=${to},category=${category},employeeId=${employeeId},attendanceOnly=${attendanceOnly},page=${page-1},size=${size})}"
@@ -187,7 +187,7 @@
           >
             Next
           </a>
-          <form method="get" th:action="@{${route}}">
+          <form method="get" th:action="@{${route}}" class="cats-page-actions cats-pagination">
             <input type="hidden" name="from" th:value="${from}" />
             <input type="hidden" name="to" th:value="${to}" />
             <input type="hidden" name="category" th:value="${category}" />
@@ -222,21 +222,24 @@
             <thead>
               <tr>
                 <th>Employee</th>
-                <th>Day limit / committed</th>
-                <th>Budget / committed</th>
-                <th>Remaining days / budget</th>
+                <th class="cats-num">Day limit / committed</th>
+                <th class="cats-num">Budget / committed</th>
+                <th class="cats-num">Remaining days / budget</th>
               </tr>
             </thead>
             <tbody>
               <tr th:each="a : ${report.annual}">
                 <td th:text="${a.name + ' (' + a.staffId + ')'}"></td>
                 <td
+                  class="cats-num"
                   th:text="${a.summary.dayLimit + ' / ' + a.summary.totalDays}"
                 ></td>
                 <td
+                  class="cats-num"
                   th:text="${'$' + #numbers.formatDecimal(a.summary.budget,1,'COMMA',2,'POINT') + ' / $' + #numbers.formatDecimal(a.summary.totalBudget,1,'COMMA',2,'POINT')}"
                 ></td>
                 <td
+                  class="cats-num"
                   th:text="${a.summary.remainingDays + ' / $' + #numbers.formatDecimal(a.summary.remainingBudget,1,'COMMA',2,'POINT')}"
                 ></td>
               </tr>

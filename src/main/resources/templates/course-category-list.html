@@ -25,14 +25,14 @@
               <tr>
                 <th scope="col">Name</th>
                 <th scope="col">Category type</th>
-                <th scope="col">Actions</th>
+                <th scope="col" class="cats-row-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr th:each="row : ${rows}">
                 <td><b th:text="${row.categoryName}"></b></td>
                 <td><span th:text="${row.kind.displayName}"></span></td>
-                <td>
+                <td class="cats-row-actions">
                   <div class="cats-page-actions">
                     <a
                       th:href="@{/admin/categories/{id}/edit(id=${row.categoryId})}"
