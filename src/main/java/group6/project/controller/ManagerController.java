@@ -87,7 +87,7 @@ public class ManagerController {
         model.addAttribute("pageData", result);
         model.addAttribute(
                 "applicationCount",
-                groups.stream().mapToInt(group -> group.applications().size()).sum());
+                rows.size());
         return "manager-approvals";
     }
 

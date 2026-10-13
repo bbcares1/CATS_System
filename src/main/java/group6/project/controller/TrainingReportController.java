@@ -40,12 +40,8 @@ public class TrainingReportController {
         from = from == null ? LocalDate.now().withDayOfYear(1) : from;
         to = to == null ? LocalDate.of(from.getYear(), 12, 31) : to;
         var report = load(actor, from, to, category, employeeId, attendanceOnly);
-        if (size != 5 && size != 10 && size != 15) size = 5;
-        int last = Math.max(0, (report.rows().size() - 1) / size);
-        page = Math.max(0, Math.min(page, last));
-        int start = page * size;
-        model.addAttribute(
-                "rows", report.rows().subList(start, Math.min(start + size, report.rows().size())));
+        var result = PageSupport.page(report.rows(), page, size);
+        model.addAttribute("rows", result.getContent());
         model.addAttribute("report", report);
         model.addAttribute("from", from);
         model.addAttribute("to", to);
@@ -53,9 +49,9 @@ public class TrainingReportController {
         model.addAttribute("employeeId", employeeId);
         model.addAttribute("categories", CourseCategoryType.values());
         model.addAttribute("attendanceOnly", attendanceOnly);
-        model.addAttribute("page", page);
-        model.addAttribute("lastPage", last);
-        model.addAttribute("size", size);
+        model.addAttribute("page", result.getNumber());
+        model.addAttribute("lastPage", Math.max(0, result.getTotalPages() - 1));
+        model.addAttribute("size", result.getSize());
         model.addAttribute("workspace", actor instanceof Admin ? "Admin" : "Manager");
         model.addAttribute("route", actor instanceof Admin ? "/admin/reports" : "/manager/reports");
         return "training-report";
