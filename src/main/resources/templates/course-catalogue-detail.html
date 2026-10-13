@@ -1,0 +1,60 @@
+<!doctype html>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Course details', 'Staff', 'apply', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <a class="cats-back" th:href="@{/staff/courses}">Back to courses</a>
+      <div class="cats-page-header">
+        <div>
+          <p
+            class="cats-sub"
+            th:text="${course.courseCategory.categoryName}"
+          ></p>
+          <h1 th:text="${course.title}"></h1>
+          <p th:text="${course.provider.name}"></p>
+        </div>
+        <a
+          class="btn btn-primary"
+          th:if="${course.customDatesAllowed or !#lists.isEmpty(schedules)}"
+          th:href="@{/staff/courses/{id}/apply(id=${course.courseId})}"
+          >Apply for this course</a
+        >
+      </div>
+      <div class="card card-body cats-stack">
+        <h2 class="cats-card-title">About this course</h2>
+        <p class="cats-pre-wrap" th:text="${course.courseDescription}"></p>
+        <p>
+          <b>Fee: </b
+          ><span
+            th:text="${course.courseFee.signum() == 0} ? 'No fee' : '$' + ${#numbers.formatDecimal(course.courseFee,1,'COMMA',2,'POINT')}"
+          ></span>
+        </p>
+        <p th:if="${course.customDatesAllowed}">
+          You may choose your own working dates when applying.
+        </p>
+      </div>
+      <div class="card card-body">
+        <h2 class="cats-card-title">Available schedules</h2>
+        <p
+          th:if="${#lists.isEmpty(schedules)}"
+          th:text="${course.customDatesAllowed} ? 'Choose your own dates in the application.' : 'No upcoming dates.'"
+        ></p>
+        <div th:each="choice : ${schedules}" class="border-bottom py-3">
+          <b
+            th:text="${#temporals.format(choice.batch.courseStartDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)} + ' to ' + ${#temporals.format(choice.batch.courseEndDate,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
+          ></b>
+          <span th:text="${choice.batch.halfDayPeriod}"></span>
+          <p class="mb-0">
+            <span th:text="${choice.batch.trainingDays}"></span> training days
+          </p>
+          <p class="mb-0">
+            <span th:text="${choice.places} + ' places left'"></span>
+          </p>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

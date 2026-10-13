@@ -1,49 +1,57 @@
 <!doctype html>
-<!-- Example of a page built on the shared layout. See DESIGN.md. -->
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout('Dashboard', 'Manager', 'dashboard', ~{::#content})}">
-<body>
-<section id="content">
+<!-- Manager dashboard with pending requests and links to team history. -->
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Dashboard', 'Manager', 'dashboard', ~{::#content})}"
+>
+  <body>
+    <section id="content">
+      <div class="cats-page-header">
+        <div>
+          <h1>Dashboard</h1>
+        </div>
+        <div class="cats-page-actions">
+          <a class="btn btn-outline-secondary" th:href="@{/staff/home}">
+            <svg th:replace="~{fragments/icons :: icon('briefcase')}"></svg>My courses
+          </a>
+          <a class="btn btn-outline-secondary" th:href="@{/staff/apply}">
+            <svg th:replace="~{fragments/icons :: icon('file-plus')}"></svg
+            >Apply for a course
+          </a>
+          <a class="btn btn-outline-secondary" th:href="@{/staff/personal}">
+            <svg th:replace="~{fragments/icons :: icon('clock')}"></svg>My
+            course history
+          </a>
+        </div>
+      </div>
 
-  <div class="cats-page-header">
-    <div>
-      <h1>Welcome back, <span th:text="${currentUser.name}">Manager</span></h1>
-      <p class="cats-sub"><span th:text="${currentUser.staffId}">M0001</span> &middot; Manager</p>
-    </div>
-    <div class="cats-page-actions">
-      <a class="btn btn-outline-secondary" th:href="@{/staff/home}">
-        <svg th:replace="~{fragments/icons :: icon('briefcase')}"></svg>My staff workspace
-      </a>
-      <a class="btn btn-outline-secondary" th:href="@{/staff/apply}">
-        <svg th:replace="~{fragments/icons :: icon('file-plus')}"></svg>Apply for a course
-      </a>
-      <a class="btn btn-outline-secondary" th:href="@{/staff/personal}">
-        <svg th:replace="~{fragments/icons :: icon('clock')}"></svg>My course history
-      </a>
-    </div>
-  </div>
-
-  <div class="cats-grid cats-grid-2">
-    <div class="card">
-      <div class="card-header">
-        <h2 class="cats-card-title">Approvals</h2>
+      <div class="cats-grid cats-grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="cats-card-title">Approvals</h2>
+          </div>
+          <div class="card-body">
+            <p class="text-secondary">
+              <span th:text="${pendingCount}"></span> applications waiting for
+              your decision.
+            </p>
+            <a class="btn btn-primary" th:href="@{/manager/approvals}"
+              >View course applications</a
+            >
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2 class="cats-card-title">Team course history</h2>
+          </div>
+          <div class="card-body">
+            <a class="btn btn-outline-secondary" th:href="@{/manager/history}"
+              >View team history</a
+            >
+          </div>
+        </div>
       </div>
-      <div class="card-body">
-        <p class="text-secondary">Course applications from your team that are waiting for your decision.</p>
-        <a class="btn btn-primary" th:href="@{/manager/approvals}">View course applications</a>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <h2 class="cats-card-title">Team course history</h2>
-        <span th:replace="~{fragments/ui :: tag('Coming soon')}"></span>
-      </div>
-      <div class="card-body">
-        <p class="mb-0 text-secondary">What your team members applied for this year.</p>
-      </div>
-    </div>
-  </div>
-
-</section>
-</body>
+    </section>
+  </body>
 </html>

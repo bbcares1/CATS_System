@@ -1,0 +1,8 @@
+target
+.git
+.env*
+cats.env
+docker.env
+cats-image.tar
+*.log
+docs

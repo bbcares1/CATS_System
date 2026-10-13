@@ -1,22 +1,24 @@
+// We check outgoing messages and missing SMTP settings without sending real email.
 package group6.project.service;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import group6.project.form.AdminEmailForm;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-
-import group6.project.model.AdminEmailForm;
 
 class AdminEmailServiceTest {
 
     @Test
     void sendsConfiguredMessageToSubmittedRecipient() {
         JavaMailSender mailSender = org.mockito.Mockito.mock(JavaMailSender.class);
-        AdminEmailService service = new AdminEmailService(mailSender, "admin@qq.com");
+        AdminEmailService service =
+                new AdminEmailService(java.util.Optional.of(mailSender), "admin@qq.com", "");
         AdminEmailForm form = new AdminEmailForm();
         form.setRecipientEmail("  recipient@example.com ");
         form.setSubject("  Course update  ");
@@ -39,7 +41,8 @@ class AdminEmailServiceTest {
     @Test
     void rejectsSendingWhenSenderAddressIsNotConfigured() {
         JavaMailSender mailSender = org.mockito.Mockito.mock(JavaMailSender.class);
-        AdminEmailService service = new AdminEmailService(mailSender, " ");
+        AdminEmailService service =
+                new AdminEmailService(java.util.Optional.of(mailSender), " ", "");
 
         assertThrows(IllegalStateException.class, () -> service.send(new AdminEmailForm()));
         verifyNoInteractions(mailSender);

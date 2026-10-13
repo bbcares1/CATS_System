@@ -1,77 +1,160 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout('Public holidays', 'Admin', 'holidays', ~{::#content})}">
-<body>
-<section id="content">
-  <div class="cats-page-header">
-    <div>
-      <h1>Public holidays</h1>
-      <p class="cats-sub">Dates added here are excluded from course schedules.</p>
-    </div>
-  </div>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Public holidays', 'Admin', 'holidays', ~{::#content})}"
+>
+  <body>
+    <section id="content">
+      <div class="cats-page-header">
+        <div>
+          <h1>Public holidays</h1>
+        </div>
+      </div>
 
-  <section class="card mb-4">
-    <div class="card-header">
-      <h2 class="cats-card-title">Add a public holiday</h2>
-      <p class="text-secondary small mb-0">Scheduled sessions will move to the next eligible training day.</p>
-    </div>
-    <div class="card-body">
-      <form th:action="@{/excluded-days/add}" th:object="${newExcludedDay}"
-            method="post" class="cats-form" novalidate>
-        <div th:if="${#fields.hasAnyErrors()}" class="cats-error-summary" role="alert">
-          <div><h2>Check the holiday details</h2>
-            <ul><li th:each="error : ${#fields.allErrors()}" th:text="${error}">Please correct this field.</li></ul>
-          </div>
+      <section class="card mb-4">
+        <div class="card-header">
+          <h2 class="cats-card-title">Add a public holiday</h2>
+          <p class="text-secondary small mb-0">
+            Dates already used by active applications or schedules cannot be
+            changed.
+          </p>
         </div>
-        <div class="row g-3">
-          <div class="col-md-5">
-            <label class="form-label" for="date">Date</label>
-            <input type="date" id="date" th:field="*{date}" class="form-control" required>
-            <div class="cats-field-msg" th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
-          </div>
-          <div class="col-md-7">
-            <label class="form-label" for="description">Holiday name</label>
-            <input type="text" id="description" th:field="*{description}" class="form-control" maxlength="255" required>
-            <div class="cats-field-msg" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
-          </div>
+        <div class="card-body">
+          <form
+            th:action="@{/excluded-days/add}"
+            th:object="${newExcludedDay}"
+            method="post"
+            class="cats-form"
+            novalidate
+          >
+            <input th:replace="~{fragments/csrf :: token}" />
+            <div
+              th:if="${#fields.hasAnyErrors()}"
+              class="cats-error-summary"
+              role="alert"
+            >
+              <div>
+                <h2>Check the holiday details</h2>
+                <ul>
+                  <li
+                    th:each="error : ${#fields.allErrors()}"
+                    th:text="${error}"
+                  >
+                    Please correct this field.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-5">
+                <label class="form-label" for="date">Date</label>
+                <input
+                  type="date"
+                  id="date"
+                  th:field="*{date}"
+                  class="form-control"
+                  required
+                />
+                <div
+                  class="cats-field-msg"
+                  th:if="${#fields.hasErrors('date')}"
+                  th:errors="*{date}"
+                ></div>
+              </div>
+              <div class="col-md-7">
+                <label class="form-label" for="description">Holiday name</label>
+                <input
+                  type="text"
+                  id="description"
+                  th:field="*{description}"
+                  class="form-control"
+                  maxlength="255"
+                  required
+                />
+                <div
+                  class="cats-field-msg"
+                  th:if="${#fields.hasErrors('description')}"
+                  th:errors="*{description}"
+                ></div>
+              </div>
+            </div>
+            <div class="cats-form-footer">
+              <button type="submit" class="btn btn-primary">
+                Add public holiday
+              </button>
+            </div>
+          </form>
         </div>
-        <div class="cats-form-footer">
-          <button type="submit" class="btn btn-primary">Add public holiday</button>
-        </div>
-      </form>
-    </div>
-  </section>
+      </section>
 
-  <section class="card" aria-labelledby="holiday-table-title">
-    <div class="card-header">
-      <h2 id="holiday-table-title" class="cats-card-title">Configured public holidays</h2>
-    </div>
-    <div class="table-responsive">
-      <table class="table align-middle mb-0">
-        <thead>
-          <tr><th scope="col">Date</th><th scope="col">Holiday</th><th scope="col" class="cats-row-actions">Actions</th></tr>
-        </thead>
-        <tbody>
-          <tr th:each="day : ${excludedDaysList}" th:with="deleteId='delete-holiday-' + ${day.id}">
-            <td class="text-nowrap" th:text="${#temporals.format(day.date, 'd MMM yyyy')}">1 Jan 2026</td>
-            <td class="fw-medium" th:text="${day.description}">Public holiday</td>
-            <td class="cats-row-actions">
-              <a class="btn btn-sm btn-outline-secondary"
-                 th:href="@{/excluded-days/edit/{id}(id=${day.id})}">Edit</a>
-              <button type="button" class="btn btn-sm btn-outline-danger"
-                      data-bs-toggle="modal" th:attr="data-bs-target='#' + ${deleteId}">Delete</button>
-              <div th:replace="~{fragments/ui :: confirm(${deleteId}, 'Delete public holiday', 'This date will no longer be excluded from course schedules.', @{/excluded-days/delete/{id}(id=${day.id})}, 'Delete holiday', true)}"></div>
-            </td>
-          </tr>
-          <tr th:if="${#lists.isEmpty(excludedDaysList)}">
-            <td colspan="3">
-              <div th:replace="~{fragments/ui :: empty('calendar', 'No public holidays configured', 'Add a date above to exclude it from course schedules.', ~{})}"></div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-</section>
-</body>
+      <section class="card" aria-labelledby="holiday-table-title">
+        <div class="card-header">
+          <h2 id="holiday-table-title" class="cats-card-title">
+            Configured public holidays
+          </h2>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Date</th>
+                <th scope="col">Holiday</th>
+                <th scope="col" class="cats-row-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                th:each="day : ${excludedDaysList}"
+                th:with="deleteId='delete-holiday-' + ${day.id}"
+              >
+                <td
+                  class="text-nowrap"
+                  th:text="${#temporals.format(day.date,'d MMM yyyy',T(java.util.Locale).ENGLISH)}"
+                >
+                  1 Jan 2026
+                </td>
+                <td class="fw-medium" th:text="${day.description}">
+                  Public holiday
+                </td>
+                <td class="cats-row-actions">
+                  <a
+                    class="btn btn-sm btn-outline-secondary"
+                    th:href="@{/excluded-days/edit/{id}(id=${day.id})}"
+                    >Edit</a
+                  >
+                  <form
+                    th:action="@{/excluded-days/delete/{id}(id=${day.id})}"
+                    method="post"
+                    class="d-inline"
+                    data-confirm-title="Delete public holiday"
+                    data-confirm-message="Remove this unused holiday date?"
+                  >
+                    <input th:replace="~{fragments/csrf :: token}" />
+                    <input
+                      type="hidden"
+                      name="version"
+                      th:value="${day.version}"
+                    /><button class="btn btn-sm btn-outline-danger">
+                      Delete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(excludedDaysList)}">
+                <td colspan="3">
+                  <div
+                    th:replace="~{fragments/ui :: empty('calendar', 'No public holidays configured', 'Add a date above to exclude it from course schedules.', ~{})}"
+                  ></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <div
+        th:replace="~{fragments/list-pagination :: pager(${pageData}, '/excluded-days', null, null)}"
+      ></div>
+    </section>
+  </body>
 </html>

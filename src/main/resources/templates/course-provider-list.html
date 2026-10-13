@@ -1,0 +1,82 @@
+<!doctype html>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Training providers', 'Admin', 'courses', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <nav th:replace="~{fragments/ui :: courseTabs('providers')}"></nav>
+      <div class="cats-page-header">
+        <h1>Training providers</h1>
+        <div class="cats-page-actions">
+          <a class="btn btn-primary" th:href="@{/admin/providers/new}"
+            >Add provider</a
+          >
+        </div>
+      </div>
+      <div class="card card-body">
+        <p th:if="${#lists.isEmpty(rows)}">
+          No providers.
+        </p>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(rows)}">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Website</th>
+                <th scope="col">Email</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="row : ${rows}">
+                <td><b th:text="${row.name}"></b></td>
+                <td>
+                  <a
+                    th:if="${!#strings.isEmpty(row.website)}"
+                    th:href="${row.website}"
+                    th:text="${row.website}"
+                    target="_blank"
+                    rel="noopener"
+                  ></a>
+                </td>
+                <td><span th:text="${row.email}"></span></td>
+                <td>
+                  <span th:text="${row.active} ? 'Active' : 'Archived'"></span>
+                </td>
+                <td>
+                  <div class="cats-page-actions">
+                    <a
+                      th:href="@{/admin/providers/{id}/edit(id=${row.providerId})}"
+                      >Edit</a
+                    >
+                    <form
+                      method="post"
+                      th:action="@{/admin/providers/{id}/delete(id=${row.providerId})}"
+                      data-confirm-title="Remove this record?"
+                      data-confirm-message="Remove this record from active use? Referenced records may be archived or kept."
+                    >
+                      <input th:replace="~{fragments/csrf :: token}" />
+                      <input
+                        type="hidden"
+                        name="version"
+                        th:value="${row.version}"
+                      /><button class="btn btn-link text-danger p-0">
+                        Remove
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div
+        th:replace="~{fragments/list-pagination :: pager(${pageData},'/admin/providers',null,null)}"
+      ></div>
+    </section>
+  </body>
+</html>

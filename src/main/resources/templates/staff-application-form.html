@@ -1,86 +1,195 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Course Application</title>
-        <link rel="stylesheet" th:href="@{/css/category.css}">
-        <link rel="stylesheet" th:href="@{/css/staff.css}">
-    </head>
-    <body>
-        <main class="container">
-            <!-- Navigation: Links to staff pages. -->
-            <nav>
-                <a th:href="@{/staff/home}">Dashboard</a>
-                <a th:href="@{/staff/personal}">Personal Course History</a>
-                <a class="active" th:href="@{/staff/apply}">Apply / Edit Application</a>
-                <a th:href="@{/logout}">Logout</a>
-            </nav>
-            <h1 th:text="${editId == null ? 'Apply for Course' : 'Edit Application'}"></h1>
-            <p class="error" th:if="${error}" th:text="${error}"></p>
-            <!-- Course application: Enter or edit the course details. -->
-            <form th:action="${formAction}" th:object="${course}" method="post">
-                <input th:if="${editId != null}" type="hidden" name="applicationId" th:value="${editId}">
-                <div class="form-group">
-                    <label for="courseTitle">Course title *</label>
-                    <p class="error" th:if="${#fields.hasErrors('courseTitle')}" th:errors="*{courseTitle}"></p>
-                    <input type="text" th:field="*{courseTitle}" required maxlength="255">
-                </div>
-                <div class="form-group">
-                    <label for="courseCategory">Category *</label>
-                    <p class="error" th:if="${#fields.hasErrors('courseCategory')}" th:errors="*{courseCategory}"></p>
-                    <select th:field="*{courseCategory}" required>
-                        <option value="">Select a category</option>
-                        <option th:each="category : ${categories}" th:value="${category}" th:text="${category.displayName}"></option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="trainingProvider">Training provider</label>
-                    <p class="error" th:if="${#fields.hasErrors('trainingProvider')}" th:errors="*{trainingProvider}"></p>
-                    <input type="text" th:field="*{trainingProvider}" maxlength="255">
-                </div>
-                <div class="form-group">
-                    <!-- Course period: The existing shared service requires both dates in one calendar year. -->
-                    <p>Choose start and end dates within the same calendar year.</p>
-                    <label for="courseStartDate">Start date *</label>
-                    <p class="error" th:if="${#fields.hasErrors('courseStartDate')}" th:errors="*{courseStartDate}"></p>
-                    <input type="date" th:field="*{courseStartDate}" th:min="${today}" required>
-                </div>
-                <div class="form-group">
-                    <label for="courseEndDate">End date *</label>
-                    <p class="error" th:if="${#fields.hasErrors('courseEndDate')}" th:errors="*{courseEndDate}"></p>
-                    <input type="date" th:field="*{courseEndDate}" th:min="${today}" required>
-                </div>
-                <div class="form-group">
-                    <label for="halfDayPeriod">Session</label>
-                    <select th:field="*{halfDayPeriod}">
-                        <option value="">Full days</option>
-                        <option value="AM">Morning (AM)</option>
-                        <option value="PM">Afternoon (PM)</option>
-                    </select>
-                    <p>AM/PM is for Internal Training only and reduces the total by half a day. Weekends and public holidays are excluded.</p>
-                </div>
-                <div class="form-group">
-                    <label for="courseFee">Course fee ($)</label>
-                    <p class="error" th:if="${#fields.hasErrors('courseFee')}" th:errors="*{courseFee}"></p>
-                    <input type="number" th:field="*{courseFee}" min="0" step="0.01" required>
-                    <p>Internal Training is free. External Courses and Professional Certifications must stay within your remaining budget.</p>
-                </div>
-                <div class="form-group">
-                    <label for="justification">Justification *</label>
-                    <p class="error" th:if="${#fields.hasErrors('justification')}" th:errors="*{justification}"></p>
-                    <textarea th:field="*{justification}" rows="4" maxlength="255" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="workDissemination">Work dissemination during the course</label>
-                    <p class="error" th:if="${#fields.hasErrors('workDissemination')}" th:errors="*{workDissemination}"></p>
-                    <textarea th:field="*{workDissemination}" rows="3" maxlength="255"></textarea>
-                </div>
-                <div class="form-actions">
-                    <button class="btn btn-primary" type="submit" th:text="${editId == null ? 'Submit Application' : 'Save Changes'}"></button>
-                    <a class="btn btn-secondary" th:href="@{/staff/personal}">Back</a>
-                </div>
-            </form>
-        </main>
-    </body>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Course application', 'Staff', 'apply', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header">
+        <div>
+          <h1
+            th:text="${editId == null ? 'Apply for a course' : 'Edit application'}"
+          ></h1>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/staff/courses}"
+          >Back to courses</a
+        >
+      </div>
+      <div th:replace="~{fragments/application :: allowance(${summary})}"></div>
+      <div class="card card-body">
+        <form
+          class="cats-stack"
+          id="application-form"
+          th:action="@{${formAction}}"
+          th:object="${form}"
+          method="post"
+          novalidate
+        >
+          <input th:replace="~{fragments/csrf :: token}" />
+          <input type="hidden" th:field="*{version}" />
+          <div
+            class="cats-error-summary"
+            role="alert"
+            th:if="${#fields.hasErrors('*')}"
+          >
+            <div>
+              <h2 class="cats-card-title">Please check your application</h2>
+              <ul>
+                <li
+                  th:each="error : ${#fields.allErrors()}"
+                  th:text="${error}"
+                ></li>
+              </ul>
+            </div>
+          </div>
+          <div class="cats-field">
+            <label class="form-label cats-req" for="courseTitle"
+              >Course title</label
+            ><input
+              class="form-control"
+              type="text"
+              th:field="*{courseTitle}"
+              th:errorclass="is-invalid"
+              maxlength="200"
+            />
+            <div class="cats-field-msg" th:errors="*{courseTitle}"></div>
+          </div>
+          <div class="cats-grid cats-grid-2">
+            <div class="cats-field">
+              <label class="form-label cats-req" for="courseCategory"
+                >Category</label
+              ><select class="form-select" th:field="*{courseCategory}">
+                <option value="">Choose a category</option>
+                <option
+                  th:each="category : ${categories}"
+                  th:value="${category}"
+                  th:text="${category.displayName}"
+                ></option>
+              </select>
+              <div class="cats-field-msg" th:errors="*{courseCategory}"></div>
+            </div>
+            <div class="cats-field">
+              <label class="form-label cats-req" for="trainingProvider"
+                >Training provider</label
+              ><input
+                class="form-control"
+                type="text"
+                th:field="*{trainingProvider}"
+                th:errorclass="is-invalid"
+                maxlength="200"
+              />
+              <div class="cats-field-msg" th:errors="*{trainingProvider}"></div>
+            </div>
+          </div>
+          <div id="custom-dates" class="cats-grid cats-grid-2">
+            <div class="cats-field">
+              <label class="form-label cats-req" for="courseStartDate"
+                >Start date</label
+              ><input
+                class="form-control"
+                type="date"
+                th:field="*{courseStartDate}"
+                th:errorclass="is-invalid"
+                th:min="${today}"
+              />
+              <div class="cats-field-msg" th:errors="*{courseStartDate}"></div>
+            </div>
+            <div class="cats-field">
+              <label class="form-label cats-req" for="courseEndDate"
+                >End date</label
+              ><input
+                class="form-control"
+                type="date"
+                th:field="*{courseEndDate}"
+                th:errorclass="is-invalid"
+                th:min="${today}"
+              />
+              <div class="cats-field-msg" th:errors="*{courseEndDate}"></div>
+            </div>
+          </div>
+          <div class="cats-field" id="half-day-field">
+            <label class="form-label" for="halfDayPeriod">Session</label
+            ><select class="form-select" th:field="*{halfDayPeriod}">
+              <option value="">Full working days</option>
+              <option value="AM">Morning (AM)</option>
+              <option value="PM">Afternoon (PM)</option>
+            </select>
+            <div class="form-text">
+              Half-day sessions are for one-day Internal Training only.
+            </div>
+            <div class="cats-field-msg" th:errors="*{halfDayPeriod}"></div>
+          </div>
+          <div class="cats-field">
+            <label class="form-label cats-req" for="courseFee"
+              >Course fee ($)</label
+            ><input
+              class="form-control"
+              type="number"
+              th:field="*{courseFee}"
+              th:errorclass="is-invalid"
+              min="0"
+              step="0.01"
+            />
+            <div class="cats-field-msg" th:errors="*{courseFee}"></div>
+          </div>
+          <div class="cats-field">
+            <label class="form-label cats-req" for="justification"
+              >Why do you need this course?</label
+            ><textarea
+              rows="3"
+              maxlength="2000"
+              class="form-control"
+              th:field="*{justification}"
+              th:errorclass="is-invalid"
+            ></textarea>
+            <div class="cats-field-msg" th:errors="*{justification}"></div>
+          </div>
+          <div class="cats-field">
+            <label class="form-label" for="workDissemination"
+              >Work arrangements during the course</label
+            ><textarea
+              rows="3"
+              maxlength="2000"
+              class="form-control"
+              th:field="*{workDissemination}"
+              th:errorclass="is-invalid"
+            ></textarea>
+            <div class="cats-field-msg" th:errors="*{workDissemination}"></div>
+          </div>
+          <div
+            class="cats-field"
+            th:if="${editId == null and !#lists.isEmpty(reviewers)}"
+          >
+            <label class="form-label cats-req" for="reviewerId"
+              >Approving Manager</label
+            ><select class="form-select" th:field="*{reviewerId}">
+              <option value="">Choose a Manager</option>
+              <option
+                th:each="manager : ${reviewers}"
+                th:value="${manager.userId}"
+                th:text="${manager.name} + ' (' + ${manager.staffId} + ')'"
+              ></option>
+            </select>
+          </div>
+          <p
+            class="text-secondary"
+            th:if="${editId == null and employee.manager != null}"
+          >
+            Approving Manager: <span th:text="${employee.manager.name}"></span>
+          </p>
+          <div class="cats-form-footer">
+            <a class="btn btn-outline-secondary" th:href="@{/staff/personal}"
+              >Cancel</a
+            ><button
+              class="btn btn-primary"
+              type="submit"
+              th:text="${editId == null ? 'Submit application' : 'Save changes'}"
+            ></button>
+          </div>
+        </form>
+      </div>
+      <script defer th:src="@{/js/application-form.js}"></script>
+    </section>
+  </body>
 </html>

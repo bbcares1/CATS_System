@@ -1,138 +1,51 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout('Admin dashboard', 'Admin', 'dashboard', ~{::#content})}">
-<body>
-<section id="content">
-  <div class="cats-page-header">
-    <div>
-      <h1>Admin dashboard</h1>
-      <p class="cats-sub">
-        <span th:text="'Welcome, ' + ${currentUser.name} + '.'">Welcome, Admin.</span>
-        Access all administration tools from one place.
-      </p>
-    </div>
-  </div>
-
-  <div class="cats-stack">
-    <section class="cats-grid cats-grid-2" aria-label="Administration">
-      <article class="card h-100">
-        <div class="card-body">
-          <h2 class="cats-card-title">Staff and accounts</h2>
-          <p class="text-secondary">
-            Create staff and manager accounts, update staff details, and manage reporting lines.
-          </p>
-          <a class="btn btn-primary" th:href="@{/admin/staffs}">
-            <svg th:replace="~{fragments/icons :: icon('users')}"></svg>
-            Manage accounts
-          </a>
-        </div>
-      </article>
-
-      <article class="card h-100">
-        <div class="card-body">
-          <h2 class="cats-card-title">Training entitlement</h2>
-          <p class="text-secondary">
-            Review and update staff annual training budgets and available training days.
-          </p>
-          <a class="btn btn-outline-secondary" th:href="@{/admin/budgets}">
-            <svg th:replace="~{fragments/icons :: icon('card')}"></svg>
-            Manage entitlement
-          </a>
-        </div>
-      </article>
-
-      <article class="card h-100">
-        <div class="card-body">
-          <h2 class="cats-card-title">Approval hierarchy</h2>
-          <p class="text-secondary">
-            Configure the approval roles and hierarchy used by course applications.
-          </p>
-          <a class="btn btn-outline-secondary" th:href="@{/admin/hierarchy}">
-            <svg th:replace="~{fragments/icons :: icon('sitemap')}"></svg>
-            Manage hierarchy
-          </a>
-        </div>
-      </article>
-
-      <article class="card h-100">
-        <div class="card-body">
-          <h2 class="cats-card-title">Course categories</h2>
-          <p class="text-secondary">
-            Add and maintain the categories used to organise training courses.
-          </p>
-          <a class="btn btn-outline-secondary" th:href="@{/admin/categories}">
-            <svg th:replace="~{fragments/icons :: icon('tag')}"></svg>
-            Manage categories
-          </a>
-        </div>
-      </article>
-
-      <article class="card h-100">
-        <div class="card-body">
-          <h2 class="cats-card-title">Course catalogue</h2>
-          <p class="text-secondary">
-            Maintain course descriptions, fees, and categories available to employees.
-          </p>
-          <a class="btn btn-outline-secondary" th:href="@{/admin/courses}">
-            <svg th:replace="~{fragments/icons :: icon('book')}"></svg>
-            Manage courses
-          </a>
-        </div>
-      </article>
-
-      <article class="card h-100">
-        <div class="card-body">
-          <h2 class="cats-card-title">Course batches</h2>
-          <p class="text-secondary">
-            Create and maintain course batches, training days, and participant capacity.
-          </p>
-          <a class="btn btn-outline-secondary" th:href="@{/admin/batches}">
-            <svg th:replace="~{fragments/icons :: icon('book')}"></svg>
-            Manage batches
-          </a>
-        </div>
-      </article>
-
-      <article class="card h-100">
-        <div class="card-body">
-          <h2 class="cats-card-title">Course calendar</h2>
-          <p class="text-secondary">
-            Schedule batch dates around excluded days and selected weekend training sessions.
-          </p>
-          <a class="btn btn-outline-secondary" th:href="@{/admin/calendar}">
-            <svg th:replace="~{fragments/icons :: icon('calendar')}"></svg>
-            Open calendar
-          </a>
-        </div>
-      </article>
-
-      <article class="card h-100">
-        <div class="card-body">
-          <h2 class="cats-card-title">Email staff and managers</h2>
-          <p class="text-secondary">
-            Select a staff member or manager, compose a message, and send it from the Admin workspace.
-          </p>
-          <a class="btn btn-outline-secondary" th:href="@{/admin/emails}">
-            <svg th:replace="~{fragments/icons :: icon('inbox')}"></svg>
-            Open email
-          </a>
-        </div>
-      </article>
-
-      <article class="card h-100">
-        <div class="card-body">
-          <h2 class="cats-card-title">Public holidays</h2>
-          <p class="text-secondary">
-            Maintain public holidays and other excluded dates used by course scheduling.
-          </p>
-          <a class="btn btn-outline-secondary" th:href="@{/excluded-days}">
-            <svg th:replace="~{fragments/icons :: icon('calendar')}"></svg>
-            Manage excluded days
-          </a>
-        </div>
-      </article>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout('Admin dashboard', 'Admin', 'dashboard', ~{::#content})}"
+>
+  <body>
+    <section id="content" class="cats-stack">
+      <div class="cats-page-header"><h1>Admin dashboard</h1></div>
+      <div class="cats-grid cats-grid-2">
+        <section class="card card-body">
+          <h2 class="cats-card-title">Accounts and reporting managers</h2>
+          <div class="cats-page-actions">
+            <a class="btn btn-outline-secondary" th:href="@{/admin/accounts}"
+              >Manage accounts</a
+            >
+            <a class="btn btn-quiet" th:href="@{/admin/entitlements}"
+              >Annual allowances</a
+            >
+          </div>
+        </section>
+        <section class="card card-body">
+          <h2 class="cats-card-title">Courses</h2>
+          <div class="cats-page-actions">
+            <a class="btn btn-primary" th:href="@{/admin/courses/new}"
+              >Add course</a
+            >
+            <a class="btn btn-quiet" th:href="@{/admin/courses}"
+              >View courses</a
+            >
+          </div>
+        </section>
+        <section class="card card-body">
+          <h2 class="cats-card-title">Reimbursements</h2>
+          <a class="btn btn-outline-secondary" th:href="@{/admin/payments}"
+            >View approved claims</a
+          >
+        </section>
+        <section class="card card-body">
+          <h2 class="cats-card-title">Training</h2>
+          <div class="cats-page-actions">
+            <a class="btn btn-outline-secondary" th:href="@{/training/calendar}"
+              >Training calendar</a
+            >
+            <a class="btn btn-quiet" th:href="@{/admin/reports}">Reports</a>
+          </div>
+        </section>
+      </div>
     </section>
-  </div>
-</section>
-</body>
+  </body>
 </html>

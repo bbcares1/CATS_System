@@ -1,183 +1,142 @@
+// We check calculated course dates, holidays and half-day rules.
 package group6.project.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import java.time.LocalDate;
-import java.util.Set;
+import group6.project.model.CourseCategoryType;
+import group6.project.model.ExcludedDays;
+import group6.project.repo.ExcludedDaysRepo;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
-import group6.project.repo.CourseApplicationRepo;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
+import java.util.List;
 
 class CourseScheduleServiceTest {
+    private final ExcludedDaysRepo holidays = mock(ExcludedDaysRepo.class);
+    private final CourseScheduleService schedules = new CourseScheduleService(holidays);
+    private final LocalDate monday =
+            LocalDate.now()
+                    .plusYears(1)
+                    .withDayOfYear(1)
+                    .with(TemporalAdjusters.nextOrSame(DayOfWeek.MONDAY));
 
-    @Mock
-    private ExcludedDaysService excludedDaysService;
-
-    @Mock
-    private CourseApplicationRepo courseApplicationRepo;
-
-    private CourseScheduleService courseScheduleService;
-
+    // Use next year's working week so the test does not expire after the presentation.
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        when(excludedDaysService.isExcludedDay(any(LocalDate.class)))
-                .thenReturn(false);
-
-        courseScheduleService =
-                new CourseScheduleService(
-                        excludedDaysService,
-                        courseApplicationRepo);
+    void setup() {
+        when(holidays.findAll()).thenReturn(List.of());
     }
 
     @Test
-    void shouldSkipWeekendWhenCalculatingSchedule() {
-        LocalDate requestedStart = nextWeekday(LocalDate.now().plusDays(1));
-        CourseScheduleService.Schedule schedule =
-                courseScheduleService.calculateSchedule(
-                        requestedStart,
-                        5.0);
-
-        assertEquals(requestedStart, schedule.actualStartDate());
-        assertEquals(addWeekdays(requestedStart, 4), schedule.actualEndDate());
+    void skipsWeekends() {
+        var schedule =
+                schedules.calculate(
+                        CourseCategoryType.EXTERNAL_COURSE, monday.plusDays(4), 2, null);
+        assertEquals(monday.plusDays(7), schedule.end());
+        assertEquals(List.of(monday.plusDays(4), monday.plusDays(7)), schedule.dates());
     }
 
     @Test
-    void shouldRejectRequestedStartDateBeforeToday() {
-        assertThrows(IllegalArgumentException.class,
-                () -> courseScheduleService.calculateSchedule(
-                        LocalDate.now().minusDays(1),
-                        1.0));
+    void rejectsTodayAndPastStart() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        schedules.calculate(
+                                CourseCategoryType.EXTERNAL_COURSE, LocalDate.now(), 1, null));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        schedules.calculate(
+                                CourseCategoryType.EXTERNAL_COURSE,
+                                LocalDate.now().minusDays(1),
+                                1,
+                                null));
     }
 
     @Test
-    void shouldMoveSaturdayStartToMonday() {
-        CourseScheduleService.Schedule schedule =
-                courseScheduleService.calculateSchedule(
-                        LocalDate.of(2026, 10, 10),
-                        3.0);
-
-        assertEquals(LocalDate.of(2026, 10, 12), schedule.actualStartDate());
-        assertEquals(LocalDate.of(2026, 10, 14), schedule.actualEndDate());
+    void movesSaturdayToMonday() {
+        var schedule =
+                schedules.calculate(
+                        CourseCategoryType.EXTERNAL_COURSE, monday.minusDays(2), 3, null);
+        assertEquals(monday, schedule.start());
+        assertEquals(monday.plusDays(2), schedule.end());
     }
 
     @Test
-    void shouldMoveHolidayStartToNextWorkingDay() {
-        LocalDate holiday = LocalDate.of(2026, 10, 12);
-        when(excludedDaysService.isExcludedDay(holiday)).thenReturn(true);
-
-        CourseScheduleService.Schedule schedule =
-                courseScheduleService.calculateSchedule(holiday, 3.0);
-
-        assertEquals(LocalDate.of(2026, 10, 13), schedule.actualStartDate());
-        assertEquals(LocalDate.of(2026, 10, 15), schedule.actualEndDate());
+    void movesHolidayStartToNextWorkingDay() {
+        exclude(monday);
+        var schedule = schedules.calculate(CourseCategoryType.EXTERNAL_COURSE, monday, 3, null);
+        assertEquals(monday.plusDays(1), schedule.start());
+        assertEquals(monday.plusDays(3), schedule.end());
     }
 
     @Test
-    void shouldSkipHolidayDuringCourse() {
-        LocalDate holiday = LocalDate.of(2026, 10, 14);
-        when(excludedDaysService.isExcludedDay(holiday)).thenReturn(true);
-
-        CourseScheduleService.Schedule schedule =
-                courseScheduleService.calculateSchedule(
-                        LocalDate.of(2026, 10, 12),
-                        4.0);
-
-        assertEquals(LocalDate.of(2026, 10, 12), schedule.actualStartDate());
-        assertEquals(LocalDate.of(2026, 10, 16), schedule.actualEndDate());
+    void skipsHolidayDuringCourse() {
+        exclude(monday.plusDays(2));
+        var schedule = schedules.calculate(CourseCategoryType.EXTERNAL_COURSE, monday, 4, null);
+        assertEquals(monday.plusDays(4), schedule.end());
+        assertFalse(schedule.dates().contains(monday.plusDays(2)));
     }
 
     @Test
-    void shouldAllowSelectedWeekendTraining() {
-        LocalDate saturday = LocalDate.of(2026, 10, 10);
-
-        CourseScheduleService.Schedule schedule =
-                courseScheduleService.calculateSchedule(
-                        saturday,
-                        1.0,
-                        Set.of(saturday));
-
-        assertEquals(saturday, schedule.actualStartDate());
-        assertEquals(saturday, schedule.actualEndDate());
-        assertEquals(
-                java.util.List.of(saturday),
-                courseScheduleService.getTrainingDates(
-                        schedule, Set.of(saturday)));
+    void halfDayRequiresInternalAndOneSession() {
+        var schedule = schedules.calculate(CourseCategoryType.INTERNAL_TRAINING, monday, 0.5, "AM");
+        assertEquals(monday, schedule.end());
+        assertEquals(0.5, schedule.days());
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> schedules.calculate(CourseCategoryType.EXTERNAL_COURSE, monday, 0.5, "AM"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> schedules.calculate(CourseCategoryType.INTERNAL_TRAINING, monday, 0.5, ""));
     }
 
     @Test
-    void excludedDayTakesPrecedenceOverSelectedWeekendTraining() {
-        LocalDate saturday = LocalDate.of(2026, 10, 10);
-        when(excludedDaysService.isExcludedDay(saturday)).thenReturn(true);
-
-        CourseScheduleService.Schedule schedule =
-                courseScheduleService.calculateSchedule(
-                        saturday,
-                        1.0,
-                        Set.of(saturday));
-
-        assertEquals(LocalDate.of(2026, 10, 12), schedule.actualStartDate());
-        assertEquals(LocalDate.of(2026, 10, 12), schedule.actualEndDate());
-        assertEquals(
-                java.util.List.of(LocalDate.of(2026, 10, 12)),
-                courseScheduleService.getTrainingDates(
-                        schedule, Set.of(saturday)));
-    }
-
-    @Test
-    void shouldCalculateHalfDaySchedule() {
-        CourseScheduleService.Schedule schedule =
-                courseScheduleService.calculateSchedule(
-                        LocalDate.of(2026, 10, 12),
-                        2.5);
-
-        assertEquals(LocalDate.of(2026, 10, 12), schedule.actualStartDate());
-        assertEquals(LocalDate.of(2026, 10, 14), schedule.actualEndDate());
-        assertEquals(2.5, schedule.trainingDays());
-    }
-
-    @Test
-    void shouldCalculateScheduleAcrossMonths() {
-        CourseScheduleService.Schedule schedule =
-                courseScheduleService.calculateSchedule(
-                        LocalDate.of(2026, 10, 29),
-                        5.0);
-
-        assertEquals(LocalDate.of(2026, 10, 29), schedule.actualStartDate());
-        assertEquals(LocalDate.of(2026, 11, 4), schedule.actualEndDate());
-
-        var calendars = courseScheduleService.generateCalendars(
-                schedule.actualStartDate(),
-                schedule.actualEndDate());
-
-        assertEquals(2, calendars.size());
-        assertEquals("OCTOBER", calendars.get(0).month());
-        assertEquals(2026, calendars.get(0).year());
-        assertEquals("NOVEMBER", calendars.get(1).month());
-        assertEquals(2026, calendars.get(1).year());
-    }
-
-    private LocalDate nextWeekday(LocalDate date) {
-        while (date.getDayOfWeek().getValue() > 5) {
-            date = date.plusDays(1);
+    void rejectsMultiDayHalfSessionsAndInvalidDurations() {
+        for (double days : List.of(0.0, 2.5, Double.NaN, Double.POSITIVE_INFINITY, 261.0)) {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            schedules.calculate(
+                                    CourseCategoryType.INTERNAL_TRAINING, monday, days, null));
         }
-        return date;
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> schedules.calculate(CourseCategoryType.INTERNAL_TRAINING, monday, 2, "PM"));
     }
 
-    private LocalDate addWeekdays(LocalDate date, int weekdays) {
-        while (weekdays > 0) {
-            date = date.plusDays(1);
-            if (date.getDayOfWeek().getValue() <= 5) {
-                weekdays--;
-            }
-        }
-        return date;
+    @Test
+    void crossesMonthsButNotYears() {
+        LocalDate lastWeek =
+                monday.withMonth(11)
+                        .withDayOfMonth(27)
+                        .with(TemporalAdjusters.nextOrSame(DayOfWeek.MONDAY));
+        var schedule = schedules.calculate(CourseCategoryType.EXTERNAL_COURSE, lastWeek, 5, null);
+        assertEquals(12, schedule.end().getMonthValue());
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        schedules.calculate(
+                                CourseCategoryType.EXTERNAL_COURSE,
+                                monday.withMonth(12).withDayOfMonth(31),
+                                2,
+                                null));
+    }
+
+    @Test
+    void rejectsUnknownCategory() {
+        assertThrows(
+                IllegalArgumentException.class, () -> schedules.calculate(null, monday, 1, null));
+    }
+
+    // A saved excluded day is used both at the start and in the middle of a schedule.
+    private void exclude(LocalDate date) {
+        ExcludedDays holiday = new ExcludedDays();
+        holiday.setDate(date);
+        when(holidays.findAll()).thenReturn(List.of(holiday));
     }
 }
