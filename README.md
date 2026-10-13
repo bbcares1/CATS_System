@@ -128,6 +128,10 @@ CATS_System/
 
 Controllers handle requests, services apply business rules, repositories query the database, and models represent stored records. Forms hold user input; templates render the pages. `db` contains the schema and demo data; `test` contains automated tests. Each Java file starts with a one-line comment describing its role.
 
+## AI usage
+
+See [AI usage](docs/AI_USAGE.md).
+
 ## Tests
 
 Run the tests with H2:
